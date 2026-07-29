@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Content, Lint, Types, Test, Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_WEB_URL: https://www.sushi-templates.com
+      NEXT_PUBLIC_SITE_NAME: Sushi SaaS
+      NEXT_PUBLIC_REPOSITORY_URL: https://github.com/PansaLegrand/sushi-saas-template
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.5
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm content:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
