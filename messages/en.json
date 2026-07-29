@@ -1,0 +1,102 @@
+{
+  "metadata": {
+    "title": "Sushi SaaS — A serious open-source SaaS backbone",
+    "description": "A production-minded Next.js starter with authentication, Stripe billing, organizations, credits, storage, jobs, and an operator-ready admin console.",
+    "keywords": ["Next.js SaaS starter", "open source SaaS", "Stripe billing", "Better Auth", "Drizzle ORM"]
+  },
+  "nav": {
+    "label": "Primary navigation",
+    "docs": "Docs",
+    "blog": "Field notes",
+    "github": "GitHub",
+    "language": "Choose language"
+  },
+  "landing": {
+    "eyebrow": "MIT licensed · Production-minded",
+    "heroLineOne": "The plumbing is done.",
+    "heroLineTwo": "Build the product.",
+    "subtitle": "Authentication, organizations, Stripe billing, a credit ledger, private storage, background jobs, and a separate admin console—connected through one enforceable architecture.",
+    "primaryAction": "Start with the docs",
+    "secondaryAction": "Inspect the source",
+    "signalsLabel": "Project signals",
+    "signals": [
+      { "title": "Replay-safe money", "body": "Idempotent checkout, webhooks, ledger grants, and refunds." },
+      { "title": "Organization-first", "body": "Billing, members, storage, and credits share one tenant boundary." },
+      { "title": "No-leak errors", "body": "Catalogued server failures resolve to localized browser copy." },
+      { "title": "Tests as architecture", "body": "Layering, auth gates, replay behavior, and DB constraints are executable." }
+    ],
+    "systems": {
+      "title": "A backbone, not a demo.",
+      "intro": "The starter focuses on the parts that become expensive after launch: ownership, retries, reconciliation, operational access, and explicit boundaries.",
+      "items": [
+        { "title": "Authentication & abuse controls", "body": "Verified email flows, OAuth, password recovery, MFA, Turnstile, Redis rate limits, and authentication event history." },
+        { "title": "Billing & entitlements", "body": "Stripe Prices drive checkout; lifecycle webhooks update organization subscriptions and capability checks." },
+        { "title": "Credit accounting", "body": "An append-only, traceable ledger connects purchases, grants, task spending, reversals, and balances." },
+        { "title": "Organizations & teams", "body": "Personal and shared workspaces, invitations, roles, last-owner protection, and pooled resources." },
+        { "title": "Storage & jobs", "body": "Private S3-compatible uploads, signed access, lifecycle state, and a durable retryable database queue." },
+        { "title": "Operator console", "body": "A separately deployed admin application with MFA, read/write roles, audit events, and billing visibility." }
+      ]
+    },
+    "architecture": {
+      "title": "One direction through the codebase.",
+      "intro": "Routes translate HTTP. Services own invariants. Models own queries. The database owns constraints. Tests stop those boundaries from quietly dissolving.",
+      "steps": [
+        { "title": "Routes", "body": "Authenticate, validate, and translate HTTP into a business operation." },
+        { "title": "Services", "body": "Coordinate invariants, idempotency, authorization, and side effects." },
+        { "title": "Models", "body": "Provide typed, tenant-aware persistence behind one query boundary." },
+        { "title": "Database", "body": "Enforce uniqueness, ownership, references, and durable state transitions." }
+      ]
+    },
+    "closing": {
+      "title": "Start closer to the part only your company can build.",
+      "action": "Open the quick start"
+    }
+  },
+  "docs": {
+    "title": "Documentation",
+    "intro": "Practical setup and implementation guides for the Sushi SaaS starter.",
+    "empty": "Documentation is being prepared."
+  },
+  "blogs": {
+    "title": "Field notes",
+    "intro": "Clear explanations of the architecture, trade-offs, and operating ideas behind modern SaaS products.",
+    "empty": "No field notes have been published yet."
+  },
+  "footer": {
+    "label": "Footer navigation",
+    "description": "Documentation and engineering notes for the Sushi SaaS open-source starter.",
+    "docs": "Docs",
+    "blog": "Field notes",
+    "privacy": "Privacy",
+    "terms": "Terms"
+  },
+  "privacy": {
+    "title": "Privacy notice",
+    "description": "How this documentation website handles visitor information.",
+    "updated": "Last updated · July 29, 2026",
+    "notice": "This notice covers the documentation website only. Products built from the starter need their own policy based on the services and data they use.",
+    "sections": [
+      { "heading": "Information processed", "paragraphs": ["This website serves public documentation. It does not create customer accounts, accept payments, or store product uploads.", "The hosting provider may process routine request data such as an IP address, user agent, requested URL, and timestamp to deliver and protect the site."] },
+      { "heading": "Analytics and cookies", "paragraphs": ["Analytics are disabled by default. If privacy-respecting analytics are enabled later, this notice and the consent experience must be updated before collection starts.", "The site may use strictly necessary preferences, such as a chosen language or theme."] },
+      { "heading": "External links", "paragraphs": ["Documentation links to GitHub and third-party provider documentation. Their privacy practices apply after you follow those links."] },
+      { "heading": "Questions", "paragraphs": ["Open an issue in the linked source repository for questions about this notice or the documentation website."] }
+    ]
+  },
+  "terms": {
+    "title": "Website terms",
+    "description": "Terms for using the Sushi SaaS documentation website.",
+    "updated": "Last updated · July 29, 2026",
+    "notice": "These terms cover this documentation website. The starter code is licensed separately under the MIT License in its repository.",
+    "sections": [
+      { "heading": "Documentation", "paragraphs": ["The material is provided for general technical information. It is not legal, tax, security, or financial advice.", "Examples must be reviewed and adapted for your product, deployment, jurisdiction, and threat model."] },
+      { "heading": "Open-source code", "paragraphs": ["Use of the starter source code is governed by the MIT License included in the source repository. These website terms do not replace that license."] },
+      { "heading": "Availability and changes", "paragraphs": ["The website and its content may change, move, or be unavailable without notice. Version-specific implementation details should be checked against the source release you use."] },
+      { "heading": "Third-party services", "paragraphs": ["References to third-party products are informational and do not create an endorsement or warranty. Their own terms apply."] }
+    ]
+  },
+  "notFound": {
+    "title": "This page moved or never existed.",
+    "body": "Use the documentation index to find the current guide.",
+    "action": "Return home"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "title": "Sushi SaaS — 严肃的开源 SaaS 基础架构",
+    "description": "面向生产的 Next.js starter，包含认证、Stripe、组织、积分、存储、任务与独立管理后台。",
+    "keywords": ["Next.js SaaS starter", "开源 SaaS", "Stripe 计费", "Better Auth", "Drizzle ORM"]
+  },
+  "nav": { "label": "主导航", "docs": "文档", "blog": "工程笔记", "github": "GitHub", "language": "选择语言" },
+  "landing": {
+    "eyebrow": "MIT 协议 · 面向生产",
+    "heroLineOne": "基础设施已经就绪。",
+    "heroLineTwo": "专注构建产品。",
+    "subtitle": "认证、组织、Stripe 计费、积分账本、私有存储、后台任务和独立管理后台，通过一套可执行的架构连接在一起。",
+    "primaryAction": "从文档开始",
+    "secondaryAction": "查看源码",
+    "signalsLabel": "项目特性",
+    "signals": [
+      { "title": "资金操作可安全重放", "body": "Checkout、Webhook、积分发放和退款都具备幂等性。" },
+      { "title": "组织优先", "body": "计费、成员、文件和积分共享同一个租户边界。" },
+      { "title": "错误不泄漏", "body": "服务端分类错误会解析为本地化的前端文案。" },
+      { "title": "用测试约束架构", "body": "分层、鉴权、重放与数据库约束都是可执行规则。" }
+    ],
+    "systems": {
+      "title": "是基础架构，不是演示。",
+      "intro": "Starter 聚焦上线后最昂贵的问题：所有权、重试、对账、运营访问和明确边界。",
+      "items": [
+        { "title": "认证与滥用防护", "body": "邮箱验证、OAuth、找回密码、MFA、Turnstile、Redis 限流和认证事件历史。" },
+        { "title": "计费与权限", "body": "Stripe Price 驱动 checkout；生命周期 Webhook 更新组织订阅和功能权限。" },
+        { "title": "积分会计", "body": "只追加的可追踪账本连接购买、发放、任务消耗、撤销与余额。" },
+        { "title": "组织与团队", "body": "个人与共享空间、邀请、角色、最后所有者保护和资源池。" },
+        { "title": "存储与任务", "body": "私有 S3 兼容上传、签名访问、生命周期状态和可重试的持久队列。" },
+        { "title": "运营控制台", "body": "独立部署的管理应用，包含 MFA、读写角色、审计事件和计费可见性。" }
+      ]
+    },
+    "architecture": {
+      "title": "代码只沿一个方向流动。",
+      "intro": "路由转换 HTTP，服务维护业务不变量，模型负责查询，数据库执行约束；测试防止边界悄悄消失。",
+      "steps": [
+        { "title": "路由", "body": "完成认证与校验，把 HTTP 转换成业务操作。" },
+        { "title": "服务", "body": "协调不变量、幂等、授权与副作用。" },
+        { "title": "模型", "body": "在唯一查询边界后提供类型化、租户感知的持久化。" },
+        { "title": "数据库", "body": "强制唯一性、所有权、引用关系与持久状态转换。" }
+      ]
+    },
+    "closing": { "title": "从更接近“只有你的公司能构建”的地方开始。", "action": "打开快速开始" }
+  },
+  "docs": { "title": "文档", "intro": "Sushi SaaS starter 的实用配置与实现指南。", "empty": "文档正在准备中。" },
+  "blogs": { "title": "工程笔记", "intro": "清晰解释现代 SaaS 背后的架构、取舍和运营思路。", "empty": "暂时没有已发布的笔记。" },
+  "footer": { "label": "页脚导航", "description": "Sushi SaaS 开源 starter 的文档与工程笔记。", "docs": "文档", "blog": "工程笔记", "privacy": "隐私", "terms": "条款" },
+  "privacy": {
+    "title": "隐私说明",
+    "description": "此文档网站如何处理访客信息。",
+    "updated": "最后更新 · 2026年7月29日",
+    "notice": "本说明仅涵盖文档网站。基于 starter 构建的产品需根据自身服务和数据制定独立政策。",
+    "sections": [
+      { "heading": "处理的信息", "paragraphs": ["此网站提供公开文档，不创建客户账户、不接受付款，也不保存产品上传内容。", "托管服务商可能处理 IP、浏览器、访问 URL 与时间等常规请求信息，以交付并保护网站。"] },
+      { "heading": "分析与 Cookie", "paragraphs": ["分析默认关闭。如果未来启用，必须先更新本说明与同意体验。", "网站可能保存语言或主题等严格必要的偏好设置。"] },
+      { "heading": "外部链接", "paragraphs": ["文档会链接到 GitHub 和第三方服务商文档，访问后适用其各自的隐私政策。"] },
+      { "heading": "问题", "paragraphs": ["如对本说明或文档网站有疑问，请在链接的源码仓库提交 issue。"] }
+    ]
+  },
+  "terms": {
+    "title": "网站条款",
+    "description": "Sushi SaaS 文档网站的使用条款。",
+    "updated": "最后更新 · 2026年7月29日",
+    "notice": "这些条款仅涵盖网站。Starter 代码单独适用其仓库中的 MIT 许可证。",
+    "sections": [
+      { "heading": "文档", "paragraphs": ["内容仅提供一般技术信息，不构成法律、税务、安全或财务建议。", "你需要结合产品、部署、司法辖区和威胁模型审查并调整示例。"] },
+      { "heading": "开源代码", "paragraphs": ["Starter 的使用受源码仓库中的 MIT 许可证约束，本网站条款不会替代该许可证。"] },
+      { "heading": "可用性与变更", "paragraphs": ["网站和内容可能随时变更、迁移或不可用。版本相关实现细节应以你使用的源码发布版本为准。"] },
+      { "heading": "第三方服务", "paragraphs": ["对第三方产品的引用仅供参考，不构成认可或保证；其自身条款仍然适用。"] }
+    ]
+  },
+  "notFound": { "title": "此页面已移动或从未存在。", "body": "请通过文档首页查找当前指南。", "action": "返回首页" }
+}

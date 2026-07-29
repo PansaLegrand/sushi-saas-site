@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "title": "Sushi SaaS — Un socle SaaS open source sérieux",
+    "description": "Un starter Next.js pensé pour la production avec authentification, Stripe, organisations, crédits, stockage, tâches et console admin.",
+    "keywords": ["starter SaaS Next.js", "SaaS open source", "facturation Stripe", "Better Auth", "Drizzle ORM"]
+  },
+  "nav": { "label": "Navigation principale", "docs": "Documentation", "blog": "Notes", "github": "GitHub", "language": "Choisir la langue" },
+  "landing": {
+    "eyebrow": "Licence MIT · Pensé pour la production",
+    "heroLineOne": "L’infrastructure est prête.",
+    "heroLineTwo": "Construisez le produit.",
+    "subtitle": "Authentification, organisations, Stripe, registre de crédits, stockage privé, tâches de fond et console admin séparée — reliés par une architecture vérifiable.",
+    "primaryAction": "Commencer par la documentation",
+    "secondaryAction": "Voir le code",
+    "signalsLabel": "Signaux du projet",
+    "signals": [
+      { "title": "Paiements sûrs au rejeu", "body": "Checkout, webhooks, crédits et remboursements idempotents." },
+      { "title": "Organisations d’abord", "body": "Facturation, membres, fichiers et crédits partagent une frontière tenant." },
+      { "title": "Erreurs sans fuite", "body": "Les erreurs cataloguées deviennent des messages localisés." },
+      { "title": "Architecture testée", "body": "Couches, droits, rejeux et contraintes sont exécutables." }
+    ],
+    "systems": {
+      "title": "Un socle, pas une démo.",
+      "intro": "Le starter traite ce qui coûte cher après le lancement : propriété, rejeux, rapprochement, opérations et frontières explicites.",
+      "items": [
+        { "title": "Authentification et abus", "body": "Email vérifié, OAuth, récupération, MFA, Turnstile, limites Redis et historique des événements." },
+        { "title": "Facturation et droits", "body": "Les Price Stripe pilotent le checkout ; les webhooks mettent à jour abonnements et capacités." },
+        { "title": "Comptabilité des crédits", "body": "Un registre immuable relie achats, attributions, dépenses, annulations et soldes." },
+        { "title": "Organisations et équipes", "body": "Espaces personnels et partagés, invitations, rôles, dernier propriétaire et ressources mutualisées." },
+        { "title": "Stockage et tâches", "body": "Uploads S3 privés, accès signé, cycle de vie et file durable avec reprises." },
+        { "title": "Console opérateur", "body": "Application admin déployée séparément avec MFA, rôles lecture/écriture, audit et visibilité billing." }
+      ]
+    },
+    "architecture": {
+      "title": "Une seule direction dans le code.",
+      "intro": "Les routes traduisent HTTP. Les services portent les invariants. Les modèles interrogent. La base impose les contraintes.",
+      "steps": [
+        { "title": "Routes", "body": "Authentifier, valider et traduire HTTP en opération métier." },
+        { "title": "Services", "body": "Coordonner invariants, idempotence, autorisation et effets." },
+        { "title": "Modèles", "body": "Persistance typée et tenant-aware derrière une seule frontière." },
+        { "title": "Base de données", "body": "Imposer unicité, propriété, références et transitions durables." }
+      ]
+    },
+    "closing": { "title": "Commencez plus près de ce que seule votre entreprise peut construire.", "action": "Ouvrir le démarrage rapide" }
+  },
+  "docs": { "title": "Documentation", "intro": "Guides pratiques de configuration et d’implémentation du starter Sushi SaaS.", "empty": "La documentation est en préparation." },
+  "blogs": { "title": "Notes de terrain", "intro": "Explications claires sur l’architecture, les compromis et l’exploitation d’un SaaS moderne.", "empty": "Aucune note n’est encore publiée." },
+  "footer": { "label": "Navigation de pied de page", "description": "Documentation et notes d’ingénierie du starter open source Sushi SaaS.", "docs": "Documentation", "blog": "Notes", "privacy": "Confidentialité", "terms": "Conditions" },
+  "privacy": {
+    "title": "Avis de confidentialité",
+    "description": "Comment ce site de documentation traite les informations des visiteurs.",
+    "updated": "Dernière mise à jour · 29 juillet 2026",
+    "notice": "Cet avis ne couvre que le site de documentation. Les produits issus du starter nécessitent leur propre politique.",
+    "sections": [
+      { "heading": "Informations traitées", "paragraphs": ["Ce site sert une documentation publique. Il ne crée pas de compte, n’accepte pas de paiement et ne stocke pas de fichiers produit.", "L’hébergeur peut traiter les données techniques usuelles nécessaires à la livraison et à la protection du site."] },
+      { "heading": "Mesure et cookies", "paragraphs": ["La mesure d’audience est désactivée par défaut. Si elle est activée, cet avis et le consentement devront être mis à jour avant toute collecte.", "Le site peut mémoriser des préférences strictement nécessaires, comme la langue ou le thème."] },
+      { "heading": "Liens externes", "paragraphs": ["La documentation renvoie vers GitHub et des fournisseurs tiers. Leurs politiques s’appliquent après avoir suivi ces liens."] },
+      { "heading": "Questions", "paragraphs": ["Ouvrez une issue dans le dépôt lié pour toute question sur cet avis ou le site."] }
+    ]
+  },
+  "terms": {
+    "title": "Conditions du site",
+    "description": "Conditions d’utilisation du site de documentation Sushi SaaS.",
+    "updated": "Dernière mise à jour · 29 juillet 2026",
+    "notice": "Ces conditions couvrent le site. Le code du starter est régi séparément par la licence MIT.",
+    "sections": [
+      { "heading": "Documentation", "paragraphs": ["Le contenu fournit des informations techniques générales ; ce n’est pas un conseil juridique, fiscal, de sécurité ou financier.", "Examinez et adaptez les exemples à votre produit, déploiement, juridiction et modèle de menace."] },
+      { "heading": "Code open source", "paragraphs": ["L’utilisation du starter est régie par la licence MIT de son dépôt. Ces conditions ne la remplacent pas."] },
+      { "heading": "Disponibilité et changements", "paragraphs": ["Le site et son contenu peuvent évoluer ou être indisponibles. Vérifiez les détails avec la version du code que vous utilisez."] },
+      { "heading": "Services tiers", "paragraphs": ["Les références à des tiers sont informatives et ne constituent ni garantie ni approbation. Leurs conditions s’appliquent."] }
+    ]
+  },
+  "notFound": { "title": "Cette page a été déplacée ou n’a jamais existé.", "body": "Utilisez l’index de la documentation pour trouver le guide actuel.", "action": "Retour à l’accueil" }
+}
