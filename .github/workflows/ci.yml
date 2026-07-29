@@ -14,10 +14,6 @@ jobs:
     name: Content, Lint, Types, Test, Build
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      NEXT_PUBLIC_WEB_URL: https://www.sushi-templates.com
-      NEXT_PUBLIC_SITE_NAME: Sushi SaaS
-      NEXT_PUBLIC_REPOSITORY_URL: https://github.com/PansaLegrand/sushi-saas-template
 
     steps:
       - uses: actions/checkout@v4

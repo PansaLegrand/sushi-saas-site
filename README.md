@@ -13,7 +13,6 @@ Stripe, storage, job worker, or admin runtime.
 Requirements: Node 20.19 and pnpm 10.22.
 
 ```bash
-cp .env.example .env
 pnpm install
 pnpm dev
 ```
