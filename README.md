@@ -59,8 +59,9 @@ should include a linked documentation change in this repository.
 - Editorial site snapshot: former `site` branch commit
   `175b5a712e08b5b57574e72838fcf78bd9324c44`
 
-The Git history begins here as an independent project. No remote is configured
-until the repository owner and final name are confirmed.
+The Git history begins here as an independent project, with no ancestry or
+submodule link to the starter. This repository is published independently at
+[`PansaLegrand/sushi-saas-site`](https://github.com/PansaLegrand/sushi-saas-site).
 
 ## License
 
