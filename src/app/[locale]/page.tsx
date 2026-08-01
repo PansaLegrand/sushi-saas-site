@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { Link } from "@/i18n/navigation";
 import { buildMetadata } from "@/lib/seo";
 import { SiteConfig } from "@/config/site";
-import { absoluteLocaleUrl, normalizeLocale } from "@/i18n/locale";
+import { absoluteLocaleUrl, locales, normalizeLocale } from "@/i18n/locale";
 
 export async function generateMetadata({
   params
@@ -15,12 +15,23 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations("metadata");
 
-  return buildMetadata({
+  const metadata = buildMetadata({
     locale,
     title: t("title"),
     description: t("description"),
     keywords: t.raw("keywords") as string[]
   });
+
+  // Next.js normalizes an origin-only metadata URL by removing its root slash.
+  // The homepage emits its canonical and hreflang links directly below so they
+  // exactly match the public `/` URL.
+  return {
+    ...metadata,
+    alternates: undefined,
+    openGraph: metadata.openGraph
+      ? { ...metadata.openGraph, url: undefined }
+      : undefined
+  };
 }
 
 export default async function LandingPage({
@@ -69,6 +80,17 @@ export default async function LandingPage({
 
   return (
     <>
+      <link rel="canonical" href={homeUrl} />
+      <meta property="og:url" content={homeUrl} />
+      {locales.map((available) => (
+        <link
+          key={available}
+          rel="alternate"
+          hrefLang={available}
+          href={absoluteLocaleUrl(SiteConfig.origin, available)}
+        />
+      ))}
+      <link rel="alternate" hrefLang="x-default" href={`${SiteConfig.origin}/`} />
       <SiteHeader locale={locale} />
       <main>
         <script
