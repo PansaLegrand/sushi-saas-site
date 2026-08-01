@@ -1,0 +1,73 @@
+---
+title: 架构与错误契约
+icon: "Workflow"
+description: 了解 Sushi SaaS 强制执行的应用分层、浏览器数据流、授权边界和多语言无泄漏错误系统。
+keywords: [架构, 服务, 模型, 错误, Next.js, TypeScript]
+tags: [架构, 错误, 测试]
+author: "Sushi Templates"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-01T00:00:00.000Z"
+---
+
+> 已与 starter 提交 [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8) 同步。
+
+## 服务端只沿一个方向流动
+
+```text
+src/app/**       路由与页面：HTTP 输入/输出
+  ↓
+src/services/**  业务规则、编排与不变量
+  ↓
+src/models/**    类型化持久化；唯一允许调用 db() 的层
+  ↓
+src/db/**        Schema、迁移与连接
+```
+
+路由只负责认证、校验和 HTTP 转换；所有写操作都经过 service。Model 负责查询、租户条件和事务。`tests/unit/architecture.test.ts` 会拒绝跨层导入。
+
+不要创建 `src/features/`。一个业务域应横向分布在各层，例如预约功能位于 `models/reservation.ts`、`services/reservations/`、`config/reservations.ts` 和 `components/reservations/`。
+
+## 浏览器数据流
+
+```text
+Server Component → 直接调用 service
+Client Component → src/api/** → 共享 API client → /api/**
+```
+
+Server Component 不请求本应用自己的 API。Client Component 不直接使用 `fetch`，而是通过 `src/api/` 中的领域封装统一解析响应和错误。
+
+## 授权包含两个问题
+
+组织角色与订阅方案彼此独立：
+
+```ts
+const ctx = await getOrgContext(request);
+if (!ctx || !can(ctx, "file:delete", file)) return respForbidden();
+await requireEntitlement(ctx.orgUuid, "storage.upload");
+```
+
+`can()` 判断成员角色是否允许操作；entitlement 函数判断组织当前方案是否包含该能力或容量。
+
+## 无泄漏错误契约
+
+服务端抛出带稳定目录代码的 `AppError`。每个路由边界使用 `respError`：内部细节进入日志，用户只收到安全的本地化文案。
+
+```ts
+throw new AppError("CREDITS_INSUFFICIENT", {
+  message: `org ${orgUuid} could not spend ${cost}`,
+  details: { required: cost, available: balance }
+});
+```
+
+UI 根据 `error_code` 分支，并通过 `resolveErrorMessage` 或 `resolveAuthError` 获取文案，绝不渲染 `error.message`。错误翻译位于 `src/lib/errors/i18n/locales/`；新增代码必须同时补齐五种语言。
+
+## 安全新增业务域
+
+1. 在 `src/config/` 定义常量和环境配置。
+2. 在 `src/models/` 添加类型化 CRUD。
+3. 在 `src/services/` 放置不变量、授权、幂等和副作用。
+4. 保持路由精简，并使用错误目录转换失败。
+5. 添加对应层级的测试。
+6. 运行 `pnpm lint`、`pnpm test:run` 和 `pnpm build`。
+
+更详细的工程契约位于 starter 仓库的 `docs/errors.md`、`docs/frontend.md` 和 `AGENTS.md`。

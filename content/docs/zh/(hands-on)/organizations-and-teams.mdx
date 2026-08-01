@@ -1,0 +1,61 @@
+---
+title: 组织、团队与租户隔离
+icon: "Users"
+description: 配置个人工作区、成员角色、邀请、席位上限、租户隔离、共享积分与组织计费。
+keywords: [组织, 团队, 多租户, RBAC, 邀请, 席位]
+tags: [组织, 授权, 租户]
+author: "Sushi Templates"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-01T00:00:00.000Z"
+---
+
+> 已与 starter 提交 [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8) 同步。
+
+## 每个账号都有组织
+
+注册会创建个人组织及 owner 成员关系。系统没有另一套“用户拥有资源”的路径：文件、任务、订单、订阅、积分、API key 和预约都使用 `org_uuid`。
+
+Better Auth 提供成员表与邀请机制；Sushi 补充租户范围、应用权限、席位限制、共享余额和并发保护。
+
+## 角色与能力
+
+角色层级为 `owner` ⊃ `admin` ⊃ `member`。
+
+| 操作 | Member | Admin | Owner |
+| --- | :---: | :---: | :---: |
+| 读取组织数据、创建/删除文件、消费积分 | ✓ | ✓ | ✓ |
+| 邀请、移除成员、修改角色 |  | ✓ | ✓ |
+| 更新组织 |  | ✓ | ✓ |
+| 管理计费或删除组织 |  |  | ✓ |
+
+使用 `getOrgContext(request, optionalSlug)` 获取用户、组织 UUID 和角色，再用 `can(ctx, action, resource)` 进行授权。绝不从请求 body 接受 `org_uuid`。
+
+## 租户隔离
+
+只有 model 查询数据库。所有租户表查询都使用 `scopedToOrg(column, ctx.orgUuid)`，插入必须写入组织 UUID。架构测试会扫描这些规则。
+
+应用使用 `organizations.uuid`；Better Auth 的 `organizations.id` 仅供其内部关系使用。带品牌的 `OrgUuid` 类型防止误传用户 UUID。
+
+## 邀请与席位上限
+
+邀请 72 小时后过期，只能由被邀请邮箱接受；接受与拒绝使用独立端点。重新邀请会替换旧的待处理邀请。
+
+| 方案 | 总席位 |
+| --- | ---: |
+| Free | 1 |
+| Plus | 5 |
+| Max | 20 |
+
+发送和接受时都会检查“已加入成员 + 有效待处理邀请”。两个检查共享组织级 PostgreSQL advisory lock，避免两个并发请求同时占用最后一个席位。管理员后台可设置带审计记录的临时或永久例外。
+
+## 安全不变量
+
+- 组织不能失去最后一个 owner。
+- 用户不能离开自己的唯一组织。
+- 成员不能授予高于自己的角色。
+- 降级不会移除现有成员，只会阻止新的邀请与接受。
+- 积分和 Stripe Customer 属于组织，而不是点击结账的成员。
+
+用户界面位于 `/{locale}/account/team`，API 位于 `/api/account/team/*`。组织支持操作位于独立管理应用中。
+
+starter 暂未提供组织切换器、组织 slug 路由、自定义角色或 Stripe 按席位数量计费；这些是需要产品策略的扩展。

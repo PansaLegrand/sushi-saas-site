@@ -1,0 +1,82 @@
+---
+title: Architecture and Error Contracts
+icon: "Workflow"
+description: Understand Sushi SaaS's enforced application layers, browser data flow, authorization boundary, and translated no-leak error system.
+keywords: [architecture, services, models, errors, Next.js, TypeScript]
+tags: [architecture, errors, testing]
+author: "Sushi Templates"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-01T00:00:00.000Z"
+---
+
+> Synced with starter commit [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8).
+
+## One Direction Through the Server
+
+```text
+src/app/**       routes and pages: HTTP in, HTTP out
+  ↓
+src/services/**  business rules, orchestration, invariants
+  ↓
+src/models/**    typed persistence; the only layer allowed to call db()
+  ↓
+src/db/**        schema, migrations, and connection
+```
+
+Routes authenticate, validate, and translate HTTP. Writes always go through a service. Models own queries, tenant predicates, and database transactions. `tests/unit/architecture.test.ts` rejects imports that cross these boundaries.
+
+Do not create `src/features/`; each domain is spread across the horizontal layers. For example, reservations use `models/reservation.ts`, `services/reservations/`, `config/reservations.ts`, and `components/reservations/`.
+
+## Browser Data Flow
+
+```text
+Server Component → service directly
+Client Component → src/api/** → shared API client → /api/**
+```
+
+Server Components never fetch the application's own API. Client Components never call raw `fetch`; they use a domain wrapper under `src/api/`, which consistently unwraps the response envelope and raises a typed client error.
+
+## Authorization Has Two Questions
+
+Organization roles and subscription plans are intentionally separate:
+
+```ts
+const ctx = await getOrgContext(request);
+if (!ctx || !can(ctx, "file:delete", file)) return respForbidden();
+
+await requireEntitlement(ctx.orgUuid, "storage.upload");
+```
+
+`can()` answers whether the member's role permits an action. Entitlement functions answer whether the organization's effective plan includes the capability or capacity.
+
+## No-Leak Error Contract
+
+Server code throws `AppError` with a stable catalog code. Every route boundary ends in `respError`; it logs internal detail and returns translated safe copy:
+
+```ts
+throw new AppError("CREDITS_INSUFFICIENT", {
+  message: `org ${orgUuid} could not spend ${cost}`,
+  details: { required: cost, available: balance }
+});
+```
+
+```json
+{
+  "code": -1,
+  "message": "You do not have enough credits for this.",
+  "error_code": "CREDITS_INSUFFICIENT"
+}
+```
+
+The UI branches on `error_code` and resolves copy through `resolveErrorMessage` or `resolveAuthError`. It never renders `error.message`. Error translations live in `src/lib/errors/i18n/locales/`; adding a code requires all five locales.
+
+## Adding a Domain Safely
+
+1. Define constants and environment-derived flags in `src/config/`.
+2. Add typed CRUD under `src/models/`.
+3. Put invariants, authorization, idempotency, and side effects in `src/services/`.
+4. Keep route handlers thin and translate failures with the error catalog.
+5. Add the appropriate unit, service, API, component, or database tests.
+6. Run `pnpm lint`, `pnpm test:run`, and `pnpm build`.
+
+The detailed engineering contracts remain in `docs/errors.md`, `docs/frontend.md`, and `AGENTS.md` inside the starter repository.

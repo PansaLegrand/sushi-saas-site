@@ -1,13 +1,13 @@
 {
   "metadata": {
-    "title": "Sushi SaaS — A serious open-source SaaS backbone",
+    "title": "Production-minded open-source Next.js SaaS starter",
     "description": "A production-minded Next.js starter with authentication, Stripe billing, organizations, credits, storage, jobs, and an operator-ready admin console.",
     "keywords": ["Next.js SaaS starter", "open source SaaS", "Stripe billing", "Better Auth", "Drizzle ORM"]
   },
   "nav": {
     "label": "Primary navigation",
     "docs": "Docs",
-    "blog": "Field notes",
+    "blog": "Blog",
     "github": "GitHub",
     "language": "Choose language"
   },
@@ -53,12 +53,12 @@
     }
   },
   "docs": {
-    "title": "Documentation",
+    "title": "Next.js SaaS starter documentation",
     "intro": "Practical setup and implementation guides for the Sushi SaaS starter.",
     "empty": "Documentation is being prepared."
   },
   "blogs": {
-    "title": "Field notes",
+    "title": "SaaS engineering blog",
     "intro": "Clear explanations of the architecture, trade-offs, and operating ideas behind modern SaaS products.",
     "empty": "No field notes have been published yet."
   },
@@ -66,7 +66,7 @@
     "label": "Footer navigation",
     "description": "Documentation and engineering notes for the Sushi SaaS open-source starter.",
     "docs": "Docs",
-    "blog": "Field notes",
+    "blog": "Blog",
     "privacy": "Privacy",
     "terms": "Terms"
   },

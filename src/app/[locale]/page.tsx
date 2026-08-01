@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { Link } from "@/i18n/navigation";
 import { buildMetadata } from "@/lib/seo";
 import { SiteConfig } from "@/config/site";
+import { absoluteLocaleUrl, normalizeLocale } from "@/i18n/locale";
 
 export async function generateMetadata({
   params
@@ -29,15 +30,53 @@ export default async function LandingPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const lang = normalizeLocale(locale);
   const t = await getTranslations("landing");
   const signals = t.raw("signals") as Array<{ title: string; body: string }>;
   const systems = t.raw("systems.items") as Array<{ title: string; body: string }>;
   const flow = t.raw("architecture.steps") as Array<{ title: string; body: string }>;
+  const homeUrl = absoluteLocaleUrl(SiteConfig.origin, lang);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": `${SiteConfig.origin}/#website`,
+        name: SiteConfig.name,
+        url: homeUrl,
+        inLanguage: lang
+      },
+      {
+        "@type": "SoftwareSourceCode",
+        "@id": `${SiteConfig.origin}/#software`,
+        name: SiteConfig.name,
+        description: SiteConfig.description,
+        codeRepository: SiteConfig.repositoryUrl,
+        license: `${SiteConfig.repositoryUrl}/blob/main/LICENSE`,
+        programmingLanguage: ["TypeScript", "JavaScript"],
+        runtimePlatform: "Node.js",
+        url: homeUrl
+      },
+      {
+        "@type": "Organization",
+        "@id": `${SiteConfig.origin}/#organization`,
+        name: SiteConfig.name,
+        url: SiteConfig.origin,
+        sameAs: [SiteConfig.repositoryUrl]
+      }
+    ]
+  };
 
   return (
     <>
       <SiteHeader locale={locale} />
       <main>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c")
+          }}
+        />
         <section className="hero">
           <div className="shell hero__copy">
             <p className="eyebrow">{t("eyebrow")}</p>

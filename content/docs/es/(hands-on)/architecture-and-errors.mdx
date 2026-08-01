@@ -1,0 +1,66 @@
+---
+title: Arquitectura y contratos de error
+icon: "Workflow"
+description: Comprende las capas obligatorias de Sushi SaaS, el flujo de datos del navegador, la autorización y el sistema de errores traducidos sin filtraciones.
+keywords: [arquitectura, servicios, modelos, errores, Next.js, TypeScript]
+tags: [arquitectura, errores, pruebas]
+author: "Sushi Templates"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-01T00:00:00.000Z"
+---
+
+> Sincronizado con el commit [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8) del starter.
+
+## Una sola dirección en el servidor
+
+```text
+src/app/**       rutas y páginas: entrada y salida HTTP
+  ↓
+src/services/**  reglas de negocio, coordinación e invariantes
+  ↓
+src/models/**    persistencia tipada; única capa que llama a db()
+  ↓
+src/db/**        esquema, migraciones y conexión
+```
+
+Las rutas autentican, validan y traducen HTTP. Toda escritura pasa por un servicio. Los modelos son dueños de consultas, filtros de tenant y transacciones. `tests/unit/architecture.test.ts` rechaza importaciones que rompen estas fronteras.
+
+No crees `src/features/`: cada dominio se reparte horizontalmente entre modelos, servicios, configuración y componentes.
+
+## Flujo de datos del navegador
+
+```text
+Server Component → servicio directo
+Client Component → src/api/** → cliente API común → /api/**
+```
+
+Los Server Components no llaman a la API propia. Los Client Components no usan `fetch` directamente; usan un módulo de dominio en `src/api/` que procesa el sobre y los errores de forma uniforme.
+
+## Dos preguntas de autorización
+
+El rol de organización y el plan de suscripción son independientes:
+
+```ts
+const ctx = await getOrgContext(request);
+if (!ctx || !can(ctx, "file:delete", file)) return respForbidden();
+await requireEntitlement(ctx.orgUuid, "storage.upload");
+```
+
+`can()` responde si el rol permite la acción. Los entitlements responden si el plan efectivo de la organización incluye la capacidad o el límite.
+
+## Contrato de errores sin filtraciones
+
+El servidor lanza `AppError` con un código estable del catálogo. Cada ruta termina sus excepciones en `respError`, que registra el detalle interno y devuelve texto seguro traducido.
+
+La interfaz decide por `error_code` y resuelve el texto con `resolveErrorMessage` o `resolveAuthError`; nunca muestra `error.message`. Las traducciones viven en `src/lib/errors/i18n/locales/` y cada código debe existir en los cinco idiomas.
+
+## Añadir un dominio con seguridad
+
+1. Define constantes en `src/config/`.
+2. Añade CRUD tipado en `src/models/`.
+3. Coloca invariantes, autorización, idempotencia y efectos en `src/services/`.
+4. Mantén las rutas finas y usa el catálogo de errores.
+5. Añade pruebas del nivel adecuado.
+6. Ejecuta `pnpm lint`, `pnpm test:run` y `pnpm build`.
+
+Los contratos completos siguen versionados en `docs/errors.md`, `docs/frontend.md` y `AGENTS.md` del starter.

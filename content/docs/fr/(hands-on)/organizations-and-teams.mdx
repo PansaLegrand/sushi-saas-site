@@ -1,0 +1,55 @@
+---
+title: Organisations, équipes et isolation tenant
+icon: "Users"
+description: Configurer espaces personnels, rôles, invitations, limites de sièges, isolation tenant, crédits mutualisés et facturation par organisation.
+keywords: [organisations, équipes, tenancy, RBAC, invitations, sièges]
+tags: [organisations, autorisation, tenancy]
+author: "Sushi Templates"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-01T00:00:00.000Z"
+---
+
+> Synchronisé avec le commit [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8) du starter.
+
+## Chaque compte possède une organisation
+
+L’inscription crée une organisation personnelle et une adhésion owner. Il n’existe pas de seconde voie de ressources « utilisateur » : fichiers, tâches, commandes, abonnements, crédits, clés API et réservations utilisent `org_uuid`.
+
+Better Auth fournit les adhésions et invitations. Sushi ajoute le périmètre tenant, les permissions, les limites de sièges, les soldes mutualisés et les gardes de concurrence.
+
+## Rôles
+
+La hiérarchie est `owner` ⊃ `admin` ⊃ `member`.
+
+| Action | Member | Admin | Owner |
+| --- | :---: | :---: | :---: |
+| Lire, créer/supprimer des fichiers, dépenser des crédits | ✓ | ✓ | ✓ |
+| Inviter, retirer et changer les rôles |  | ✓ | ✓ |
+| Modifier l’organisation |  | ✓ | ✓ |
+| Gérer la facturation ou supprimer l’organisation |  |  | ✓ |
+
+Utilisez `getOrgContext(request, optionalSlug)` puis `can(ctx, action, resource)`. N’acceptez jamais `org_uuid` dans le corps d’une requête.
+
+## Isolation et limites de sièges
+
+Toutes les requêtes sur des tables tenant utilisent `scopedToOrg(column, ctx.orgUuid)` dans les modèles. Les tests d’architecture détectent une lecture ou insertion non limitée.
+
+Les invitations expirent après 72 heures, sont liées à l’adresse invitée et réservent un siège tant qu’elles sont actives.
+
+| Plan | Sièges totaux |
+| --- | ---: |
+| Free | 1 |
+| Plus | 5 |
+| Max | 20 |
+
+La capacité est vérifiée à l’envoi et à l’acceptation sous le même verrou advisory PostgreSQL. Le support peut définir une exception auditée, temporaire ou permanente.
+
+## Invariants
+
+- Le dernier owner ne peut pas être retiré.
+- Un utilisateur ne peut pas quitter sa seule organisation.
+- Un membre ne peut pas attribuer un rôle supérieur au sien.
+- Un downgrade conserve membres et données, mais bloque les nouvelles entrées.
+- Les crédits et le client Stripe appartiennent à l’organisation.
+
+L’interface est sous `/{locale}/account/team`, l’API sous `/api/account/team/*`. Le starter ne fournit pas encore de sélecteur d’organisation, routes par slug, rôles personnalisés ou quantité Stripe par siège.

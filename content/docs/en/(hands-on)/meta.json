@@ -3,15 +3,21 @@
   "defaultOpen": true,
   "pages": [
     "quick-start",
+    "architecture-and-errors",
     "database-setup",
     "authentication-and-admin",
+    "organizations-and-teams",
+    "plans-and-entitlements",
     "stripe-setup",
-    "notifications-slack",
-    "storage-uploads",
-    "logging",
-    "email-service",
     "account-ledger",
+    "storage-uploads",
+    "jobs-and-readiness",
+    "email-service",
+    "notifications-slack",
+    "logging",
+    "account-data-lifecycle",
     "text-to-video-tasks",
-    "reservations-feature"
+    "reservations-feature",
+    "deployment-and-security"
   ]
 }

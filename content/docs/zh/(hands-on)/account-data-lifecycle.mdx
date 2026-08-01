@@ -1,0 +1,46 @@
+---
+title: 账号数据导出与删除
+icon: "ShieldCheck"
+description: 配置隐私数据清单、认证导出、延迟删除、外部 provider 清理、伪匿名化和取消保护。
+keywords: [账号删除, 数据导出, 隐私, 数据清除, GDPR, 保留策略]
+tags: [隐私, 账号, 生命周期]
+author: "Sushi Templates"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-01T00:00:00.000Z"
+---
+
+> 已与 starter 提交 [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8) 同步。生产前请让法律顾问审核流程和保留设置。
+
+## 经过测试的数据清单
+
+`src/config/account-data-policy.ts` 为每张数据库表指定删除、伪匿名化、保留或非个人数据，并声明是否包含在导出中。测试会把清单与 `src/db/schema.ts` 对比，因此新增表却未作隐私决策会导致构建失败。
+
+凭据、密码 hash、session、验证 token 和 TOTP secret 永不导出。财务、审计、账本和共享工作区记录可在替换不可逆标识后保留。
+
+## 请求导出
+
+`POST /api/account/data-export` 要求认证、同源、限流和 `Idempotency-Key`，返回 202 并入队。通过 `GET /api/account/data-export/{requestUuid}` 查询状态。
+
+完成后响应包含五分钟有效的 manifest 与私有文件签名链接。导出对象保持私有，默认七天后过期。
+
+## 请求删除
+
+`POST /api/account/deletion` 还要求 15 分钟内创建的新 session。默认七天宽限期内可用 `DELETE /api/account/deletion` 取消；`GET` 查询状态。
+
+若账号是共享组织最后一个 owner 或最后一个完整权限管理员，请求会被阻止，必须先转移所有权或提升其他管理员。
+
+宽限期后，持久 worker 会撤销认证、取消订阅、按策略删除 Stripe Customer、删除个人工作区对象和外部任务结果、清理可删除记录，并对必须保留的订单、积分、订阅、预约和审计记录进行伪匿名化。外部效果逐项记录，重试不会虚报完成。
+
+## 必须审核的策略
+
+`src/config/account-lifecycle.ts` 控制宽限期、导出保留期、新 session 时限、Stripe 删除、安全 blocklist 保留和签名链接时长。
+
+这些是技术默认值，不是法律建议。请与 `src/config/legal.ts`、provider 合同、财税保留义务和运营地区保持一致。
+
+## 生产清单
+
+1. 配置私有存储与 Job runner。
+2. 为新增外部 provider 实现删除 hook。
+3. 新增表时同步更新数据策略。
+4. 用一次性账号测试导出、宽限期取消、owner 阻塞、重试和最终删除。
+5. 不记录导出内容、凭据或签名 URL。

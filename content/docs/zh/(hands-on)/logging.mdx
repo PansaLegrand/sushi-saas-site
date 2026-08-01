@@ -1,133 +1,20 @@
 ---
-title: "日志与可观测性"
-icon: "Activity"
-description: "Node、Edge 与 Workers 通用的结构化日志：请求ID、敏感信息脱敏与路由示例；适配 Vercel、Cloudflare 与 Node 服务器。"
-keywords:
-  - 日志
-  - 可观测性
-  - Pino
-  - Next.js
-  - Vercel
-  - Cloudflare Workers
-  - Edge 运行时
-  - JSON 日志
-  - 请求ID
-tags: [日志, 可观测性, Node, Edge]
-author: "Pansa Legrand"
-publishedAt: "2025-10-11T00:00:00.000Z"
-updatedAt: "2025-10-11T00:00:00.000Z"
+title: 结构化日志
+icon: "ScrollText"
+description: 使用可关联、已脱敏的结构化日志运维 Node 与 Edge runtime。
+keywords: [日志, Pino, 可观测性, request ID]
+tags: [日志, 运维]
+author: "Sushi Templates"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-01T00:00:00.000Z"
 ---
 
-基础概念
-- 结构化(JSON)日志，便于查询与关联。
-- 关联ID：为每个请求统一 `request_id`。
-- 等级：`debug`/`info`/`warn`/`error`。
-- 脱敏：不要记录 cookies、tokens、密钥等。
+> 已与启动模板提交 [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8) 同步。
 
-包含内容
-- Node 与 Edge/Workers 统一的日志 API（相同用法）。
-  - Node：Pino 输出一行 JSON（快速、稳定）。
-  - Edge/Workers：`console.log` 输出一行 JSON（轻量）。
-- 中间件在响应头附加 `x-request-id`（不修改请求头/ Cookie）。
-- 存储 presign 路由提供示例。
+Node runtime 使用 Pino，Edge 输出同形 JSON。日志写到 stdout 供托管平台收集，应用不管理日志文件。`LOG_LEVEL` 可设为 `debug`、`info`、`warn` 或 `error`。
 
-关键文件
-- Node: `src/lib/logger/server.ts`
-- Edge: `src/lib/logger/edge.ts`
-- 类型: `src/lib/logger/types.ts`
-- 中间件: `src/middleware.ts`
-- 示例: `src/app/api/storage/uploads/route.ts`
+让 request ID 贯穿 route、service、job、Stripe order/event 与供应商调用。记录 event 名、`org_uuid`、安全资源 UUID、job/order 号、耗时和结果等结构字段，不要只写叙述文本。
 
-关键文件
-- Node: `src/lib/logger/server.ts`
-- Edge: `src/lib/logger/edge.ts`
-- 类型: `src/lib/logger/types.ts`
-- 中间件: `src/middleware.ts`
-- 示例: `src/app/api/storage/uploads/route.ts`
+logger 会脱敏 authorization header、cookie、密码、token、API key 等秘密。不要记录原始请求体、预签名 URL 或账户导出数据。route 用 `respError` 记录内部上下文并返回安全翻译后的 `error_code`，绝不向浏览器输出 `error.message`。
 
-查看日志
-- 本地：终端（一行 JSON）。为更清晰，可使用 `pino-pretty`：
-  - `pnpm dev 2>&1 | pnpx pino-pretty`
-  - 保存文件：`pnpm dev 2>&1 | pnpx pino-pretty | tee logs/dev.log`
-- Vercel：Deployments → Functions → Logs 或 `vercel logs`。
-- Cloudflare Workers：`wrangler tail`。
-
-用法(Node)
-```ts
-import { logger, requestIdFromHeaders } from '@/lib/logger/server'
-export async function POST(req: Request){
-  const rid = requestIdFromHeaders(req.headers)
-  const log = logger.child({ request_id: rid, route: '/api/example' })
-  log.info({ event: 'example.start' })
-  // ...
-  log.info({ event: 'example.ok' })
-  return new Response('ok')
-}
-```
-
-用法(Edge)
-```ts
-import { logger } from '@/lib/logger/edge'
-export const runtime = 'edge'
-export function GET(){
-  logger.info({ event: 'edge.heartbeat' })
-  return new Response('ok')
-}
-```
-
-建议
-- 配置 `LOG_LEVEL`，根据需要调整脱敏规则。
-- 默认不写入日志文件，输出到 stdout/stderr。若需本地保存可用 `tee`：`pnpm dev 2>&1 | tee logs/dev.json`。
-- 将服务端 `console.*` 替换为 logger。
-
-用法(Node)
-```ts
-import { logger, requestIdFromHeaders } from '@/lib/logger/server'
-export async function POST(req: Request){
-  const rid = requestIdFromHeaders(req.headers)
-  const log = logger.child({ request_id: rid, route: '/api/example' })
-  const start = Date.now()
-  try {
-    log.info({ event: 'example.start' })
-    // ...
-    log.info({ event: 'example.ok', duration_ms: Date.now() - start })
-    return new Response('ok')
-  } catch (e:any) {
-    log.error({ event: 'example.error', message: e?.message })
-    return new Response('error', { status: 500 })
-  }
-}
-```
-
-用法(Edge)
-```ts
-import { logger } from '@/lib/logger/edge'
-export const runtime = 'edge'
-export function GET(){
-  logger.info({ event: 'edge.heartbeat' })
-  return new Response('ok')
-}
-```
-
-辅助函数: withApiLogging (Node)
-```ts
-import { withApiLogging } from '@/lib/logger/server'
-export const POST = withApiLogging(async (req) => new Response('ok'), {
-  route: '/api/foo', event: 'foo.process'
-})
-```
-
-最佳实践
-- 每个请求创建子 logger，附带 `request_id`；结束时记录 `duration_ms`。
-- 文本简短、字段为主；避免记录完整请求体。
-
-自定义脱敏
-- Node：修改 `src/lib/logger/server.ts` 的 `redactPaths`。
-- Edge：修改 `src/lib/logger/edge.ts` 的 `redactKeys`。
-
-可选集成
-- Sentry（`@sentry/nextjs`）、Axiom / Better Stack / Datadog 等。
-
-故障排查
-- 出现意外登录重定向：确认中间件未覆盖请求头/ Cookie。
-- Edge 无日志：确保 `runtime='edge'` 并使用 `wrangler tail`/Vercel 日志查看。
+监控 readiness、cron、重试耗尽、webhook action-required、延迟和异常 5xx，并用标识把 Slack 告警关联回日志；Slack 不是日志存储。

@@ -1,0 +1,63 @@
+---
+title: Organizations, Teams, and Tenancy
+icon: "Users"
+description: Configure personal workspaces, member roles, invitations, seat limits, tenant scoping, pooled credits, and organization billing.
+keywords: [organizations, teams, tenancy, RBAC, invitations, seat limits]
+tags: [organizations, authorization, tenancy]
+author: "Sushi Templates"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-01T00:00:00.000Z"
+---
+
+> Synced with starter commit [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8).
+
+## Every Account Has an Organization
+
+Signup creates a personal organization and owner membership. There is no separate user-owned resource path: files, tasks, orders, subscriptions, credits, API keys, and reservations use `org_uuid`.
+
+Better Auth supplies the organization membership tables and invitation mechanics. Sushi adds tenant scoping, application permissions, seat enforcement, pooled balances, and concurrency guards.
+
+## Roles and Capabilities
+
+Roles form a hierarchy: `owner` ⊃ `admin` ⊃ `member`.
+
+| Action | Member | Admin | Owner |
+| --- | :---: | :---: | :---: |
+| Read organization data, create/delete files, spend credits | ✓ | ✓ | ✓ |
+| Invite, remove, and change member roles |  | ✓ | ✓ |
+| Update the organization |  | ✓ | ✓ |
+| Manage billing or delete the organization |  |  | ✓ |
+
+Call `getOrgContext(request, optionalSlug)` to resolve the current user, organization UUID, and role. Call `can(ctx, action, resource)` for role authorization. Never accept `org_uuid` from a request body.
+
+## Tenant Scoping
+
+Only models query the database. Every tenant-table query uses `scopedToOrg(column, ctx.orgUuid)`, and every insert writes the organization UUID. Architecture tests scan these models so a new unscoped query fails the build.
+
+The app uses the application's `organizations.uuid`; Better Auth's internal `organizations.id` is only for its own relationships. `OrgUuid` is branded so a user UUID cannot be passed accidentally to an entitlement or tenant query.
+
+## Invitations and Seat Limits
+
+Invitations expire after 72 hours, are bound to the invited email, and are accepted or declined with separate endpoints. Re-inviting supersedes the old pending invitation.
+
+The plan limit counts accepted members plus live pending invitations:
+
+| Plan | Total seats |
+| --- | ---: |
+| Free | 1 |
+| Plus | 5 |
+| Max | 20 |
+
+Capacity is checked both when sending and accepting. Both checks share a per-organization PostgreSQL advisory lock so two requests cannot claim the final seat. Support may set a temporary or permanent audited seat override from the admin console.
+
+## Safety Invariants
+
+- An organization cannot lose its final owner.
+- A user cannot leave their only organization.
+- A member cannot grant a role above their own.
+- Downgrades never remove existing members; they block new invitations and acceptances until usage is within the new limit.
+- Credits and Stripe customers belong to the organization, not to the member who clicked checkout.
+
+The customer UI is under `/{locale}/account/team`. The API surface is under `/api/account/team/*`. Organization support controls live in the separate admin application.
+
+The starter intentionally does not yet ship an organization switcher, org-slug routes, custom roles, or per-seat Stripe quantities. These are additive product decisions rather than hidden partial implementations.

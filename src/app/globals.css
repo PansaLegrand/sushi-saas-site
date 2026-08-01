@@ -49,6 +49,27 @@ a {
   text-decoration: none;
 }
 
+.article-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 1rem;
+  margin-top: 0.9rem;
+  color: var(--muted-foreground);
+  font-size: 0.82rem;
+}
+
+.article-meta time::before {
+  content: "·";
+  margin-right: 1rem;
+}
+
+@media (max-width: 420px) {
+  .article-meta time::before {
+    content: "";
+    margin: 0;
+  }
+}
+
 .shell {
   width: min(1180px, calc(100% - 2rem));
   margin-inline: auto;

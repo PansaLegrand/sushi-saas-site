@@ -1,0 +1,68 @@
+---
+title: 方案、上限与功能权限
+icon: "BadgeCheck"
+description: 自定义 Free、Plus、Max 的能力、组织上限、Stripe 映射、宽限期、叠加订阅和客服例外。
+keywords: [方案, 功能权限, 上限, 订阅, Stripe, SaaS 定价]
+tags: [方案, 计费, 权限]
+author: "Sushi Templates"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-01T00:00:00.000Z"
+---
+
+> 已与 starter 提交 [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8) 同步。
+
+## 唯一的权限入口
+
+路由、组件和领域 service 都不导入 `src/config/plans.ts`，也不比较 `tier === "max"`。调用方通过 `src/services/entitlements.ts` 查询能力或上限：
+
+```ts
+await requireEntitlement(orgUuid, "tasks.text_to_video");
+await enforceLimit(orgUuid, "storage.totalMb", { current, adding });
+const maximum = await limitOf(orgUuid, "storage.maxFileMb");
+```
+
+因此重命名方案或增加第四档不会让分散的条件失效，架构测试会强制这条边界。
+
+## 默认目录
+
+| 能力或上限 | Free | Plus | Max |
+| --- | ---: | ---: | ---: |
+| 组织成员 | 1 | 5 | 20 |
+| 存储上传 | 是 | 是 | 是 |
+| 单文件上限 | 5 MB | 25 MB | 200 MB |
+| 总存储 | 100 MB | 5,000 MB | 50,000 MB |
+| 文本生成视频 | 否 | 是 | 是 |
+| 每月任务 | 0 | 50 | 不限 |
+| 每月包含积分 | 0 | 500 | 2,500 |
+
+`null` 表示不限。注册积分是一次性发放；Free 没有周期性积分任务。
+
+## 有效方案解析
+
+方案属于组织。`subscriptions` 保存 Stripe 或人工订阅的当前状态，`orders` 保存不可变的财务历史。
+
+解析器选择当前有效且 rank 最高的订阅。`active`、`trialing` 有效；`past_due` 有七天宽限期；取消、未支付、不完整、暂停或已过期的周期不授权。
+
+组织可以同时拥有多个订阅。成功周期的积分会叠加，但功能上限只由最高有效档位提供。计费页面会展示全部当前订阅。
+
+## 自定义
+
+1. 在 `src/types/plan.ts` 添加功能或上限名称。
+2. 在 `src/config/plans.ts` 为每个档位定义值。
+3. 在 `src/config/billing.ts` 定义金额、周期、积分、币种和 Stripe Price 映射。
+4. 用 `requireEntitlement` 或 `enforceLimit` 保护服务端操作。
+5. 通过已有 provider 把 `PlanSnapshot` 提供给客户端。
+
+新 checkout 使用服务端 `STRIPE_PRICE_*` 环境变量；旧的 public 别名仅为已有部署和历史订阅保留。
+
+## 降级与例外
+
+降级不会删除数据或成员，只会在用量超出新上限时阻止新的上传、任务或邀请。
+
+客服可设置带审计的组织席位例外，优先级为：
+
+```text
+有效组织例外 → 有效方案上限 → 目录默认值
+```
+
+人工赠送方案是 `source = "manual"` 的普通订阅记录。功能权限决定能否操作，积分账本记录实际消耗。

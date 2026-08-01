@@ -1,0 +1,53 @@
+---
+title: 持久任务与就绪检查
+icon: "ListChecks"
+description: 运维 PostgreSQL 任务队列、Cron runner、重试、去重、存活探针与依赖就绪检查。
+keywords: [后台任务, cron, 队列, readiness, health check, PostgreSQL]
+tags: [任务, 运维, 可靠性]
+author: "Sushi Templates"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-01T00:00:00.000Z"
+---
+
+> 已与 starter 提交 [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8) 同步。
+
+## 为什么任务必须持久化
+
+Serverless 实例可能在响应返回后立刻冻结。必须完成的工作——邮件、积分发放、对象删除、账号导出与删除——会写入 `jobs` 表，而不是交给 `queueMicrotask` 或未等待的 Promise。
+
+当前任务包含欢迎/支付/邀请/预约邮件、注册积分、Slack 事件、存储删除、账号导出、导出过期和账号删除。
+
+## 安全入队
+
+```ts
+await enqueueJob("welcome_email", { email, name, userUuid }, {
+  dedupeKey: `welcome:${userUuid}`,
+  subjectUserUuid: userUuid
+});
+```
+
+`dedupeKey` 保证入队幂等。Subject UUID 让隐私流程能够取消或清理待处理任务。Handler 自身也必须幂等，因为 provider 可能已接受请求而 worker 尚未收到响应。
+
+## Runner 行为
+
+`GET /api/cron/jobs` 由 `Authorization: Bearer $CRON_SECRET` 保护。`vercel.json` 每五分钟调用一次；在其他平台必须自行调度。
+
+Runner 使用 `FOR UPDATE SKIP LOCKED` 每次领取一个任务，允许 Cron 并发运行；租约为五分钟；单 handler 上限 20 秒，整次 drain 40 秒；默认最多尝试五次，从 30 秒开始指数退避；完成记录保留 14 天。它还会清理过期上传预留并扫描卡住的 Stripe 事件。
+
+`CRON_SECRET` 必须与 `BETTER_AUTH_SECRET` 不同，且不能让 Cron 端点无保护暴露。
+
+## 存活与就绪
+
+`GET` 或 `HEAD /api/health` 只检查进程存活，不访问依赖。
+
+`GET /api/ready` 检查生产环境配置、数据库和迁移、Redis 分布式限流以及队列状态。数据库、迁移、Redis 或必需配置失败会返回 503；队列失败只把报告标为 degraded，不会把 Web 服务摘除。
+
+平台频繁探活使用 `/api/health`；部署完成和接收流量前使用 `/api/ready`。
+
+## 运维清单
+
+1. 设置至少 32 随机字节的 `CRON_SECRET`。
+2. 确认调度器每五分钟调用。
+3. 监控 `cron.jobs` 结构化日志。
+4. 对 readiness 非 200 和 failed 队列增长告警。
+5. Job payload 只做向后兼容的增量修改。

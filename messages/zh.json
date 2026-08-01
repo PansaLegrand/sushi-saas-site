@@ -1,10 +1,10 @@
 {
   "metadata": {
-    "title": "Sushi SaaS — 严肃的开源 SaaS 基础架构",
+    "title": "面向生产环境的开源 Next.js SaaS 启动模板",
     "description": "面向生产的 Next.js starter，包含认证、Stripe、组织、积分、存储、任务与独立管理后台。",
     "keywords": ["Next.js SaaS starter", "开源 SaaS", "Stripe 计费", "Better Auth", "Drizzle ORM"]
   },
-  "nav": { "label": "主导航", "docs": "文档", "blog": "工程笔记", "github": "GitHub", "language": "选择语言" },
+  "nav": { "label": "主导航", "docs": "文档", "blog": "博客", "github": "GitHub", "language": "选择语言" },
   "landing": {
     "eyebrow": "MIT 协议 · 面向生产",
     "heroLineOne": "基础设施已经就绪。",
@@ -43,9 +43,9 @@
     },
     "closing": { "title": "从更接近“只有你的公司能构建”的地方开始。", "action": "打开快速开始" }
   },
-  "docs": { "title": "文档", "intro": "Sushi SaaS starter 的实用配置与实现指南。", "empty": "文档正在准备中。" },
-  "blogs": { "title": "工程笔记", "intro": "清晰解释现代 SaaS 背后的架构、取舍和运营思路。", "empty": "暂时没有已发布的笔记。" },
-  "footer": { "label": "页脚导航", "description": "Sushi SaaS 开源 starter 的文档与工程笔记。", "docs": "文档", "blog": "工程笔记", "privacy": "隐私", "terms": "条款" },
+  "docs": { "title": "Next.js SaaS 启动模板文档", "intro": "Sushi SaaS starter 的实用配置与实现指南。", "empty": "文档正在准备中。" },
+  "blogs": { "title": "SaaS 工程博客", "intro": "清晰解释现代 SaaS 背后的架构、取舍和运营思路。", "empty": "暂时没有已发布的文章。" },
+  "footer": { "label": "页脚导航", "description": "Sushi SaaS 开源 starter 的文档与工程文章。", "docs": "文档", "blog": "博客", "privacy": "隐私", "terms": "条款" },
   "privacy": {
     "title": "隐私说明",
     "description": "此文档网站如何处理访客信息。",

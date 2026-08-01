@@ -1,10 +1,10 @@
 {
   "metadata": {
-    "title": "Sushi SaaS — Un socle SaaS open source sérieux",
+    "title": "Starter SaaS Next.js open source, pensé pour la production",
     "description": "Un starter Next.js pensé pour la production avec authentification, Stripe, organisations, crédits, stockage, tâches et console admin.",
     "keywords": ["starter SaaS Next.js", "SaaS open source", "facturation Stripe", "Better Auth", "Drizzle ORM"]
   },
-  "nav": { "label": "Navigation principale", "docs": "Documentation", "blog": "Notes", "github": "GitHub", "language": "Choisir la langue" },
+  "nav": { "label": "Navigation principale", "docs": "Documentation", "blog": "Blog", "github": "GitHub", "language": "Choisir la langue" },
   "landing": {
     "eyebrow": "Licence MIT · Pensé pour la production",
     "heroLineOne": "L’infrastructure est prête.",
@@ -43,9 +43,9 @@
     },
     "closing": { "title": "Commencez plus près de ce que seule votre entreprise peut construire.", "action": "Ouvrir le démarrage rapide" }
   },
-  "docs": { "title": "Documentation", "intro": "Guides pratiques de configuration et d’implémentation du starter Sushi SaaS.", "empty": "La documentation est en préparation." },
-  "blogs": { "title": "Notes de terrain", "intro": "Explications claires sur l’architecture, les compromis et l’exploitation d’un SaaS moderne.", "empty": "Aucune note n’est encore publiée." },
-  "footer": { "label": "Navigation de pied de page", "description": "Documentation et notes d’ingénierie du starter open source Sushi SaaS.", "docs": "Documentation", "blog": "Notes", "privacy": "Confidentialité", "terms": "Conditions" },
+  "docs": { "title": "Documentation du starter SaaS Next.js", "intro": "Guides pratiques de configuration et d’implémentation du starter Sushi SaaS.", "empty": "La documentation est en préparation." },
+  "blogs": { "title": "Blog d’ingénierie SaaS", "intro": "Explications claires sur l’architecture, les compromis et l’exploitation d’un SaaS moderne.", "empty": "Aucun article n’est encore publié." },
+  "footer": { "label": "Navigation de pied de page", "description": "Documentation et articles d’ingénierie du starter open source Sushi SaaS.", "docs": "Documentation", "blog": "Blog", "privacy": "Confidentialité", "terms": "Conditions" },
   "privacy": {
     "title": "Avis de confidentialité",
     "description": "Comment ce site de documentation traite les informations des visiteurs.",

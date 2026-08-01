@@ -32,7 +32,7 @@ export function buildMetadata({
   title,
   description,
   keywords: rawKeywords,
-  image,
+  image = "/og.png",
   noindex,
   type = "website",
   publishedTime,
@@ -41,12 +41,13 @@ export function buildMetadata({
 }: MetadataInput): Metadata {
   const lang = normalizeLocale(locale);
   const canonical = absoluteLocaleUrl(SiteConfig.origin, lang, path);
-  const languages = Object.fromEntries(
+  const languages: Record<string, string> = Object.fromEntries(
     locales.map((available) => [
       available,
       absoluteLocaleUrl(SiteConfig.origin, available, path)
     ])
   );
+  languages["x-default"] = absoluteLocaleUrl(SiteConfig.origin, "en", path);
 
   return {
     metadataBase: new URL(SiteConfig.origin),
@@ -61,16 +62,16 @@ export function buildMetadata({
       description,
       siteName: SiteConfig.name,
       locale: lang,
-      images: image ? [{ url: image }] : undefined,
+      images: [{ url: image, width: 1200, height: 630, alt: title }],
       publishedTime: type === "article" ? publishedTime : undefined,
       modifiedTime: type === "article" ? modifiedTime : undefined,
       authors: type === "article" ? authors : undefined
     },
     twitter: {
-      card: image ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title,
       description,
-      images: image ? [image] : undefined
+      images: [image]
     },
     robots: noindex ? { index: false, follow: true } : undefined
   };

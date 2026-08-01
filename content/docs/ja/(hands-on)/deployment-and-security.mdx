@@ -1,0 +1,28 @@
+---
+title: デプロイとセキュリティ checklist
+icon: "Rocket"
+description: 明示 migration、cron、readiness、信頼ネットワーク、本番 control で Web と admin をデプロイします。
+keywords: [デプロイ, セキュリティ, Vercel, 本番]
+tags: [デプロイ, セキュリティ]
+author: "Sushi Templates"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-01T00:00:00.000Z"
+---
+
+> スターターのコミット [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8) と同期済みです。
+
+Web と `apps/admin` を別 origin の独立 service としてデプロイします。Node `>=20.19.0 <23`、pnpm `10.22.0` で `pnpm lint`、`pnpm test:cov`、`pnpm build` 後、`pnpm db:check:prod` と `pnpm db:migrate:prod` を明示実行します。migration は build で自動実行しません。
+
+## 本番必須 control
+
+- 強い `BETTER_AUTH_SECRET`、正しい URL、本番 PostgreSQL、復元訓練済み backup。
+- Redis 分散 rate limit と明示的に信頼した client IP header/source。
+- Turnstile、demo flag と local auth link log の無効化。
+- `CRON_SECRET` と 5 分ごとの `/api/cron/jobs`（`vercel.json` に設定済み）。
+- 課金時は Stripe live key、検証 webhook、安全な Portal、Price ID。
+- storage 時は非公開 object、最小権限、正しい CORS、短期 signed URL。
+- 検証済み email domain と地域に合う retention/legal policy。
+
+`/api/health` は liveness、`/api/ready` は env、DB、migration、Redis、queue を確認します。queue degraded は traffic が通っても alert 対象です。
+
+本番 HSTS と report-only CSP path があります。report を観測してから依存 host に合う policy を enforce します。デプロイ後は auth、組織隔離、checkout/webhook、cron、export/delete、admin MFA を smoke test し、`DEPLOYMENT.md`、`docs/security-headers.md`、`.env.example` を読んでください。

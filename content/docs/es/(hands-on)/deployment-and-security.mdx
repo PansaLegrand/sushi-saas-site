@@ -1,0 +1,28 @@
+---
+title: Checklist de despliegue y seguridad
+icon: "Rocket"
+description: Despliega web y admin con migraciones explícitas, cron, readiness, red fiable y controles de producción.
+keywords: [despliegue, seguridad, Vercel, producción]
+tags: [despliegue, seguridad]
+author: "Sushi Templates"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-01T00:00:00.000Z"
+---
+
+> Sincronizado con el commit [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8) del starter.
+
+Despliega web y `apps/admin` como servicios con orígenes separados. Usa Node `>=20.19.0 <23` y pnpm `10.22.0`; ejecuta `pnpm lint`, `pnpm test:cov`, `pnpm build` y después `pnpm db:check:prod` y `pnpm db:migrate:prod`. Las migraciones nunca son automáticas.
+
+## Controles obligatorios
+
+- `BETTER_AUTH_SECRET` fuerte, URLs correctas, PostgreSQL productivo y copias con pruebas de restauración.
+- Rate limit distribuido en Redis y fuente/header de IP explícitamente fiable.
+- Turnstile; flags demo y logs de enlaces auth desactivados.
+- `CRON_SECRET` y `/api/cron/jobs` cada cinco minutos (`vercel.json` lo incluye).
+- Stripe live, webhook, Portal seguro y Price IDs si hay facturación.
+- Objetos privados, mínimo privilegio, CORS correcto y URLs breves si hay storage.
+- Dominio de correo verificado y política legal/retención revisada.
+
+Usa `/api/health` para vida y `/api/ready` para entorno, base, migraciones, Redis y cola. Una cola degradada requiere alerta aunque sirva tráfico.
+
+Hay HSTS en producción y ruta CSP report-only. Observa reportes antes de aplicar una política compatible. Tras desplegar prueba auth, aislamiento, checkout/webhooks, cron, exportación/borrado y MFA admin. Lee `DEPLOYMENT.md`, `docs/security-headers.md` y `.env.example`.

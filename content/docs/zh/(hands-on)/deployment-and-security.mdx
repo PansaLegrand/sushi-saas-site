@@ -1,0 +1,28 @@
+---
+title: 部署与安全清单
+icon: "Rocket"
+description: 通过显式迁移、Cron、readiness、可信网络与生产安全控制部署 Web 和管理应用。
+keywords: [部署, 安全, Vercel, 生产]
+tags: [部署, 安全]
+author: "Sushi Templates"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-01T00:00:00.000Z"
+---
+
+> 已与启动模板提交 [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8) 同步。
+
+将 Web 与 `apps/admin` 作为不同来源的独立服务部署。使用 Node `>=20.19.0 <23` 和 pnpm `10.22.0`，运行 `pnpm lint`、`pnpm test:cov`、`pnpm build`，再显式执行 `pnpm db:check:prod` 与 `pnpm db:migrate:prod`。迁移绝不是自动 build 步骤。
+
+## 生产必备控制
+
+- 强 `BETTER_AUTH_SECRET`、正确 URL、生产 PostgreSQL，以及经过恢复演练的备份。
+- Redis 分布式限流和明确可信的客户端 IP header/来源。
+- 认证流程 Turnstile；关闭 demo 与本地认证链接日志。
+- `CRON_SECRET`，并每五分钟调用 `/api/cron/jobs`（`vercel.json` 已含计划）。
+- 启用计费时使用 Stripe live key、已验证 webhook、安全 Portal 与 Price ID。
+- 启用存储时保持对象私有、最小权限凭据、正确 CORS 与短期签名 URL。
+- 验证邮件域，并按所在地审查数据保留和法律策略。
+
+`/api/health` 用于存活，`/api/ready` 用于部署就绪；后者检查环境、数据库、迁移、Redis 与队列，队列降级即使不阻断请求也需告警。
+
+安全 header 包含生产 HSTS 和 report-only CSP 路径。先观察报告，再按分析、验证码、支付和存储 host 收紧策略。部署后 smoke-test 认证、组织隔离、结账/webhook、Cron、导出/删除与管理端 MFA。上线前阅读模板 `DEPLOYMENT.md`、`docs/security-headers.md` 和 `.env.example`。

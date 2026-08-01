@@ -1,0 +1,52 @@
+---
+title: Plans, limites et droits
+icon: "BadgeCheck"
+description: Personnaliser les capacités Free, Plus et Max, limites d’organisation, mappages Stripe, grâce, abonnements cumulés et exceptions support.
+keywords: [plans, droits, limites, abonnements, Stripe, tarification SaaS]
+tags: [plans, facturation, droits]
+author: "Sushi Templates"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-01T00:00:00.000Z"
+---
+
+> Synchronisé avec le commit [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8) du starter.
+
+## Une seule porte pour les droits
+
+Aucune route ni composant n’importe `src/config/plans.ts` ou ne compare `tier === "max"`. Les appelants interrogent `src/services/entitlements.ts` :
+
+```ts
+await requireEntitlement(orgUuid, "tasks.text_to_video");
+await enforceLimit(orgUuid, "storage.totalMb", { current, adding });
+```
+
+Renommer un plan ou ajouter un quatrième niveau ne casse donc pas des conditions dispersées. Les tests d’architecture imposent cette frontière.
+
+## Catalogue par défaut
+
+| Capacité ou limite | Free | Plus | Max |
+| --- | ---: | ---: | ---: |
+| Membres | 1 | 5 | 20 |
+| Upload | Oui | Oui | Oui |
+| Fichier maximal | 5 Mo | 25 Mo | 200 Mo |
+| Stockage total | 100 Mo | 5 000 Mo | 50 000 Mo |
+| Texte vers vidéo | Non | Oui | Oui |
+| Tâches mensuelles | 0 | 50 | Illimité |
+| Crédits mensuels | 0 | 500 | 2 500 |
+
+`null` signifie illimité. Les crédits d’inscription sont une attribution unique ; Free n’a pas de tâche récurrente.
+
+## Résolution du plan
+
+Les plans appartiennent à l’organisation. `subscriptions` contient l’état courant et `orders` l’historique financier immuable. Le resolver choisit l’abonnement valide de rang le plus élevé. `active` et `trialing` donnent accès ; `past_due` dispose de sept jours de grâce.
+
+Une organisation peut cumuler des abonnements : leurs crédits s’ajoutent, mais seul le niveau effectif le plus haut fournit les limites. L’écran de facturation affiche tous les abonnements courants.
+
+## Personnaliser
+
+1. Ajouter les noms dans `src/types/plan.ts`.
+2. Définir chaque valeur pour tous les niveaux dans `src/config/plans.ts`.
+3. Garder montants, intervalles, crédits, devises et Prices dans `src/config/billing.ts`.
+4. Protéger l’opération avec `requireEntitlement` ou `enforceLimit`.
+
+Les nouveaux checkouts utilisent les variables serveur `STRIPE_PRICE_*`. Un downgrade ne supprime ni données ni membres. Le support peut appliquer une exception de sièges auditée ; un comp manuel est une ligne `subscriptions` avec `source = "manual"`.

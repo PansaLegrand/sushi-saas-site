@@ -1,0 +1,70 @@
+---
+title: Plans, Limits, and Entitlements
+icon: "BadgeCheck"
+description: Customize Free, Plus, and Max capabilities, organization limits, Stripe mappings, grace periods, stacked subscriptions, and support overrides.
+keywords: [plans, entitlements, limits, subscriptions, Stripe, SaaS pricing]
+tags: [plans, billing, entitlements]
+author: "Sushi Templates"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-01T00:00:00.000Z"
+---
+
+> Synced with starter commit [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8).
+
+## One Entitlement Door
+
+No route, component, or domain service imports `src/config/plans.ts` or compares `tier === "max"`. Callers ask for a capability or limit through `src/services/entitlements.ts`:
+
+```ts
+await requireEntitlement(orgUuid, "tasks.text_to_video");
+await enforceLimit(orgUuid, "storage.totalMb", { current, adding });
+const maximum = await limitOf(orgUuid, "storage.maxFileMb");
+```
+
+This keeps authorization stable when a tier is renamed or a fourth tier is added. Architecture tests enforce the boundary.
+
+## Default Catalog
+
+| Capability or limit | Free | Plus | Max |
+| --- | ---: | ---: | ---: |
+| Organization members | 1 | 5 | 20 |
+| Storage upload | Yes | Yes | Yes |
+| Maximum file | 5 MB | 25 MB | 200 MB |
+| Total storage | 100 MB | 5,000 MB | 50,000 MB |
+| Text-to-video | No | Yes | Yes |
+| Tasks per month | 0 | 50 | Unlimited |
+| Included monthly credits | 0 | 500 | 2,500 |
+
+`null` means unlimited. Signup credits are a separate one-time grant; Free has no recurring allowance job.
+
+## How the Effective Plan Is Resolved
+
+Plans belong to the organization. `subscriptions` stores current Stripe or manual subscription state, while `orders` remains the immutable financial history.
+
+The resolver selects the highest-ranked currently entitling subscription. `active` and `trialing` entitle; `past_due` receives a seven-day grace period; canceled, unpaid, incomplete, paused, or expired periods do not.
+
+An organization may hold multiple subscriptions. All their successful period grants remain additive, but only the highest effective tier supplies feature limits. The billing screen shows every current subscription so parallel charges are not hidden.
+
+## Customize the Catalog
+
+1. Add feature and limit names to `src/types/plan.ts`.
+2. Define a value for every tier in `src/config/plans.ts`.
+3. Put commercial amounts, intervals, credit grants, currencies, and Price mappings in `src/config/billing.ts`.
+4. Guard the server operation with `requireEntitlement` or `enforceLimit`.
+5. Expose the serialized `PlanSnapshot` to client UI through the existing provider.
+
+New checkout uses server-only `STRIPE_PRICE_*` environment variables. Legacy public aliases remain read for existing deployments and grandfathered subscriptions.
+
+## Downgrades and Overrides
+
+Downgrades never delete data or members. Creation-time checks block new uploads, tasks, or invitations until usage falls within the new limit.
+
+Support can set an audited organization seat override without changing billing. The precedence is:
+
+```text
+active organization override → effective plan limit → catalog default
+```
+
+Manual comps are normal `subscriptions` rows with `source = "manual"`; they follow the same resolver as paid subscriptions.
+
+Credits meter consumption after a capability is allowed. Entitlements decide whether an action is available; the credit ledger records how much it consumed.

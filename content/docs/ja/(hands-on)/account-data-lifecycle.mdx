@@ -1,0 +1,34 @@
+---
+title: アカウントのデータ出力と消去
+icon: "ShieldCheck"
+description: プライバシー台帳、認証付き出力、遅延消去、外部 provider の削除、仮名化、取消保護を設定します。
+keywords: [アカウント削除, データエクスポート, プライバシー, 消去, GDPR, 保持]
+tags: [プライバシー, アカウント, ライフサイクル]
+author: "Sushi Templates"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-01T00:00:00.000Z"
+---
+
+> starter のコミット [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8) に同期しています。本番前に法務担当者と保持設定を確認してください。
+
+## テストされるデータ台帳
+
+`src/config/account-data-policy.ts` は全 DB 表を削除、仮名化、保持、非個人情報のいずれかに分類し、出力対象かを定義します。テストが `src/db/schema.ts` と照合するため、判断なしに表を追加すると build が失敗します。
+
+認証情報、password hash、session、verification token、TOTP secret は出力しません。財務、監査、ledger、共有 workspace の記録は識別子置換後に保持できます。
+
+## エクスポート
+
+`POST /api/account/data-export` は認証、same-origin、rate limit、`Idempotency-Key` を要求し、202 で job を登録します。`GET /api/account/data-export/{requestUuid}` で確認します。
+
+完了後は五分有効の manifest と private file の署名 URL を返します。出力物は private のまま、既定で七日後に失効します。
+
+## 消去
+
+`POST /api/account/deletion` は 15 分以内の新しい session も必要です。既定の猶予は七日で、`DELETE` で取消、`GET` で状態確認できます。
+
+共有組織の最後の owner、または最後の完全管理者は先に移管が必要です。猶予後、worker は認証を失効し、Stripe を解約し、個人 workspace の object と外部出力を削除し、削除可能な行を消し、保持対象の注文・クレジット・予約・監査を仮名化します。
+
+`src/config/account-lifecycle.ts` が猶予、保持、新 session、Stripe Customer 削除、blocklist、署名 URL 時間を制御します。これらは法的助言ではありません。
+
+Private storage と cron を維持し、新 provider には削除 hook を追加し、新表と同時に policy を更新してください。使い捨てアカウントで全フローを試し、出力内容や署名 URL をログに残さないでください。

@@ -57,7 +57,7 @@ const nextConfig = {
     ];
   },
   async redirects() {
-    return MOVED_TO_DOCS.flatMap((slug) => [
+    const contentMoves = MOVED_TO_DOCS.flatMap((slug) => [
       ...locales.map((locale) => ({
         source: `/${locale}/blogs/${slug}`,
         destination:
@@ -70,6 +70,20 @@ const nextConfig = {
         permanent: true
       }
     ]);
+
+    return [
+      ...contentMoves,
+      {
+        source: `/${defaultLocale}`,
+        destination: "/",
+        permanent: true
+      },
+      {
+        source: `/${defaultLocale}/:path*`,
+        destination: "/:path*",
+        permanent: true
+      }
+    ];
   }
 };
 

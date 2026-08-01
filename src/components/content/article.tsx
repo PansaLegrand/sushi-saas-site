@@ -10,6 +10,14 @@ import { buildMetadata } from "@/lib/seo";
 type ContentKind = "docs" | "blogs";
 type PageParams = { slug?: string[]; locale?: string };
 
+const collectionNames: Record<string, Record<ContentKind, string>> = {
+  en: { docs: "Documentation", blogs: "Blog" },
+  zh: { docs: "文档", blogs: "博客" },
+  es: { docs: "Documentación", blogs: "Blog" },
+  fr: { docs: "Documentation", blogs: "Blog" },
+  ja: { docs: "ドキュメント", blogs: "ブログ" }
+};
+
 function values(value: unknown): string[] | undefined {
   if (Array.isArray(value)) return value.filter((item) => typeof item === "string");
   if (typeof value === "string") return [value];
@@ -71,16 +79,61 @@ export function Article({
   const locale = normalizeLocale(params.locale);
   const url = absoluteLocaleUrl(SiteConfig.origin, locale, `/${kind}/${slug}`);
   const authors = values(data.authors) ?? values(data.author);
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": kind === "docs" ? "TechArticle" : "BlogPosting",
+  const image = new URL(data.image ?? "/og.png", SiteConfig.origin).toString();
+  const isAboutPage = kind === "blogs" && slug === "about";
+  const collectionName = collectionNames[locale]?.[kind] ?? collectionNames.en[kind];
+  const collectionUrl = absoluteLocaleUrl(SiteConfig.origin, locale, `/${kind}`);
+  const article = {
+    "@type": isAboutPage ? "AboutPage" : kind === "docs" ? "TechArticle" : "BlogPosting",
+    "@id": `${url}#article`,
     headline: page.data.title,
     description: page.data.description,
-    datePublished: data.publishedAt,
-    dateModified: data.updatedAt ?? data.publishedAt,
+    image: isAboutPage ? undefined : [image],
+    datePublished: isAboutPage ? undefined : data.publishedAt,
+    dateModified: isAboutPage ? undefined : data.updatedAt ?? data.publishedAt,
     inLanguage: locale,
-    author: authors?.map((name) => ({ "@type": "Person", name })),
-    mainEntityOfPage: url
+    author: isAboutPage
+      ? undefined
+      : authors?.map((name) => ({
+          "@type": "Person",
+          name,
+          url: absoluteLocaleUrl(SiteConfig.origin, locale, "/blogs/about")
+        })),
+    publisher: {
+      "@type": "Organization",
+      name: SiteConfig.name,
+      url: SiteConfig.origin
+    },
+    mainEntityOfPage: { "@type": "WebPage", "@id": url }
+  };
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      article,
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: SiteConfig.name,
+            item: absoluteLocaleUrl(SiteConfig.origin, locale)
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: collectionName,
+            item: collectionUrl
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: page.data.title,
+            item: url
+          }
+        ]
+      }
+    ]
   };
 
   return (
@@ -91,6 +144,20 @@ export function Article({
     >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
+      {!isAboutPage && (authors?.length || data.updatedAt || data.publishedAt) ? (
+        <div className="article-meta">
+          {authors?.length ? <span>{authors.join(", ")}</span> : null}
+          {data.updatedAt ?? data.publishedAt ? (
+            <time dateTime={data.updatedAt ?? data.publishedAt}>
+              {new Intl.DateTimeFormat(locale, {
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+              }).format(new Date(data.updatedAt ?? data.publishedAt))}
+            </time>
+          ) : null}
+        </div>
+      ) : null}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

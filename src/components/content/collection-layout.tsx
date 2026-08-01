@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { getTranslations } from "next-intl/server";
 import { RootProvider } from "fumadocs-ui/provider";
 import { DocsLayout } from "fumadocs-ui/layouts/notebook";
-import { localeNames, locales, normalizeLocale } from "@/i18n/locale";
+import { localeNames, localePath, locales, normalizeLocale } from "@/i18n/locale";
 import { SiteConfig } from "@/config/site";
 
 export async function CollectionLayout({
@@ -31,11 +31,19 @@ export async function CollectionLayout({
         tree={source.pageTree[lang] ?? { name: "", children: [] }}
         nav={{
           title: SiteConfig.name,
-          url: "/"
+          url: localePath(lang)
         }}
         links={[
-          { text: t("docs"), url: "/docs", active: "nested-url" },
-          { text: t("blog"), url: "/blogs", active: "nested-url" },
+          {
+            text: t("docs"),
+            url: localePath(lang, "/docs"),
+            active: "nested-url"
+          },
+          {
+            text: t("blog"),
+            url: localePath(lang, "/blogs"),
+            active: "nested-url"
+          },
           {
             text: t("github"),
             url: SiteConfig.repositoryUrl,
