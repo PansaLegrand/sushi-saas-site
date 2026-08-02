@@ -1,0 +1,43 @@
+---
+title: Autenticación de clientes
+icon: "ShieldCheck"
+description: Elige los métodos de acceso de tus clientes y protege la consola de operadores con MFA y roles de plataforma.
+keywords: [Better Auth, autenticación, administración, MFA]
+tags: [autenticación, administración, seguridad]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Verificado con el commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) del starter.
+
+Esta configuración ofrece al cliente registro, email verificado, acceso, recuperación, sesiones y un espacio de organización. El personal de confianza usa una consola separada que exige a la vez un rol de plataforma y MFA.
+
+Sushi SaaS usa Better Auth para email/contraseña y doble factor. Google OAuth está integrado, pero es opcional. Se incluyen membresía, invitaciones y un selector de espacio basado en parámetros de consulta; no hay equipos anidados, roles personalizados ni rutas con el slug de la organización.
+
+## Elige tu superficie de autenticación
+
+| Opción | Comportamiento incluido | Qué configuras |
+| --- | --- | --- |
+| Email/contraseña | Verificación y recuperación activas | Resend y el dominio remitente en producción |
+| Google OAuth | Se activa al añadir credenciales | Client ID, secreto y callback de Google |
+| CAPTCHA | Turnstile activo por defecto | Claves reales o `NEXT_PUBLIC_CAPTCHA_ENABLED=false` explícito |
+| 2FA de clientes | Disponible en ajustes | Decide si será obligatorio para clientes |
+| Acceso admin | Roles separados `admin_ro` / `admin_rw`, MFA obligatorio | Origen dedicado y lista mínima de operadores |
+
+Configura `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_AUTH_BASE_URL` y la URL web. La autenticación de producción también necesita rate limiting en Redis y una fuente de IP fiable. Resend entrega correos; en local se pueden registrar enlaces si falta proveedor o `AUTH_DEV_EMAIL_LINKS=true`, valor rechazado en producción.
+
+## Identidad y permisos
+
+- El ID string de Better Auth autentica; `user.uuid` es la identidad pública de dominio.
+- Email y proveedor son únicos, pero nunca se autoriza por email.
+- Roles de organización (`owner`, `admin`, `member`) permiten acciones; entitlements controlan funciones y límites.
+- Las rutas autentican antes de consultar y el cliente traduce códigos estables, nunca mensajes internos.
+
+## Administración separada
+
+`pnpm dev:admin` usa el puerto 3001. Despliega `apps/admin` aparte, con origen y URL de auth propios. Promueve operadores con `pnpm admin:promote`: `admin_ro` lee y `admin_rw` modifica. Se exige MFA y las escrituras generan auditoría. Los roles de organización no son roles de plataforma.
+
+Antes de lanzar prueba alta, verificación, acceso, recuperación, callback Google si se usa, revocación de sesiones, MFA y ambos permisos admin. El éxito no es solo que cargue la página: una petición sin autenticar no debe leer datos privados, `admin_ro` no debe escribir y cada cambio de `admin_rw` debe aparecer en auditoría. Sigue la guía específica de [Configuración y acceso a la consola](/es/docs/admin-console-setup) para el despliegue y el alta de operadores.
+
+**Para decidir:** compara el recorrido incluido con las alternativas de sesión, OAuth y MFA en [Autenticación web dentro de Sushi SaaS](/es/blogs/web-authentication-deep-dive).

@@ -1,0 +1,68 @@
+---
+title: Planes, límites y entitlements
+icon: "BadgeCheck"
+description: Convierte el catálogo Free, Plus y Max en tu modelo de precios sin dispersar comprobaciones de nivel por la aplicación.
+keywords: [planes, entitlements, límites, suscripciones, Stripe, precios SaaS]
+tags: [planes, facturación, entitlements]
+author: "Sushi SaaS"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Verificado con el commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) del starter.
+
+Empieza aquí al sustituir los precios de demostración. Decide qué acciones permite cada plan, qué cantidades limita y qué ocurre ante un pago fallido o un downgrade. El starter aporta un catálogo y una única frontera de aplicación para que todo sea coherente.
+
+## Una sola puerta de entitlements
+
+Ninguna ruta o componente importa `src/config/plans.ts` ni compara `tier === "max"`. Se pregunta por capacidad o límite a `src/services/entitlements.ts`:
+
+```ts
+await requireEntitlement(orgUuid, "tasks.text_to_video");
+await enforceLimit(orgUuid, "storage.totalMb", { current, adding });
+```
+
+Así, renombrar un plan o añadir un cuarto nivel no rompe condiciones dispersas. Las pruebas de arquitectura imponen esta frontera.
+
+## Catálogo predeterminado
+
+Son valores funcionales, no una recomendación comercial. Renombra niveles, cambia cifras o añade otro antes del lanzamiento, pero define cada capacidad para cada nivel.
+
+| Capacidad o límite | Free | Plus | Max |
+| --- | ---: | ---: | ---: |
+| Miembros | 1 | 5 | 20 |
+| Subidas | Sí | Sí | Sí |
+| Archivo máximo | 5 MB | 25 MB | 200 MB |
+| Almacenamiento total | 100 MB | 5.000 MB | 50.000 MB |
+| Texto a vídeo | No | Sí | Sí |
+| Tareas mensuales | 0 | 50 | Sin límite |
+| Créditos mensuales | 0 | 500 | 2.500 |
+
+`null` significa ilimitado. Los créditos de registro son una concesión única; Free no tiene una tarea recurrente.
+
+## Resolución del plan
+
+Los planes pertenecen a la organización. `subscriptions` guarda el estado actual y `orders` el historial financiero inmutable. El resolver elige la suscripción vigente de mayor rango. `active` y `trialing` dan acceso; `past_due` tiene siete días de gracia.
+
+Una organización puede tener varias suscripciones: sus créditos se suman, pero solo el nivel efectivo más alto define los límites. La pantalla de facturación muestra todas las suscripciones actuales.
+
+## Personalizar
+
+1. Añade nombres en `src/types/plan.ts`.
+2. Define cada valor para todos los niveles en `src/config/plans.ts`.
+3. Mantén importes, intervalos, créditos, monedas y Prices en `src/config/billing.ts`.
+4. Protege la operación con `requireEntitlement` o `enforceLimit`.
+
+Toma explícitamente tres decisiones:
+
+1. **Paquetización:** qué capacidades son puertas de plan y cuáles se miden con créditos.
+2. **Fallo de pago:** conservar los siete días de gracia `past_due` o aplicar otra política.
+3. **Cambios de plan:** conservar suscripciones independientes acumulables o diseñar y probar upgrades, prorrateos y ajustes de créditos antes de habilitarlos.
+
+Los nuevos checkouts usan variables privadas `STRIPE_PRICE_*`; los alias públicos antiguos solo mantienen despliegues y suscripciones existentes.
+
+Los downgrades no eliminan datos ni miembros. Soporte puede aplicar una excepción de plazas auditada. Los comps manuales son filas normales de `subscriptions` con `source = "manual"`.
+
+Publica precios solo cuando las tarjetas públicas, los Prices de Stripe, la configuración, las pruebas de entitlement y el downgrade describan la misma oferta. Verifica Free, cada plan de pago, `past_due` dentro y fuera de gracia, un comp manual y una organización por encima del nuevo límite tras bajar de plan.
+
+**Siguiente paso:** usa [Facturación con Stripe](/es/docs/stripe-setup) para cobrar esos planes y el [Libro mayor de créditos](/es/docs/account-ledger) para medir su consumo.

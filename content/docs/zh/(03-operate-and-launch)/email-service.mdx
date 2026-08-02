@@ -1,0 +1,32 @@
+---
+title: 事务邮件
+icon: "Mail"
+description: 配置 Resend、React Email 模板、安全的本地认证链接与持久发送任务。
+keywords: [Resend, React Email, 邮件, 任务]
+tags: [邮件, 运维]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> 已与启动模板提交 [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) 同步。
+
+在启用邮箱验证、找回密码、账单通知、组织邀请或预约确认前阅读本页。Sushi SaaS 提供的是一个明确方案——Resend + React Email，而不是多供应商抽象。你可以直接采用，也可以替换 `src/services/email/send.ts`，同时保留模板和调用契约。
+
+## 决定用户应该收到哪些邮件
+
+- 验证一个发信域名，并选择用户能识别的 `EMAIL_FROM`；SPF、DKIM、DMARC 是功能的一部分，不是后续美化。
+- 验证和重置密码链接在认证请求中直接发送，因为用户正在等待；欢迎、账单、邀请和预约邮件使用持久任务，可以稍后到达。
+- 本地开发可把认证链接打印到日志；生产环境会明确拒绝这种模式。
+
+**可以上线的标准：** 真实邮箱能收到所有已启用模板，链接回到正确语言和域名，任务重复执行只产生一次供应商投递，供应商拒绝会出现在队列/readiness 监控中。
+
+Resend 与 React Email 已集成。设置 `RESEND_API_KEY` 和已验证的 `EMAIL_FROM`，并为生产配置 SPF、DKIM 与 DMARC。
+
+现有模板覆盖验证邮箱、重置密码、欢迎、支付成功/失败、预约确认和组织邀请。在 `src/services/email/` 定制模板，发送编排留在 service。
+
+本地没有供应商或 `AUTH_DEV_EMAIL_LINKS=true` 时可以记录认证链接；生产会拒绝该开关。产品邮件作为持久任务入队，并使用 job UUID 作为供应商幂等键，重试不会重复发送。确保 `/api/cron/jobs` 运行，并监控 readiness 降级和耗尽重试的任务。
+
+不要在 route 中 fire-and-forget Promise，也不要添加公开测试邮件接口。领域写入成功后再入队，payload 不含秘密和不必要个人数据，并测试供应商失败、重试、重复执行、blocklist 与多语言链接。
+
+**下一步：** 在生产环境依赖欢迎、计费、邀请或预约邮件前，先配置[持久任务与就绪检查](/zh/docs/jobs-and-readiness)。

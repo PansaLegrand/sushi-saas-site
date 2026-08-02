@@ -1,51 +1,69 @@
 ---
 title: "Comment Sushi SaaS est structuré"
 icon: "Blocks"
-description: "Un parcours des couches routes, services, modèles et base de données imposées par le starter, ainsi que de l’application admin séparée."
+description: "Comprendre les couches imposées, leurs compromis et comment ajouter une fonctionnalité sans créer une seconde architecture."
 tags: [architecture, nextjs, starter]
 author: "Sushi SaaS"
 publishedAt: "2025-10-07T00:00:00.000Z"
 updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-Sushi SaaS suit une règle centrale : les données descendent à travers des couches explicites. Ce n’est pas une simple convention de dossiers ; les tests d’architecture refusent les imports qui franchissent la frontière.
+Ce guide aide les adoptants à placer leur première fonctionnalité produit. Sushi SaaS applique une architecture horizontale à tous les domaines et des tests en imposent les règles.
 
-## Le parcours dans l’application
+## Le parcours d’une requête
 
 ```text
-src/app/**       routes et pages
+src/app/**       routes et pages — HTTP entrant et sortant
   ↓
-src/services/**  règles métier et orchestration
+src/services/**  règles métier, orchestration, invariants
   ↓
-src/models/**    persistance typée
+src/models/**    persistance typée ; seule couche appelant db()
   ↓
-src/db/**        schéma, migrations et connexion
+src/db/**        schéma, migrations, connexion
 ```
 
-Les routes traduisent HTTP. Les services portent les invariants : idempotence, autorisation, règles du registre et effets externes. Les modèles sont la seule couche applicative autorisée à appeler `db()`. Les contraintes de la base forment la dernière frontière face à la concurrence.
+Une route analyse et répond. Un service décide si l’action est autorisée et coordonne les effets. Un modèle possède les lectures et écritures. Les contraintes de base restent la dernière protection contre les requêtes concurrentes.
 
-Le navigateur suit une séparation comparable : les Server Components appellent les services directement ; les Client Components passent par `src/api/**` et le client API commun. Cela évite au serveur de s’appeler lui-même en HTTP et empêche chaque composant de réinventer la gestion des réponses.
+Le navigateur suit une autre frontière :
 
-[Architecture et contrats d’erreur](/docs/architecture-and-errors) détaille ces règles exécutables.
+```text
+Server Component  → service directement
+Client Component  → src/api/** → client API partagé → /api/**
+```
 
-## Tous les domaines suivent les mêmes couches
+Cela évite au serveur un appel HTTP vers lui-même et donne aux erreurs client un contrat unique. Les règles exactes figurent dans [Architecture et contrats d’erreur](/fr/docs/architecture-and-errors).
 
-Organisations, facturation, crédits, stockage, réservations et tâches ne sont pas des mini-applications isolées. Chaque domaine traverse les mêmes couches. Une dépense de crédits entre par une route, devient autorisée et idempotente dans les services, est persistée par un modèle et protégée par les contraintes du registre.
+## Pourquoi des couches horizontales
 
-Cette cohérence donne une place unique à chaque responsabilité. [Organisations et équipes](/docs/organizations-and-teams) montre comment le tenant suit cette structure.
+Facturation, crédits, stockage, réservations et tâches ont tous besoin d’authentification, de scope tenant, d’erreurs et de persistance. Les mêmes couches rendent chaque responsabilité prévisible et permettent aux tests de détecter les raccourcis.
 
-## La console admin est une application séparée
+En contrepartie, une fonctionnalité se répartit entre plusieurs dossiers. Un dossier vertical par feature peut être plus lisible dans un grand produit ; mélanger les deux structures est toutefois pire, car chaque nouvelle requête ou règle a deux emplacements plausibles.
 
-`apps/admin` est une application Next.js autonome avec ses pages, APIs, accès aux données, contrôle MFA et rôles lecture/écriture. Elle partage le schéma et l’authentification centrale, mais peut être déployée sur une autre origine afin d’isoler les routes opérateur.
+### Vos options
 
-Lisez [Configuration et accès à la console admin](/docs/admin-console-setup) avant son déploiement.
+- **Garder la structure livrée** pour une petite équipe qui veut des conventions fortes et une infrastructure commune.
+- **Passer entièrement aux tranches verticales** si c’est la norme de l’équipe. Déplacez des domaines complets et adaptez `tests/unit/architecture.test.ts` ; n’ajoutez pas un îlot `src/features` à côté des règles actuelles.
+- **Simplifier pour un prototype temporaire** en acceptant une migration ultérieure. Si les routes écrivent directement en base, modifiez explicitement le test au lieu d’empiler des exceptions.
 
-## Frontières à conserver
+## La tenancy est aussi un choix d’architecture
 
-- Placez les invariants métier dans un service, pas dans une route.
-- Placez l’accès à la base dans un modèle, pas dans un composant ou service.
-- Vérifiez des capacités plutôt que des noms d’offres.
-- Gardez requêtes et endpoints administratifs dans `apps/admin`.
-- Mettez à jour les runbooks versionnés lorsqu’un contrat change.
+Chaque utilisateur reçoit une organisation personnelle. Un client seul et une équipe utilisent ainsi les mêmes facturation, crédits, fichiers et limites au scope organisation, sans deux chemins parallèles « utilisateur » et « équipe ».
 
-Ce guide a été vérifié avec le [commit `7580470` du starter](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470).
+Gardez ce modèle si des équipes sont possibles. Pour un produit toujours mono-utilisateur, retirer les organisations est valide, mais coordonne autorisation, schéma, modèles, facturation, stockage et tests ; ce n’est pas un simple toggle UI. Lisez [Organisations et équipes](/fr/docs/organizations-and-teams) avant de décider.
+
+## Pourquoi l’admin est séparé
+
+`apps/admin` possède pages, APIs, accès aux données, barrière MFA et rôles opérateur. Il partage schéma et auth, mais peut tourner sur une autre origine. Le coût est un build et un déploiement supplémentaires ; le bénéfice, une frontière opérateur claire.
+
+Vous pouvez le fusionner avec l’application client pour un déploiement unique. Conservez l’autorisation admin côté serveur et l’audit : masquer la navigation n’est pas une mesure de sécurité. Commencez par [Configurer la console d’administration](/fr/docs/admin-console-setup).
+
+## Ajouter votre premier domaine
+
+1. Définissez vocabulaire et limites dans `src/types` et `src/config`.
+2. Ajoutez schéma et migration expand-safe dans `src/db`.
+3. Placez le CRUD typé dans `src/models`.
+4. Placez autorisation, idempotence et effets dans `src/services`.
+5. Ajoutez route ou Server Component dans `src/app` ; utilisez `src/api` côté client.
+6. Testez la règle service, la barrière auth de la route et les replays pour argent ou crédits.
+
+Testez les capabilities plutôt que le nom du plan et mettez à jour le runbook si le contrat change. Ce guide reflète le [commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470).

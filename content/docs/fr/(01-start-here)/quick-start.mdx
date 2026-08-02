@@ -1,0 +1,65 @@
+---
+title: Démarrage rapide
+icon: "Zap"
+description: Lancez localement l’application web, la console admin, PostgreSQL et Redis, puis choisissez les services de votre production.
+keywords: [démarrage rapide, installation, Next.js, pnpm, Docker]
+tags: [installation, développement local]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Vérifié avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) du starter.
+
+À la fin de cette page, l’application client tournera sur le port 3000, la console opérateur optionnelle sur le port 3001, les bases de développement et de test seront migrées et Redis fonctionnera en local. Stripe, Resend et le stockage objet ne sont pas nécessaires pour explorer le produit localement.
+
+## Ce qui est livré et ce que vous choisissez
+
+| Zone | Valeur livrée | Votre décision |
+| --- | --- | --- |
+| Infrastructure locale | Docker Compose lance PostgreSQL et Redis | Garder Docker ou pointer `.env` vers vos services |
+| Application client | Application Next.js en cinq langues | Choisir marque, URL et langues actives |
+| Console admin | Application séparée via `pnpm dev:admin` | La déployer uniquement pour des opérateurs de confiance, sur une origine dédiée |
+| Intégrations | Adaptateurs Stripe, Resend, Slack et S3 présents | Choisir les fournisseurs et identifiants avant la production |
+
+## Prérequis
+
+- Node.js `>=20.19.0 <23`
+- pnpm `10.22.0`
+- Docker Compose pour PostgreSQL et Redis par défaut
+
+## Lancement local
+
+```bash
+git clone https://github.com/PansaLegrand/sushi-saas-template.git
+cd sushi-saas-template
+pnpm install
+pnpm setup
+pnpm dev
+```
+
+`pnpm setup` est idempotent : il ne crée `.env` que s’il est absent, démarre PostgreSQL et Redis, crée des bases de développement et de test isolées, puis applique les migrations versionnées. Il n’écrase jamais un `.env` existant.
+
+Ouvrez `http://localhost:3000`. Lancez `pnpm dev:admin` pour l’application d’administration indépendante sur `http://localhost:3001`.
+
+## Vérification
+
+```bash
+curl http://localhost:3000/api/health
+curl http://localhost:3000/api/ready
+pnpm lint
+pnpm test:run
+pnpm build
+```
+
+`/api/health` teste la vivacité ; `/api/ready` vérifie configuration, base et migrations, Redis et file de jobs.
+
+## Adaptez-le à votre produit
+
+Le `.env` généré contient des valeurs locales sûres. Utilisez [Personnaliser votre produit](/fr/docs/customize-your-product) pour définir le nom, les URL, les langues, le style, l’identité juridique et les systèmes optionnels à conserver.
+
+Le validateur de production actuel exige le stack complet : PostgreSQL, Redis avec une source d’IP fiable, un `BETTER_AUTH_SECRET` robuste, `CRON_SECRET`, les clés Stripe et les quatre Price IDs récurrents par défaut, une configuration Billing Portal sûre, Resend et un stockage compatible S3. Turnstile est actif par défaut ; fournissez de vraies clés ou désactivez-le explicitement avec `NEXT_PUBLIC_CAPTCHA_ENABLED=false`. Slack reste optionnel. Si votre produit retire une intégration, retirez dans le même changement sa validation de production et l’interface dépendante au lieu de laisser une valeur vide apparemment optionnelle.
+
+Vous pouvez continuer lorsque les deux endpoints de santé répondent, qu’un compte local peut s’inscrire et que `pnpm test:run` ainsi que `pnpm build` réussissent.
+
+Continuez avec la [Personnalisation](/fr/docs/customize-your-product), [Architecture et erreurs](/fr/docs/architecture-and-errors), [Base de données](/fr/docs/database-setup) et [Authentification des clients](/fr/docs/authentication-and-admin).

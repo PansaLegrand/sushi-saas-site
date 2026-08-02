@@ -1,0 +1,42 @@
+---
+title: Stripe Billing
+icon: "CreditCard"
+description: Connect your Stripe catalog, choose a safe subscription-change policy, and verify every payment has one local effect.
+keywords: [Stripe, subscriptions, checkout, webhooks]
+tags: [billing, Stripe]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Verified against starter commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb).
+
+By the end of this page, a customer can buy one of your configured plans, Stripe can notify the app, the organization receives its entitlement and credits exactly once, and an operator can reconcile anything uncertain.
+
+## Decide the Commercial Model First
+
+The starter ships flat organization subscriptions for Plus and Max, monthly and yearly. It allows several independent subscriptions and selects the highest active tier while adding their credit grants. The Billing Portal allows invoices, payment-method changes, and cancellation, but deliberately blocks in-place plan or quantity changes.
+
+Keep that model for the shortest safe launch. If you want seat-based billing, upgrades with proration, or automatic credit adjustment, define and test those rules before enabling Stripe's subscription-update controls.
+
+Create stable Stripe Prices for Plus and Max, monthly and yearly, then set the `STRIPE_PRICE_*` IDs, `STRIPE_PRIVATE_KEY`, and `STRIPE_WEBHOOK_SECRET`. CNY Price IDs are optional. Billing amounts and catalog metadata live in `src/config/billing.ts`; Price IDs remain server-only.
+
+Checkout is organization-owner only and requires `Idempotency-Key`. The service creates a purchase intent/order before Stripe, so retrying the same request returns one effect; a deliberate second purchase needs a new key. Multiple subscriptions can coexist and the entitlement resolver combines them.
+
+## Webhook Contract
+
+Expose `/api/pay/webhook/stripe`. At minimum subscribe to checkout completion/expiration, subscription create/update/delete, invoice paid/payment failed, and refund/dispute events. The handler verifies the signature, deduplicates Stripe event IDs, respects event time for out-of-order delivery, and grants each credit benefit once. Renewal invoices produce new orders and the configured billing-period credit grant; yearly prices grant twelve months of credits once per yearly period.
+
+Refunds and disputes are assessed and surfaced for review; the starter does not silently claw back consumed credits. Reconcile uncertain state with the supplied Stripe reconciliation command and the admin event view.
+
+## Portal and Local Testing
+
+Create a Stripe Billing Portal configuration and set its ID in production. Subscription updates in the portal must be disabled; the starter fails closed if the configuration is unsafe.
+
+```bash
+stripe listen --forward-to localhost:3000/api/pay/webhook/stripe
+```
+
+Before launch, test duplicate checkout calls, delayed/duplicate webhooks, renewals, failures, cancellation, refunds, and portal access. Use live keys only in production and restrict webhook delivery to live-mode events. You are ready when a network retry creates one order, a webhook replay grants once, an older event cannot overwrite newer state, unsafe portal configuration fails closed, and local reconciliation returns no unexplained findings.
+
+**Related:** Keep Stripe Prices aligned with [Plans and Entitlements](/docs/plans-and-entitlements), and trace every subscription credit grant through the [Organization Credit Ledger](/docs/account-ledger).

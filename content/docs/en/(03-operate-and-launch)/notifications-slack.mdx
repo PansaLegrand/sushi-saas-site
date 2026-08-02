@@ -1,0 +1,30 @@
+---
+title: Slack Operations Notifications
+icon: "Bell"
+description: Route operational events to Slack through the durable job queue without leaking sensitive data.
+keywords: [Slack, notifications, jobs, operations]
+tags: [Slack, operations]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Synced with starter commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb).
+
+Use Slack when a human should notice an operational exception quickly—such as a parked Stripe event—not as the permanent record of what happened. The integration is optional: leaving `SLACK_WEBHOOK_URL` empty disables delivery.
+
+## Choose which alerts deserve durable delivery
+
+- Stripe webhook and sweep alerts already use `slack_event` or `slack_error` jobs and retry through the durable runner.
+- A few storage and subscription guardrail alerts still use the best-effort `notifySlack*` helpers. Those can be lost if a serverless instance freezes. If an alert is required for your operation, enqueue a Slack job instead.
+- Keep messages actionable: include a safe request, order, event, or job identifier and tell the operator where to investigate. Never include tokens, raw payloads, signed URLs, or unnecessary personal data.
+
+**Ready to launch means:** a harmless test event reaches the intended channel, a simulated 429/5xx is visible as a retry or failure, duplicate enqueue is suppressed, and the identifier in Slack leads back to the database or structured logs.
+
+Create a Slack Incoming Webhook and set `SLACK_WEBHOOK_URL`. SDK construction stays in `src/integrations/slack.ts`. Billing and sweep paths queue typed `slack_event` or `slack_error` jobs; older guardrail call sites use best-effort helpers, so use a job for every new must-deliver alert.
+
+Use deterministic dedupe keys for noisy events, include request/order/job identifiers for correlation, and omit credentials, tokens, raw request bodies, download URLs, and unnecessary personal data. A missing webhook should be an intentional environment choice, not a hidden production failure.
+
+Delivery retries through the same durable runner as email and cleanup work. Keep `/api/cron/jobs` authenticated and scheduled, monitor failed jobs, and test duplicate enqueue, Slack timeout/429/5xx, redaction, and recovery. Slack is an alerting channel; the database and structured logs remain the system of record.
+
+**Next:** Include Slack delivery and queue-failure checks in the [Deployment and Security](/docs/deployment-and-security) launch runbook.

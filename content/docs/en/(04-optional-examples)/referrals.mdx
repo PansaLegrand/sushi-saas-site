@@ -1,0 +1,104 @@
+---
+title: Configure Referrals and Affiliate Rewards
+icon: "Share2"
+description: Decide whether the referral workflow fits your product, configure attribution and commissions, close its operational gaps, and test it end to end.
+keywords: [SaaS referrals, affiliate program, commissions, attribution, invite links]
+tags: [referrals, affiliates, growth]
+author: "Sushi SaaS"
+publishedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+By the end of this page, you will know whether to keep referrals off or turn the shipped foundation into a real program. The safe default is **off**: `AffiliateConfig.enabled` is `false`, and enabling it creates financial and support obligations that code alone cannot settle.
+
+## What ships
+
+| Behavior | Shipped default |
+| --- | --- |
+| Enablement | A code flag in `src/config/affiliate.ts`; there is no environment switch |
+| Invite links | `/i/{code}` plus a locale-aware `/[locale]/i/{code}` route; generated share URLs currently use the unprefixed route |
+| Attribution | First touch, a 30-day `ref` cookie, and no self-referral |
+| Signup capture | Best-effort client capture after authentication; failed attempts leave the session marker unset so a later mount can retry |
+| Signup reward | Zero; the row records attribution without a payout |
+| Paid reward | The greater of 5,000 minor currency units or 20% of the order amount |
+| Reward state | A pending cash record for manual review and payout; no money or credits move automatically |
+| User view | Authenticated `/[locale]/my-invites`, hidden with 404 while disabled |
+| Operator view | A read-only `/affiliates` table in the admin console |
+
+Database constraints make signup attribution and paid-order rewards replay-safe. First touch wins even when two tabs race. Replayed payment events cannot create a second paid reward for the same order, and a pending reward can be canceled with the order flow.
+
+## Decide whether a program fits
+
+Keep referrals off until you can answer all of these:
+
+- Who may refer: every authenticated user, approved partners, or a separate cohort?
+- What qualifies: signup, first paid order, every order, or retained revenue after a refund window?
+- Which currency does a fixed minor-unit reward represent, and how will multi-currency orders work?
+- Who reviews fraud, self-dealing, duplicate identities, refunds, tax forms, and payout disputes?
+- How and when does a pending record become approved, paid, canceled, or clawed back?
+- What do the public program terms promise?
+
+The shipped code does not gate link generation on the existing `is_affiliate` user field. Once enabled, any authenticated user who reaches the page or API can create a code. Add eligibility enforcement before launch if the program is not open to everyone.
+
+## Configure the policy in code
+
+Edit `src/config/affiliate.ts` and review every value in `AffiliateConfig`:
+
+```ts
+export const AffiliateConfig = {
+  enabled: true,
+  attributionWindowDays: 30,
+  allowSelfReferral: false,
+  attributionModel: AttributionModel.FirstTouch,
+  payoutType: "cash",
+  commissionMode: CommissionMode.GreaterOf,
+  paid: { fixed: 5_000, percent: 20 },
+  // ...
+} as const;
+```
+
+`FixedOnly`, `PercentOnly`, `GreaterOf`, and `Sum` are implemented commission modes. Fixed values use minor units; the shipped display assumes USD cents. Keep `FirstTouch`: although the enum includes `LastTouch`, the current service only writes `invited_by` when it is empty, so changing the enum alone does not implement last-touch attribution.
+
+Likewise, `payoutType: "credits"` is reserved for adopters who add a deterministic ledger grant. The shipped workflow only records cash-like reward amounts and never transfers value. Do not change the label without implementing and replay-testing the corresponding effect.
+
+## Finish the customer and operator experience
+
+The localized route exists, but the My Invites page and its components currently contain English strings and format rewards as USD. It is also not added to the main navigation. Before launch:
+
+1. Add localized copy, currency-aware formatting, empty/error states, and a discoverable account link.
+2. Decide whether generated share URLs should preserve a locale; the API currently returns `/i/{code}`.
+3. Add server-side inviter eligibility, program terms, and abuse controls.
+4. Build an audited approval and payout workflow. The admin page currently observes rows but cannot pay or mark them complete.
+5. Define refund, cancellation, and clawback behavior for your payment flows.
+
+## Verify end to end
+
+First verify the disabled state: invite links redirect normally, My Invites returns 404, and affiliate APIs return not found.
+
+Then enable the feature in a test deployment and use disposable accounts:
+
+1. Generate an invite link as the referrer.
+2. Open it in a clean browser and confirm the `ref` cookie has a 30-day lifetime.
+3. Sign up or sign in as the referred user; confirm `invited_by` and one signup attribution row are created.
+4. Visit a different referrer's link and confirm first touch is not replaced. Confirm self-referral is ignored.
+5. Complete an order and verify exactly one pending paid row with `max(5,000, floor(order amount × 20%))`.
+6. Replay the payment event and confirm no duplicate reward. Exercise cancellation/refund behavior expected by your policy.
+7. Confirm the user summary and the admin Affiliates table agree, while no payout happens automatically.
+8. Simulate a temporary capture failure and verify a later remount or full reload retries successfully.
+
+Run the service and database tests before launch. Continue with [Stripe Billing](/docs/stripe-setup) and [Admin Console Operations](/docs/admin-console-operations) because referrals depend on both payment truth and operator review.
+
+**Related:** Read [Designing a Referral and Reward Program](/blogs/affiliate-and-reward) before choosing attribution, commission, payout, and fraud-review policies.
+
+## What is not finished for you
+
+There is no automatic payout rail, credit grant, partner approval gate, fraud review workflow, tax handling, fully localized user UI, currency model, navigation entry, or working last-touch mode. The starter provides replay-safe attribution and accounting records; your program policy and operations must complete them.
+
+## Source snapshot
+
+Verified against starter commit `7580470`:
+
+- [`src/config/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/affiliate.ts)
+- [`src/services/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/services/affiliate.ts)
+- [`src/providers/affiliate-init.tsx`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/providers/affiliate-init.tsx)
+- [`src/app/[locale]/my-invites/page.tsx`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/app/%5Blocale%5D/my-invites/page.tsx)

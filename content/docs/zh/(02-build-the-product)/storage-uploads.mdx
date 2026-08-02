@@ -1,0 +1,38 @@
+---
+title: 私有存储上传
+icon: "UploadCloud"
+description: 通过策略、套餐、配额、校验和与持久删除控制配置 S3 兼容私有上传。
+keywords: [S3, R2, MinIO, 上传, 存储]
+tags: [存储, 安全]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> 已与启动模板提交 [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) 同步。
+
+当产品需要保存头像、文档、导入文件或生成内容，又不希望文件公开、也不希望所有字节都经过 Next.js 服务器时，请使用此能力。完成本页后，已登录用户应能在**账户 → 文件**中上传、下载和删除文件，而其他组织无法访问。
+
+## 选择适合产品的存储方案
+
+- 如果希望快速使用 S3 兼容服务且不依赖 AWS 账号，通常可选 **Cloudflare R2**；AWS 技术栈可选 **AWS S3**；本地或自托管环境可选 **MinIO**。三者使用同一适配器，仅通过环境变量切换。
+- 混合文件选 `general`，仅图片选 `images`（策略上限 10 MB），办公/文本文件选 `documents`，必须由浏览器提供 SHA-256 时选 `verified`。
+- 最终大小上限取套餐、`STORAGE_MAX_UPLOAD_MB` 与策略上限中的最小值。bucket 应保持私有；模板默认通过短期签名 URL 交付。
+
+**可以上线的标准：** UI 全流程可用，CORS 只允许你运营的来源，对象公共 URL 无法读取，跨组织访问被拒绝，并且 Cron 最终会删除已删除文件对应的对象。
+
+将 `STORAGE_PROVIDER` 设为 `s3`、`r2` 或 `minio`，配置 bucket、region、endpoint 与凭据。对象保持私有，浏览器只获得短期预签名 URL。为 Web 来源和必要 PUT header 配置 CORS，除非供应商要求，否则不要启用 ACL。
+
+## 上传契约
+
+1. `POST /api/storage/uploads` 检查组织成员、`storage.upload` entitlement、策略（`general`、`images`、`documents`、`verified`）、类型，以及套餐/环境/策略三者中最小的大小上限，并原子预留组织配额。
+2. 浏览器直接 PUT 到对象存储；上传器仅为显示进度而使用 XHR。
+3. `POST /api/storage/uploads/complete` 校验对象元数据和可选 SHA-256，再激活记录。
+4. `GET /api/storage/files/[uuid]?download=1` 返回按组织限定的签名下载 URL。
+5. `DELETE /api/storage/files/[uuid]` 软删除并安排持久 `storage_object_delete` 任务。
+
+未完成上传一小时后释放预留。删除由任务队列重试，因此 cron 必须运行。对象 key 由服务生成，不能接受客户端自选 bucket key。
+
+上线前测试完整流程、错误 MIME/checksum、配额竞争、过期 URL、跨组织访问、删除重试与清理。供应商 CORS 细节见模板 `docs/storage-providers.md`。
+
+**下一步：** 配置[持久任务与就绪检查](/zh/docs/jobs-and-readiness)，确保临时故障后仍能清理放弃的上传和已删除的对象。

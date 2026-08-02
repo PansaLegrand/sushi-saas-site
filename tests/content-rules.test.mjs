@@ -10,7 +10,7 @@ import {
 test("group folders do not become public slug segments", () => {
   assert.equal(
     contentSlug(
-      "/repo/content/docs/en/(hands-on)/quick-start.mdx",
+      "/repo/content/docs/en/(01-start-here)/quick-start.mdx",
       "/repo/content/docs/en"
     ),
     "quick-start"

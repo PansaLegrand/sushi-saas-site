@@ -1,8 +1,0 @@
-{
-  "title": "管理コンソール",
-  "defaultOpen": true,
-  "pages": [
-    "admin-console-setup",
-    "admin-console-operations"
-  ]
-}

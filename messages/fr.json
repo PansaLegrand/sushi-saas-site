@@ -10,7 +10,7 @@
     "heroLineOne": "L’infrastructure est prête.",
     "heroLineTwo": "Construisez le produit.",
     "subtitle": "Authentification, organisations, Stripe, registre de crédits, stockage privé, tâches de fond et console admin séparée — reliés par une architecture vérifiable.",
-    "primaryAction": "Commencer par la documentation",
+    "primaryAction": "Voir s’il vous convient",
     "secondaryAction": "Voir le code",
     "signalsLabel": "Signaux du projet",
     "signals": [
@@ -43,8 +43,8 @@
     },
     "closing": { "title": "Commencez plus près de ce que seule votre entreprise peut construire.", "action": "Ouvrir le démarrage rapide" }
   },
-  "docs": { "title": "Documentation du starter SaaS Next.js", "intro": "Étapes de référence pour installer, configurer, étendre et exploiter le starter Sushi SaaS. Pour les choix d’architecture et les modèles, consultez Guides.", "empty": "La documentation est en préparation." },
-  "blogs": { "title": "Guides Sushi SaaS", "intro": "Décisions d’architecture et modèles d’implémentation issus du starter Sushi SaaS.", "empty": "Aucun guide n’est encore publié." },
+  "docs": { "title": "Construire et exploiter Sushi SaaS", "intro": "Choisissez une tâche pour obtenir les étapes exactes de configuration et de vérification. Pour comprendre un choix ou décider quoi modifier, consultez les Guides.", "empty": "La documentation est en préparation.", "topics": "Sujets" },
+  "blogs": { "title": "Comprendre et adapter Sushi SaaS", "intro": "Découvrez les choix du starter, leurs raisons, les autres options possibles et ce qu’il faut conserver, modifier ou supprimer pour votre produit.", "empty": "Aucun guide n’est encore publié.", "topics": "Sujets" },
   "footer": { "label": "Navigation de pied de page", "description": "Documentation et guides d’implémentation du starter open source Sushi SaaS.", "docs": "Documentation", "blog": "Guides", "privacy": "Confidentialité", "terms": "Conditions" },
   "privacy": {
     "title": "Avis de confidentialité",

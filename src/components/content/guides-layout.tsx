@@ -3,7 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { HomeLayout } from "fumadocs-ui/layouts/home";
 import { RootProvider, TreeContextProvider } from "fumadocs-ui/provider";
 import { SiteConfig } from "@/config/site";
-import { localeNames, localePath, locales, normalizeLocale } from "@/i18n/locale";
+import { localePath, normalizeLocale } from "@/i18n/locale";
+import { contentUiI18n } from "@/i18n/content-ui";
 import { blogSource } from "@/lib/source";
 
 /**
@@ -22,16 +23,7 @@ export async function GuidesLayout({
   const t = await getTranslations("nav");
 
   return (
-    <RootProvider
-      i18n={{
-        locale: lang,
-        locales: locales.map((available) => ({
-          locale: available,
-          name: localeNames[available]
-        }))
-      }}
-      search={{ enabled: false }}
-    >
+    <RootProvider i18n={contentUiI18n(lang)} search={{ enabled: false }}>
       <TreeContextProvider
         tree={blogSource.pageTree[lang] ?? { name: "", children: [] }}
       >

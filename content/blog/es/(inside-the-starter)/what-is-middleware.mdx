@@ -1,35 +1,53 @@
 ---
-title: "Cómo enruta solicitudes Sushi SaaS"
+title: "Cómo enruta Sushi SaaS las peticiones"
 icon: "Workflow"
-description: "Cómo combina el starter rutas por idioma, identificadores de solicitud y contexto de organización inspeccionable en middleware."
-tags: [middleware, rutas, i18n]
+description: "Qué hace el middleware para usuarios y operadores, por qué la organización permanece visible en la URL y qué elecciones puedes cambiar."
+tags: [middleware, routing, i18n]
 author: "Sushi SaaS"
 publishedAt: "2025-10-13T00:00:00.000Z"
 updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-Sushi SaaS usa un único middleware para tres responsabilidades de solicitud: idioma, identificador de correlación y contexto de organización. La autenticación y autorización de negocio se realizan más adentro de la aplicación.
+El middleware de Sushi SaaS gestiona contexto de petición, no autenticación ni autorización de negocio. Sus tres tareas—locale, correlación y transporte de organización—producen comportamiento visible que debes elegir conscientemente.
 
-## Cada solicitud tiene un identificador
+## Lo que experimenta el usuario
 
-El middleware normaliza el `x-request-id` entrante o crea uno, lo reenvía a la ruta y lo devuelve en la respuesta. Las trazas de rutas y servicios pueden referirse a la misma solicitud sin confiar en un header arbitrario mal formado.
+- Una página se resuelve a la ruta localizada adecuada mediante `next-intl`.
+- Dos pestañas pueden permanecer en dos workspaces porque la organización se expresa con `?org=<slug>`, no solo en la sesión.
+- Un enlace de cuenta compartido muestra a qué workspace apunta.
 
-## Las APIs y las páginas siguen caminos distintos
+Cada respuesta lleva `x-request-id`, para relacionar un caso de soporte con logs estructurados. Las peticiones API omiten la negociación de idioma, pero reciben el mismo contexto de petición y organización.
 
-Las solicitudes bajo `/api` no participan en la negociación de idioma. Continúan directamente con el ID normalizado y el contexto de organización de API.
+La implementación está en [`src/middleware.ts` del commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/middleware.ts).
 
-Las páginas pasan por `next-intl`. Después, el middleware copia los metadatos internos de Next.js que reenvían headers a la respuesta localizada. Así los headers modificados llegan a la página o handler, en lugar de aparecer solo en la respuesta saliente.
+## Qué confía realmente el middleware
 
-La implementación está en [`src/middleware.ts` en `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/middleware.ts).
+En páginas, la organización procede del query parameter; se elimina un header de organización enviado por el llamante. En API, el cliente común puede enviar `x-organization-slug`; un valor de URL tiene prioridad si existen ambos.
 
-## El contexto de organización es inspeccionable
+Ninguno autoriza. `src/services/authz.ts` demuestra que el usuario pertenece a la organización y rechaza APIs ambiguas para usuarios con varias organizaciones. El middleware solo valida que el contexto sea transportable.
 
-Una página selecciona organización únicamente mediante el parámetro de la URL. Un header de organización enviado por quien llama se elimina de las páginas, de modo que un enlace copiado represente el contexto real.
+Un request ID entrante solo se acepta con formato y longitud seguros; en otro caso se crea un UUID. Se reenvía a la ruta y se copia a la respuesta.
 
-Los clientes API sí pueden enviar el header configurado. Si la URL contiene un slug de organización, este tiene prioridad. Los servicios aún validan membresía y permisos; el middleware solo normaliza y transporta contexto.
+## Elecciones disponibles
 
-## Cobertura del matcher
+### Routing por locale
 
-El matcher incluye rutas localizadas, APIs y páginas normales. Excluye recursos de Next.js, rutas internas de Vercel, archivos con extensión y la aplicación admin desplegada por separado.
+Conserva `next-intl` si necesitas páginas con locale y detección. Para un único idioma, retira la rama junto con rutas localizadas, catálogos y tests. Un contrato eliminado a medias deja redirects y enlaces en desacuerdo.
 
-Consulta [Arquitectura y contratos de error](/docs/architecture-and-errors) para las capas y [Organizaciones y equipos](/docs/organizations-and-teams) para tenancy y autorización.
+### Selección de workspace
+
+El query string incluido es local a cada pestaña y fácil de añadir a URLs existentes. Un tenant en path como `/acme/account` crea una jerarquía más fuerte, pero exige cambiar enlaces, callbacks, matchers y resolución. Solo sesión parece más simple, pero dos pestañas pueden sobrescribir la misma organización activa; úsalo solo si aceptas ese resultado.
+
+### Trazado
+
+Mantén IDs de correlación en casi todo producto desplegado. Si tu proxy u observabilidad controla trace IDs, mapea su valor fiable o conserva ambos. No permitas texto externo sin límites en logs.
+
+### Contexto API
+
+Exigir organización explícita a usuarios con varios workspaces evita operar silenciosamente en el último tenant activo. Simplifícalo solo si la API es demostrablemente de un tenant.
+
+## Cuándo añadir lógica al middleware
+
+Añade una responsabilidad solo si debe ejecutarse antes del routing y puede ser rápida y compatible con edge. Comprobaciones de membresía, autorización con base de datos, cobros y reglas de negocio pertenecen a servicios.
+
+Después de cambiarlo prueba páginas localizadas, `/api`, assets, reenvío de request ID, contexto malformado y dos pestañas. Revisa [Arquitectura y contratos de error](/es/docs/architecture-and-errors) y [Organizaciones y equipos](/es/docs/organizations-and-teams).

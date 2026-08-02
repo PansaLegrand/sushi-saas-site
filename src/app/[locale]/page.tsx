@@ -107,7 +107,7 @@ export default async function LandingPage({
             </h1>
             <p className="hero__lede">{t("subtitle")}</p>
             <div className="hero__actions">
-              <Link href="/docs" className="button">
+              <Link href="/blogs/why-use-a-saas-template" className="button">
                 {t("primaryAction")}
                 <ArrowRight size={17} aria-hidden="true" />
               </Link>

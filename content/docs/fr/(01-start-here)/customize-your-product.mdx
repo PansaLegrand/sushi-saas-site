@@ -1,0 +1,99 @@
+---
+title: Personnaliser votre produit
+icon: "SlidersHorizontal"
+description: Définissez l'identité, les langues, le style visuel, le thème, les informations légales et les systèmes optionnels avant vos fonctions métier.
+keywords: [personnalisation SaaS, marque, langues, thème, configuration juridique, choix produit]
+tags: [configuration, décisions produit, personnalisation]
+author: "Sushi SaaS"
+publishedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+À la fin de cette page, le starter portera le nom, les URL, les langues et le style de **votre produit**, et chaque système optionnel aura une décision explicite : conserver, adapter ou supprimer. Faites ces choix avant de modifier des écrans précis ; l'identité et le périmètre influencent les URL, les e-mails, les textes légaux, l'analytique, la facturation et la console d'administration.
+
+## Ce qui est livré et ce que vous choisissez
+
+| Domaine | Comportement livré | Votre décision |
+| --- | --- | --- |
+| Identité | `NEXT_PUBLIC_APP_NAME` utilise `Your SaaS` par défaut ; `NEXT_PUBLIC_DOCS_URL` est facultatif | Définir le nom public et l'URL de documentation validée |
+| Assistance | `SiteConfig.contactEmail` vaut `null`, donc aucune adresse n'est affichée | Modifier `src/config/site.ts` ou confier clairement l'assistance à un autre canal |
+| Langues | Anglais, chinois, espagnol, français et japonais sont disponibles ; les préfixes sont `as-needed` | Choisir la langue par défaut, les langues actives et la détection du navigateur |
+| Style visuel | `studio` est le preset de compilation partagé par le web et l'admin | Le garder ou choisir en code `glass`, `soft`, `editorial` ou `brutalist` |
+| Mode de couleur | L'app client utilise `system` par défaut via l'environnement | Choisir `system`, `light` ou `dark` ; l'admin n'a pas encore de sélecteur de mode |
+| Pages légales | Un brouillon visible décrit les flux par défaut du starter | Compléter l'identité et les politiques, puis obtenir une revue juridique |
+| Systèmes optionnels | Facturation, stockage, e-mail, Slack, analytique, parrainage, tâches et réservations ont du code ou des adaptateurs | Configurer ce qui reste, ou supprimer ensemble UI, validation, routes et documentation |
+
+## Point de départ recommandé
+
+Utilisez un vrai nom, conservez le mode `system` et le preset `studio` jusqu'à stabiliser l'architecture de l'information, et n'activez que les langues que l'équipe sait maintenir. Gardez analytique, publicité, parrainage et fonctions de démonstration désactivés tant qu'il n'existe pas de besoin, de texte utilisateur et de processus opérationnel.
+
+Les alternatives sont possibles, mais ont un coût. Plus de langues élargissent l'audience et l'obligation de traduction. Un preset affirmé différencie le produit, mais exige une revue complète clair/sombre et admin. Activer une intégration évite de la reconstruire, mais ajoute identifiants, pannes, déclarations de confidentialité et support.
+
+## Définir l'identité et les langues
+
+Commencez par les valeurs publiques de `.env` :
+
+```bash
+NEXT_PUBLIC_APP_NAME=Acme Cloud
+NEXT_PUBLIC_DOCS_URL=https://docs.example.com
+NEXT_PUBLIC_DEFAULT_THEME=system
+NEXT_PUBLIC_DEFAULT_LOCALE=fr
+NEXT_PUBLIC_LOCALES=fr,en
+NEXT_PUBLIC_LOCALE_DETECTION=true
+```
+
+La langue par défaut n'a pas de préfixe ; les autres en ont un. Ici, le français utilise `/pricing` et l'anglais `/en/pricing`. `NEXT_PUBLIC_LOCALE_DETECTION` autorise ou non la préférence du navigateur à sélectionner une langue active. Les variables `NEXT_PUBLIC_*` sont intégrées au client lors de la compilation : recompilez et redéployez après modification.
+
+`NEXT_PUBLIC_DOCS_URL` peut rester vide. Si vous publiez une documentation externe, indiquez son origine de production validée. Le contact d'assistance n'est volontairement pas une variable d'environnement : renseignez `SiteConfig.contactEmail` dans `src/config/site.ts`, ou laissez `null` si un autre canal porte cette promesse.
+
+## Choisir un preset visuel
+
+Modifiez la constante typée dans `src/config/style.ts` :
+
+```ts
+export const stylePreset: StylePreset = "glass";
+```
+
+L'app client et la console utilisent la même valeur. C'est un choix produit à la compilation, pas un sélecteur par utilisateur. Avant de conserver un preset différent, vérifiez pages, formulaires, tableaux, dialogues, états vides et erreurs dans les deux apps. Le web gère clair, sombre et système ; l'admin est encore rendu sans provider de mode de thème.
+
+## Finaliser l'identité légale
+
+Complétez `LegalData` dans `src/config/legal.ts` : raison sociale et adresse, contacts confidentialité et juridique, loi applicable, date d'effet et sous-traitants réellement utilisés. Traitez chaque texte entre crochets. Tant qu'un champ d'identité requis manque, `LegalConfig.isConfigured` reste false et les pages de confidentialité et conditions affichent un avertissement de brouillon non revu.
+
+Le texte livré est une trame de rédaction, pas un conseil juridique ni une politique terminée. Retirez les prestataires inutilisés, ajoutez ceux qui reçoivent des données personnelles, alignez la conservation sur l'effacement des comptes et faites valider le résultat par un professionnel qualifié.
+
+## Définir le périmètre du produit
+
+Consignez une décision pour chaque système optionnel :
+
+1. **Conserver :** configurer identifiants, textes, supervision, gestion des échecs et responsable.
+2. **Adapter :** changer la politique ou le fournisseur derrière la frontière de service existante, puis mettre à jour tests et guides.
+3. **Supprimer :** retirer routes, UI, validation de production, jobs et documentation dans le même changement. Un identifiant vide n'est pas une décision produit.
+
+Pour les systèmes conservés, poursuivez avec [Plans et droits](/fr/docs/plans-and-entitlements), [Facturation Stripe](/fr/docs/stripe-setup), [Téléversement de fichiers](/fr/docs/storage-uploads) et [Déploiement et sécurité](/fr/docs/deployment-and-security).
+
+## Vérifier avant les fonctions métier
+
+```bash
+pnpm lint
+pnpm test:run
+pnpm build:web
+pnpm build:admin
+```
+
+Vérifiez que la langue par défaut n'a pas de préfixe, que chaque autre langue active répond, que le sélecteur n'affiche aucune langue désactivée, que les liens de documentation et de support tiennent leur promesse, que les deux apps partagent le preset et que le web reste lisible en clair et sombre. Ouvrez confidentialité et conditions : ne publiez pas tant que l'avertissement de brouillon ou des marqueurs de politique subsistent.
+
+## Ce qui n'est pas terminé pour vous
+
+Le starter ne fournit ni configurateur de marque, ni sélecteur de preset à l'exécution, ni mode sombre admin, ni contact d'assistance par environnement, ni politique juridique validée, ni décision sur les systèmes optionnels de votre produit. Ces choix appartiennent volontairement à l'équipe qui l'adopte.
+
+Si vous activez mesure d’audience ou publicité, prenez cette décision avec [Analytique et consentement](/fr/docs/analytics-and-consent), pas comme une simple variable d’environnement isolée.
+
+## Instantané des sources
+
+Vérifié avec le commit `7580470` du starter :
+
+- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/site.ts)
+- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/i18n/locale.ts)
+- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/style.ts)
+- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/legal.ts)

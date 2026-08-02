@@ -1,0 +1,37 @@
+---
+title: Libro de créditos de organización
+icon: "Coins"
+description: Elige cómo medir uso y concede, consume, caduca y reembolsa créditos compartidos de forma segura.
+keywords: [créditos, libro mayor, idempotencia, organizaciones]
+tags: [créditos, contabilidad]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Verificado con el commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) del starter.
+
+Los créditos son una opción de empaquetado, no una obligación para cada función. Úsalos cuando una acción tenga coste variable o el uso comprado deba trasladarse; usa un entitlement o límite cuando solo importe si el cliente puede actuar.
+
+## Decisiones que debes tomar
+
+| Pregunta | Opción incluida | Alternativa |
+| --- | --- | --- |
+| ¿Quién posee los créditos? | La organización; los miembros comparten saldo | Añadir presupuestos por miembro sin abandonar el libro de organización |
+| ¿Cómo se guarda el saldo? | Filas append-only | No usar contador mutable sin sustituir también auditoría y replay |
+| ¿Qué se consume primero? | La concesión que antes caduca | Cambiar la regla solo con pruebas de expiración |
+| ¿Qué pasa si falla el trabajo? | Reembolso compensatorio ligado al gasto | Mantener el cargo solo si el contrato factura los fallos |
+
+Los créditos pertenecen a la organización y sus miembros comparten saldo. El libro solo añade: no actualices ni borres filas y no evites `src/services/credit.ts` con SQL directo.
+
+Una concesión añade una fila positiva con transacción única y caducidad opcional. El consumo toma un advisory lock por organización, reproduce todo el libro, usa primero concesiones próximas a caducar y solo añade negativos si hay saldo utilizable. Puede dividirse en filas `:part:n`; la API las colapsa en una transacción lógica. Un reembolso añade compensaciones ligadas al gasto original.
+
+`balance_after` es el total contable al insertar, no siempre el disponible tras caducidad. Usa el resumen de organización para disponible, concedido, consumido y vencido.
+
+Toda operación económica necesita clave de idempotencia empresarial estable. Dos llamadas iguales producen un solo efecto; las pruebas lo exigen. Renovaciones y Stripe usan números deterministas. Las concesiones admin tienen límite y auditoría.
+
+Para una función de pago: calcula coste en configuración, exige entitlement, consume mediante el servicio, guarda la transacción raíz y reembolsa si falla la operación posterior.
+
+Está terminado cuando dos consumos simultáneos no sobregiran, reintentar una clave produce un efecto, las concesiones vencidas no cuentan como disponibles, la UI muestra transacciones lógicas y un trabajo fallido deja un reembolso compensatorio auditable.
+
+**Para completar el modelo:** consulta [Planes y derechos](/es/docs/plans-and-entitlements) para decidir quién puede consumir y [Facturación con Stripe](/es/docs/stripe-setup) para entender cuándo se conceden créditos.

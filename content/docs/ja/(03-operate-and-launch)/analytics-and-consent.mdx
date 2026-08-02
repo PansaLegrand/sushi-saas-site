@@ -1,0 +1,78 @@
+---
+title: アクセス解析と同意管理
+icon: "ChartNoAxesCombined"
+description: Google Analytics と AdSense の要否を判断し、同意と法的開示を設定して、早期にスクリプトが読み込まれないことを検証します。
+keywords: [Google Analytics, GA4, AdSense, Cookie 同意, プライバシー, SaaS 解析]
+tags: [アクセス解析, 同意, プライバシー]
+author: "Sushi SaaS"
+publishedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+このページを終えると、**無効・解析のみ・広告のみ・両方**のどれにするかを意図的に決め、本番ビルドで検証できます。推奨する初期値は無効です。担当者が持つ具体的なプロダクトの問いに答えるデータだけを集めてください。
+
+## 同梱されるもの
+
+- `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` で Google Analytics コンポーネントが有効になります。
+- `NEXT_PUBLIC_GOOGLE_ADCODE` で AdSense ローダーが有効になりますが、**広告枠は作成されません**。
+- どちらのコンポーネントも本番以外では何もレンダリングしません。
+- 解析と広告は別の同意カテゴリです。計測への同意は広告への同意ではありません。
+- 同意情報がない、壊れている、古い場合は、すべて拒否した状態になります。該当カテゴリが明示的に許可されるまで、スクリプトは読み込まれません。
+- `cookie_consent` はバージョン付きの選択を 182 日保存し、`SameSite=Lax`、HTTPS では `Secure` を使います。
+- どちらの事業者 ID もなければ、バナーとフッターの Cookie 設定リンクは表示されません。
+- フッターから設定を再度開き、選択の変更・撤回ができます。
+- 独立した管理アプリは、これらのスクリプトと同意 UI をマウントしません。
+
+## 必要最小限の構成を選ぶ
+
+| 選択 | 適している場合 | コスト |
+| --- | --- | --- |
+| 無効（初期推奨） | イベントの問いやレビュー済みのプライバシー方針がまだない | これらの事業者から計測値を得られない |
+| 解析のみ | 集計した流入・利用状況が必要 | 同意、データ管理、事業者設定、品質管理 |
+| 広告のみ | 広告が事業モデルに本当に必要 | 同意、ポリシー、広告枠、信頼への負担が最大 |
+| 両方 | 計測と広告の両方が必要 | 2 つの独立した選択と事業者設定を運用する |
+
+ダッシュボードを作るためだけに解析を有効にしないでください。データによって変える判断、必要なイベント、レビュー担当、不要な収集を止める条件を先に定義します。
+
+## デプロイを設定する
+
+利用する ID だけを本番環境へ追加します。
+
+```bash
+NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX
+NEXT_PUBLIC_GOOGLE_ADCODE=ca-pub-XXXXXXXXXXXXXXXX
+```
+
+これらはビルド時に公開される ID で、秘密情報ではありません。変更後は再ビルドします。GA4 プロパティまたは AdSense アカウント側でも、本番ドメイン、対象地域、保持期間、アクセス権、事業者側の同意要件を設定してください。
+
+`src/config/legal.ts` の `LegalData.subProcessors` とプライバシーポリシーを、実際の事業者と目的に合わせます。提供地域に応じ、ポリシーとバナー文言を資格を持つ専門家に確認してもらってください。事業者を追加したり既存カテゴリの意味を変えたりした場合は、`src/lib/consent.ts` の `CONSENT_VERSION` を上げます。古い選択は破棄され、再度同意を求めます。
+
+## 本番動作を検証する
+
+開発環境は最終確認になりません。両コンポーネントは `NODE_ENV` が `production` でなければ `null` を返します。ストレージと Cookie を消し、本番ビルドまたは管理された本番環境でテストします。
+
+1. 選択前に Analytics・AdSense のスクリプトリクエストがないことを確認する。
+2. すべて拒否して再読み込みし、どちらもロードしないことを確認する。
+3. 解析だけを許可し、GA のみロードすることを確認する。
+4. 広告だけを許可し、AdSense のみロードすることを確認する。
+5. フッターから設定を開いて撤回し、再読み込み後も拒否カテゴリが無効なことを確認する。
+6. `cookie_consent` にバージョン `1`、2 つの真偽値、最大 182 日の期限があることを確認する。
+7. 両環境変数を削除して再ビルドし、バナー、設定リンク、スクリプトがすべて消えることを確認する。
+8. 管理画面のオリジンも別途確認し、この追跡 UI とスクリプトがないことを確認する。
+
+バナーの有無だけで判断せず、ブラウザーのネットワークパネルを使って確認してください。同意を強制するのはスクリプトコンポーネントであり、バナーは選択用の UI にすぎません。
+
+## まだ完成していないもの
+
+プロダクトイベント体系、独自イベント、ダッシュボード、保持目標、AdSense 広告枠コンポーネント、法的に承認された同意運用は含まれません。Google アカウント側の設定も行われません。必要最小限の計測だけを追加し、事業者設定、公開ポリシー、コードの動作を一致させてください。
+
+デプロイ確認は[デプロイとセキュリティ](/ja/docs/deployment-and-security)へ進んでください。顧客向けの方針は[プライバシーポリシー](/ja/privacy)にあります。
+
+## ソーススナップショット
+
+スターターのコミット `7580470` で確認済みです。
+
+- [`src/config/analytics.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/analytics.ts)
+- [`src/lib/consent.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/lib/consent.ts)
+- [`src/providers/google-analytics.tsx`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/providers/google-analytics.tsx)
+- [`src/providers/adsense.tsx`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/providers/adsense.tsx)

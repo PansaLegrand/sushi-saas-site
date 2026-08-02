@@ -1,88 +1,71 @@
 ---
-title: 关于 Sushi SaaS — 它是什么、为何值得信赖
+title: "Sushi SaaS 是什么"
 icon: "Info"
-description: "面向生产的 MIT 许可 SaaS 起步模板：i18n、Better Auth、Drizzle ORM、Stripe 计费、MDX 文档、RBAC 管理与实用 DX，开箱即用；可放心克隆与扩展。"
+description: "了解这个 starter 包含什么、已经替你做了哪些产品决策，以及应该采用全部还是部分能力。"
 keywords:
-  - SaaS 模板
+  - SaaS starter
   - Next.js
   - Better Auth
   - Drizzle ORM
   - Stripe
-  - MDX
-  - i18n
+  - PostgreSQL
   - MIT 许可
-tags: [概览, 方法论, 可信]
-author: "Pansa Legrand"
+tags: [概览, 选型, 架构]
+author: "Sushi SaaS"
 publishedAt: "2025-10-02T00:00:00.000Z"
-updatedAt: "2025-10-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-## Sushi SaaS 是什么？
+Sushi SaaS 是一个采用 MIT 许可、面向订阅制和按量计费产品的源码 starter。它不是托管平台，也不会根据表单自动生成应用。你需要克隆仓库、拥有并维护代码，再根据自己的用户调整其中的产品决策。
 
-Sushi SaaS 是一个务实的、面向生产的 Next.js 起步模板，帮助你更快地构建与上线真正的 SaaS。它把认证、计费、组织、积分、存储、管理与国际化放在一起，并通过类型安全的数据库与明确的迁移串联起来。
+## 文档还是指南？
 
-核心栈：
+当任务已经明确，需要针对当前代码执行配置、扩展、验证或运维时，请使用[文档](/zh/docs)。当你需要判断某项默认选择是否适合、理解选择原因，或决定保留、修改、移除什么时，请使用[指南](/zh/blogs)。它们服务于同一采用流程中的不同阶段。
 
-- Next.js App Router + 基于 next‑intl 的本地化路由
-- Better Auth + 通过 Drizzle ORM 连接 Postgres
-- Stripe Checkout + Webhook 最终入账（积分台账就绪）
-- 用于公开指南与工程文章的独立 Fumadocs 网站
-- 服务器端强制 RBAC 的管理页面
-- 实用 DX：pnpm、ESLint/Tailwind、健康检查、清晰的环境变量
+## 适合谁评估
 
-GitHub 仓库： https://github.com/PansaLegrand/sushi-saas-template
+如果你是开发者或小型工程团队，并且已经倾向使用 Next.js、TypeScript、PostgreSQL、Drizzle、Better Auth 和 Stripe，可以评估 Sushi SaaS。当产品还需要组织、多成员共享积分、私有上传、后台任务、多语言 UI 和运营后台时，它的价值最高。
 
-```bash
-git clone https://github.com/PansaLegrand/sushi-saas-template.git
-cd sushi-saas-template
-pnpm install && pnpm dev
-```
+如果你只是在验证落地页、构建无计费的单用户工具，或准备替换上述大部分技术栈，应选择更小的基础。删除从未需要过的契约，通常比从一开始少引入一些更昂贵。
 
----
+## 仓库里有什么
 
-## 为何值得信赖
+仓库包含两个应用：
 
-- 端到端类型安全：Drizzle 模式为单一事实来源；drizzle‑kit 迁移保持数据库一致。
-- 真实业务流，而非样例：认证、计费（Stripe）和管理权限已打通并在 UI 中被实际使用。
-- 可预期的 i18n：基于 next‑intl 的本地化路由与对齐的消息目录。
-- 运维清晰：`/api/health`、环境模板，以及构建、Lint、迁移的明确规范。
-- 文档完善：核心能力（认证、计费、数据库、管理、邮件）均有 MDX 指南与实际命令、文件路径。
-- 实战沉淀：来源于真实产品的经验模式（见 README 的 Showcase；例如 https://dojoclip.com、https://www.sushisaas.com）。
+- `src/app` 下的客户应用，包括认证、组织、计费、积分、存储、预约和一个按量计费任务示例；
+- `apps/admin` 下的独立管理应用，包括强制 MFA、只读/读写运营角色、风控、对账、账单检查和审计记录。
 
----
+二者共享 PostgreSQL schema 和认证数据。公开网站与代码仓库有意分离：本网站解释已发布的 starter；必须随代码一起变化的工程 runbook 则留在代码仓库中。
 
-## 项目独特性
+## 你会继承的决策
 
-- MIT 许可：可商用可改造，助你快速推进。详见仓库中的 `LICENSE`。
-- 功能完整：认证、计费、积分台账、推广/返利、预约演示、管理、存储与 i18n 开箱即用。
-- 独立文档：这个网站负责 MDX、SEO 与内容发布，不给每个克隆后的应用增加内容依赖。
-- 作者可提供咨询：需要按需落地？作者提供实现与顾问服务，助你更快、更放心地上线。Email：pansalegrand@gmail.com（英语、法语、中文——工作熟练）
+| 默认选择 | 选择它的原因 | 何时重新考虑 |
+| --- | --- | --- |
+| 路由 → 服务 → 模型 → 数据库的水平分层 | 让业务规则和查询各自只有一个明确位置 | 团队已确定另一种架构，并准备同步修改约束测试 |
+| 每个账户拥有或加入一个组织 | 让计费、文件、积分和限额共享一个租户边界 | 产品确定只会单租户，并愿意完整移除组织作用域 |
+| 由 Stripe 事件最终确认计费状态 | 把重试和延迟 webhook 视为正常输入 | 使用不同计费供应商或商业模型 |
+| 管理后台独立部署 | 把运营入口与客户导航隔离 | 运营足够简单，可以明确合并应用与部署边界 |
+| 五种产品语言 | 让界面文案和错误都可本地化 | 只支持部分语言，并同时移除对应路由、目录与测试 |
 
----
+这些是默认值，并不表示所有 SaaS 都应做同样选择。
 
-## 第一天你就拥有
+## 三种采用方式
 
-- 认证与 RBAC：Better Auth、类型化数据库适配、安全的管理角色（只读/读写）。
-- 可靠的计费：Stripe Checkout + 签名 Webhook 最终入账并发放积分。
-- 积分与订单：适合按量计费与试用的简单台账模型。
-- 国际化：面向产品 UI 的本地化路由与消息包。
-- 公开文档：在这里作为可独立部署的 Fumadocs 项目维护。
-- 开发体验：pnpm、Turbopack/Webpack、ESLint/Tailwind 与统一规范。
+1. **保留完整骨架。** 保持边界，替换品牌和示例产品界面，再配置 provider 与业务政策。
+2. **采用部分模式。** 复制一项完整能力，例如积分台账或 Stripe 重放处理，并同时带上 migration、测试和运维规则。
+3. **只把它当作参考。** 对照自己的系统检查失败处理和不变量，不必引入代码。
 
----
+不要留下“两套架构”或“两种租户模型”的半迁移状态，否则每次修改都会出现两个看似正确的位置。
 
-## 我为什么做这个开源项目
+## 仍由你负责的部分
 
-我做 Sushi SaaS 是为了结识更多构建者，也为了督促自己持续交付。开源让这一切成为可能：它带来真实的交流，点燃副项目，有时也会打开加入初创公司的机会之门。
+Starter 无法替你决定价格、退款政策、数据保留、法律条款、客服流程、备份目标、反欺诈措施或威胁模型。推荐奖励默认关闭，因为打款规则同时涉及业务和合规。示例文生视频 provider 与预约流程也是集成示例，而不是完整的产品定位。
 
-- 连接与动能：我希望结识合作者、探索副项目，如果契合，也愿意加入一家初创公司。发布真实可用的代码，是我知道的最好的开场白。
-- 通过开放让软件更好：样板只有在被使用、被批评、被改进时才会变好。这是我“公开构建”的方式——没有金钱动机——只是热爱编程，也乐于看到他人在此之上继续构建。
+## 一次实际评估
 
----
+1. 按[快速开始](/zh/docs/quick-start)运行客户应用和管理应用。
+2. 选择一个真实需要的流程——注册、Checkout、上传或积分消费——从路由追到数据库。
+3. 阅读[什么情况下 Sushi SaaS 适合你](/zh/blogs/why-use-a-saas-template)，列出准备保留、修改和删除的默认决策。
+4. 在估算生产工作前阅读[部署与安全](/zh/docs/deployment-and-security)。
 
-## 链接
-
-- GitHub： https://github.com/PansaLegrand/sushi-saas-template
-- 入门文档： [快速开始](/zh/docs/quick-start)
-
-如果你需要将此模板定制到你的产品或加速 MVP 验证，请联系：pansalegrand@gmail.com。我会说英语、法语和中文（工作熟练）。
+源码依据：[Sushi SaaS starter commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470)。

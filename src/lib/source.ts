@@ -8,7 +8,8 @@ import { defaultLocale, locales } from "@/i18n/locale";
 export const contentI18n: I18nConfig = {
   defaultLanguage: defaultLocale,
   languages: [...locales],
-  parser: "dir"
+  parser: "dir",
+  hideLocale: "default-locale"
 };
 
 function resolveIcon(icon?: string) {

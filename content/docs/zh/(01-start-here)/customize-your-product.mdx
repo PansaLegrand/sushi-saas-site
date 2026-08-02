@@ -1,0 +1,97 @@
+---
+title: 定制你的产品
+icon: "SlidersHorizontal"
+description: 在开发业务功能前，确定启动模板的产品身份、语言、视觉预设、主题、法律信息与可选系统。
+keywords: [SaaS 定制, 品牌, 多语言, 主题, 法律配置, 功能取舍]
+tags: [配置, 产品决策, 定制]
+author: "Sushi SaaS"
+publishedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+完成本页后，启动模板将以**你的产品**的名称、URL、语言与视觉风格运行；每个可选系统也会有明确的保留、调整或移除结论。请在修改单个页面前完成这些决定，因为产品身份和边界会影响 URL、邮件、法律文本、分析、计费与管理控制台。
+
+## 已提供的能力与需要你的选择
+
+| 范围 | 默认行为 | 你的决定 |
+| --- | --- | --- |
+| 产品身份 | `NEXT_PUBLIC_APP_NAME` 缺省为 `Your SaaS`；`NEXT_PUBLIC_DOCS_URL` 可选 | 设置公开名称与已审核的文档地址 |
+| 支持方式 | `SiteConfig.contactEmail` 为 `null`，界面不显示支持邮箱 | 在 `src/config/site.ts` 中填写地址，或明确由其他渠道提供支持 |
+| 语言 | 可用英语、中文、西班牙语、法语与日语；URL 按需添加语言前缀 | 选择默认语言、启用集合与浏览器语言检测 |
+| 视觉风格 | `studio` 是 Web 与管理端共享的构建时预设 | 保留它，或在代码中选择 `glass`、`soft`、`editorial`、`brutalist` |
+| 颜色模式 | 用户端通过环境变量默认使用 `system` | 选择 `system`、`light` 或 `dark`；管理端尚无模式切换器 |
+| 法律页面 | 提供与默认数据流相符、会显示草稿警告的文本骨架 | 填写身份和政策决定，并交由法律专业人士审核 |
+| 可选系统 | 计费、存储、邮件、Slack、分析、推荐、任务和预约已有代码或适配器 | 明确保留并配置、调整，或连同 UI、校验、路由与文档一起移除 |
+
+## 建议的起点
+
+先使用真实产品名；在信息架构稳定前保留 `system` 颜色模式与 `studio` 预设；只启用团队能持续维护的语言。在你具备明确用途、用户文案与运营流程前，建议关闭分析、广告、推荐计划和演示功能。
+
+其他选择并非错误，但会增加责任。更多语言意味着更大市场，也意味着长期翻译维护；更鲜明的预设有助于区分产品，却需要完整检查亮色、暗色与管理端；启用现有集成比从零开发快，但会新增凭据、故障模式、隐私披露和支持工作。
+
+## 设置产品身份与语言行为
+
+先修改 `.env` 中的公开值：
+
+```bash
+NEXT_PUBLIC_APP_NAME=Acme Cloud
+NEXT_PUBLIC_DOCS_URL=https://docs.example.com
+NEXT_PUBLIC_DEFAULT_THEME=system
+NEXT_PUBLIC_DEFAULT_LOCALE=zh
+NEXT_PUBLIC_LOCALES=zh,en
+NEXT_PUBLIC_LOCALE_DETECTION=true
+```
+
+默认语言不带前缀，其他启用语言会带前缀。以上配置下，中文使用 `/pricing`，英语使用 `/en/pricing`。`NEXT_PUBLIC_LOCALE_DETECTION` 决定是否根据浏览器偏好选择已启用语言。`NEXT_PUBLIC_*` 会编译进客户端构建，修改后必须重新构建并部署。
+
+`NEXT_PUBLIC_DOCS_URL` 可以留空；如果发布外部文档，请填写已审核的生产地址。支持邮箱刻意不是环境变量：在 `src/config/site.ts` 中设置 `SiteConfig.contactEmail`，或者在其他渠道承担支持时保持 `null`。
+
+## 选择一个视觉预设
+
+修改 `src/config/style.ts` 中有类型约束的常量：
+
+```ts
+export const stylePreset: StylePreset = "glass";
+```
+
+用户端与管理控制台都会使用同一个值。这是构建时产品选择，不是每位用户的运行时选择器。采用非默认预设前，请检查两个应用中的常用页面、表单、表格、对话框、空状态和错误状态。用户端支持亮色、暗色和跟随系统；管理端目前没有主题模式 provider。
+
+## 完成法律身份配置
+
+填写 `src/config/legal.ts` 中的 `LegalData`：注册实体名称与地址、隐私和法律联系地址、适用法律、生效日期，以及你实际使用的子处理方。逐项处理所有方括号占位内容。在必填身份字段完整之前，`LegalConfig.isConfigured` 为 false，隐私政策与服务条款会持续显示“未经审核的草稿”提示。
+
+内置文本只是起草骨架，不是法律建议或可直接发布的政策。删除未使用的供应商，补充接收个人数据的供应商，让数据保留承诺与账号删除行为一致，并请合格的法律专业人士审核。
+
+## 明确产品边界
+
+对每个可选系统记录一种决定：
+
+1. **保留：**配置凭据、用户文案、监控、故障处理与负责人。
+2. **调整：**在现有服务边界后更换政策或供应商，并同步更新测试和公开说明。
+3. **移除：**在同一次修改中移除路由、UI、生产校验、任务与文档。空凭据不等于产品决定。
+
+对保留的系统，继续阅读[套餐与权益](/zh/docs/plans-and-entitlements)、[Stripe 计费](/zh/docs/stripe-setup)、[文件上传](/zh/docs/storage-uploads)、[统计与同意](/zh/docs/analytics-and-consent)和[部署与安全](/zh/docs/deployment-and-security)。
+
+## 在开发业务功能前验证
+
+```bash
+pnpm lint
+pnpm test:run
+pnpm build:web
+pnpm build:admin
+```
+
+然后确认默认语言没有前缀、每个非默认语言都可访问、语言选择器不会出现已禁用语言、文档与支持链接兑现了承诺、两个应用使用同一视觉预设，以及用户端的亮色/暗色模式都可读。打开隐私政策和服务条款：只要草稿警告或政策占位符仍存在，就不应公开发布。
+
+## 尚未替你完成的部分
+
+启动模板不包含品牌配置器、运行时预设选择器、管理端暗色模式、通过环境变量设置的支持邮箱、经审核的法律政策，也不会替你决定哪些可选系统属于你的产品。这些选择有意留给采用者。
+
+## 源码快照
+
+已根据启动模板提交 `7580470` 验证：
+
+- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/site.ts)
+- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/i18n/locale.ts)
+- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/style.ts)
+- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/legal.ts)

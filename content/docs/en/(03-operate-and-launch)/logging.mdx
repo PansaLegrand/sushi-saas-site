@@ -1,0 +1,32 @@
+---
+title: Structured Logging
+icon: "ScrollText"
+description: Operate Sushi SaaS with structured, correlated, redacted logs across Node and edge runtimes.
+keywords: [logging, Pino, observability, request ID]
+tags: [logging, operations]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Synced with starter commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb).
+
+Use this page to make support and incident work possible before you have your first incident. Sushi SaaS emits JSON to stdout; it deliberately does not choose a log-storage vendor, retention period, dashboard, or alerting product for you.
+
+## Make three operating choices
+
+- Send stdout to the collector already provided by your host, or forward it to a service such as Datadog, Better Stack, or Grafana. The application contract stays the same.
+- Use `info` in production unless you are diagnosing a specific issue. `debug` increases volume and may shorten useful retention.
+- Decide which identifiers support staff may search. Request, organization, job, order, and Stripe event IDs are useful; email addresses and raw payloads usually are not.
+
+**Ready to launch means:** one browser request can be followed into its service/provider work with an ID, a test secret is redacted, an application error returns safe translated copy to the user, and alerts link to the log query an operator needs.
+
+The Node runtime uses Pino and edge code emits the same JSON-shaped contract. Logs go to stdout for the hosting platform to collect; the application does not manage log files. Set `LOG_LEVEL` to `debug`, `info`, `warn`, or `error`.
+
+Pass the request ID through routes, services, jobs, Stripe orders/events, and provider calls. Log structured fields such as event name, `org_uuid`, safe resource UUID, job/order number, duration, and result—not a prose-only message.
+
+The logger redacts authorization headers, cookies, passwords, tokens, API keys, and other catalogued secrets. Never log raw request bodies, presigned URLs, or exported account data. Route boundaries pass failures to `respError`, which records internal context while returning a translated safe `error_code`; never expose `error.message` to the browser.
+
+Monitor readiness, cron runs, retry exhaustion, webhook action-required state, latency, and unexpected 5xx rates. Correlate Slack alerts back to logs by identifiers; Slack is not the log store.
+
+**Next:** Route only actionable failures through [Slack Operations Notifications](/docs/notifications-slack), keeping structured logs as the source of evidence.

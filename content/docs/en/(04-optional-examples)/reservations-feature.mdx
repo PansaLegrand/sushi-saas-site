@@ -1,0 +1,33 @@
+---
+title: Reservations Feature
+icon: "CalendarCheck"
+description: Enable the opt-in reservation workflow with concurrency-safe holds, Stripe checkout, email, and calendars.
+keywords: [reservations, scheduling, Stripe, calendar]
+tags: [reservations, payments]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Synced with starter commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb).
+
+Use reservations if your SaaS sells bookable time with Stripe—for consultations, classes, rentals, or appointments. The starter includes the public booking page, member history, concurrency-safe holds, checkout, confirmation email, and calendar links. It is disabled until you intentionally define what is being sold.
+
+## Choose the booking rules your business needs
+
+- Replace the sample timezone, 9–17 business hours, 30-minute slots, and 14-day horizon in `src/config/reservations.ts`.
+- Create active `reservation_services` rows through an explicit migration or seed, or build an operator CRUD surface. Each row owns duration, price, currency, deposit, cancellation window, and before/after buffers; no production catalog manager ships.
+- Choose full payment or a deposit and make cancellation, refund, rescheduling, and no-show rules visible to users. The starter secures booking and confirmation; it does not invent those business policies for you.
+- Keep the 35-minute hold unless your Stripe Checkout expiry and customer journey justify another value. Only a verified webhook confirms payment.
+
+**Ready to launch means:** a user sees times in the intended timezone, two simultaneous users cannot book one slot, abandoned checkout releases the hold, delayed/duplicate webhooks remain safe, confirmation mail and calendar data are correct, and support knows how cancellations and refunds are handled.
+
+Reservations are disabled by default. Set `NEXT_PUBLIC_FEATURE_RESERVATIONS_ENABLED=true` only after configuring the IANA timezone and business hours in `src/config/reservations.ts`, creating the production service rows, and defining Stripe, email, cancellation, and support policies. Demo auto-seeding is off and creates only one sample consultation; never depend on it in production.
+
+The public flow uses `GET /api/reservations/services`, `POST /api/reservations/availability`, and idempotent `POST /api/reservations`; members view `GET /api/reservations/mine`. UI routes are `/:locale/reserve` and `/:locale/account/reservations`.
+
+A checkout request takes a database lock, creates one 35-minute hold and Stripe Checkout Session, and replays safely for the same `Idempotency-Key`. PostgreSQL advisory locking plus an exclusion constraint prevent overlapping held or confirmed slots under concurrency. Only a verified Stripe webhook confirms payment; session return pages do not. Expiration releases only the hold linked to that Stripe session.
+
+Confirmation queues email with ICS and exposes a Google Calendar link. Before launch, test simultaneous booking, duplicate request/webhook, abandoned checkout, delayed payment, timezone/DST boundaries, deposit/full-payment modes, email retries, and organization scoping.
+
+**Related:** A production booking flow needs [Stripe Billing](/docs/stripe-setup), [Transactional Email](/docs/email-service), and [Durable Jobs](/docs/jobs-and-readiness) configured and tested together.

@@ -1,0 +1,46 @@
+---
+title: Exportación y borrado de cuenta
+icon: "ShieldCheck"
+description: Configura inventario de privacidad, exportaciones autenticadas, borrado diferido, limpieza de proveedores, seudonimización y cancelación.
+keywords: [borrado de cuenta, exportación de datos, privacidad, eliminación, GDPR, retención]
+tags: [privacidad, cuenta, ciclo de vida]
+author: "Sushi SaaS"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Sincronizado con el commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb). Revisa este flujo y la retención con asesoría legal antes de producción.
+
+Usa esta página si los clientes deben descargar sus datos o pedir que se borre su cuenta. El starter incluye APIs autenticadas, workers durables, una política probada tabla por tabla y artefactos privados. **No incluye una pantalla de ajustes terminada** para estas acciones; añade la confirmación y el texto legal que necesite tu producto.
+
+## Define la política antes de mostrar los botones
+
+- Decide qué datos se eliminan, seudonimizan, conservan o quedan fuera de la exportación. El mapa incluido es un punto de partida técnico, no una conclusión legal.
+- Revisa los siete días por defecto de gracia y retención, la sesión reciente de 15 minutos, el borrado del cliente Stripe y la retención del blocklist.
+- Decide cómo transferir organizaciones compartidas y cómo elimina datos cada proveedor externo. El worker bloquea el borrado antes que fingir que esa obligación se completó.
+
+**Está listo para producción cuando:** asesoría legal revisó política y textos; un usuario desechable abre su exportación; puede cancelar durante la gracia; los bloqueos explican el siguiente paso; y la ejecución final elimina o seudonimiza todo sin registrar URLs firmadas.
+
+## Inventario probado
+
+`src/config/account-data-policy.ts` asigna a cada tabla: eliminar, seudonimizar, conservar o no personal, y si se exporta. Una prueba compara el inventario con `src/db/schema.ts`; añadir una tabla sin decisión de privacidad rompe el build.
+
+Credenciales, hashes, sesiones, tokens y secretos TOTP nunca se exportan. Registros financieros, de auditoría, ledger y espacios compartidos pueden conservarse tras reemplazar identificadores.
+
+## Exportar
+
+`POST /api/account/data-export` requiere autenticación, mismo origen, límite de frecuencia e `Idempotency-Key`. Devuelve 202 y encola el trabajo. Consulta `GET /api/account/data-export/{requestUuid}`.
+
+Al terminar devuelve un manifiesto y enlaces firmados de cinco minutos. Los artefactos siguen privados y caducan a los siete días por defecto.
+
+## Borrar
+
+`POST /api/account/deletion` exige además una sesión de menos de 15 minutos. El periodo de gracia predeterminado es siete días; se cancela con `DELETE` y se consulta con `GET`.
+
+Se bloquea al último owner de una organización compartida o al último administrador con acceso completo. Tras la gracia, el worker revoca credenciales, cancela Stripe, elimina objetos del espacio personal, limpia registros eliminables y seudonimiza finanzas, reservas, créditos y auditoría conservados.
+
+`src/config/account-lifecycle.ts` controla gracia, retención, sesión fresca, eliminación del cliente Stripe, blocklist y duración de URLs. Son valores técnicos, no asesoría legal.
+
+Mantén almacenamiento privado y cron activos, implementa hooks para todo proveedor nuevo, actualiza la política al crear tablas y prueba todo el flujo con una cuenta desechable. No registres payloads ni URLs firmadas.
+
+**Para llevarlo a producción:** apoya exportación y borrado en [Trabajos duraderos y readiness](/es/docs/jobs-and-readiness) y valida el conjunto con [Despliegue y seguridad](/es/docs/deployment-and-security).

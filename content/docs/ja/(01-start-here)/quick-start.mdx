@@ -1,0 +1,65 @@
+---
+title: クイックスタート
+icon: "Zap"
+description: Sushi SaaS の Web、管理コンソール、PostgreSQL、Redis をローカルで起動し、本番サービスを選びます。
+keywords: [クイックスタート, セットアップ, Next.js, pnpm, Docker]
+tags: [セットアップ, ローカル開発]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> スターターのコミット [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) で検証済みです。
+
+このページを終えると、3000 番ポートの顧客アプリ、任意で使う 3001 番ポートの運用コンソール、マイグレーション済みの開発用・テスト用 DB、ローカルの Redis が動きます。ローカルで製品を試すだけなら、Stripe、Resend、オブジェクトストレージの認証情報は不要です。
+
+## 同梱されるものと選ぶもの
+
+| 対象 | 同梱される既定値 | あなたが決めること |
+| --- | --- | --- |
+| ローカル基盤 | Docker Compose で PostgreSQL と Redis を実行 | Docker を使うか、`.env` で既存サービスを指定するか |
+| 顧客アプリ | 5 言語対応の Next.js アプリ | ブランド、URL、有効な言語 |
+| 管理コンソール | `pnpm dev:admin` で動く独立アプリ | 信頼する運用担当者だけが使える、別のオリジンへデプロイするか |
+| 外部連携 | Stripe、Resend、Slack、S3 アダプター | 本番公開前に外部サービスと認証情報を選ぶ |
+
+## 必要環境
+
+- Node.js `>=20.19.0 <23`
+- pnpm `10.22.0`
+- 標準の PostgreSQL と Redis を動かす Docker Compose
+
+## ローカル起動
+
+```bash
+git clone https://github.com/PansaLegrand/sushi-saas-template.git
+cd sushi-saas-template
+pnpm install
+pnpm setup
+pnpm dev
+```
+
+`pnpm setup` は何度実行しても安全です。`.env` がない場合だけ作成し、PostgreSQL と Redis を起動し、開発用・テスト用の独立した DB を作って、コミット済みのマイグレーションを適用します。既存の `.env` は上書きしません。
+
+`http://localhost:3000` を開きます。独立した管理アプリは `pnpm dev:admin` で起動し、`http://localhost:3001` を開きます。
+
+## 動作確認
+
+```bash
+curl http://localhost:3000/api/health
+curl http://localhost:3000/api/ready
+pnpm lint
+pnpm test:run
+pnpm build
+```
+
+`/api/health` は軽量な生存確認を行い、`/api/ready` は設定、DB 接続とマイグレーション、Redis、ジョブキューを確認します。
+
+## あなたの製品にする
+
+生成される `.env` には安全なローカル既定値があります。[製品をカスタマイズする](/ja/docs/customize-your-product)で、名称、URL、言語、見た目、法的主体、残す任意機能を設定します。
+
+現在の本番環境検証は、スターターの全構成を要求します。PostgreSQL、Redis、信頼できるクライアント IP の取得元、十分に強い `BETTER_AUTH_SECRET`、`CRON_SECRET`、Stripe のキーと既定の定期課金用 Price ID 4 個、安全な Billing Portal 設定、Resend、S3 互換ストレージが必要です。Turnstile は既定で有効です。本番用キーを設定するか、`NEXT_PUBLIC_CAPTCHA_ENABLED=false` で明示的に無効化してください。Slack は任意です。製品から外部連携を削除する場合は、認証情報を空欄にするだけで済ませず、同じ変更で本番環境検証と関連 UI も削除してください。
+
+二つのヘルスチェック用エンドポイントが成功し、顧客アプリでローカルアカウントを登録でき、`pnpm test:run` と `pnpm build` が通れば次へ進めます。
+
+次に[製品のカスタマイズ](/ja/docs/customize-your-product)、[アーキテクチャとエラー](/ja/docs/architecture-and-errors)、[データベース](/ja/docs/database-setup)、[顧客認証](/ja/docs/authentication-and-admin)を読んでください。

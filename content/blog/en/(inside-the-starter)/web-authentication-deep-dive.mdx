@@ -1,31 +1,61 @@
 ---
 title: "How Sushi SaaS Authentication Works"
 icon: "ShieldCheck"
-description: "A product-specific map of Better Auth, verified email, optional Google sign-in, MFA, organizations, and abuse controls."
+description: "Follow the shipped sign-in journey, then decide which providers, verification, MFA, tenancy, and abuse controls your product should keep."
 tags: [authentication, better-auth, security]
 author: "Sushi SaaS"
 publishedAt: "2025-10-13T00:00:00.000Z"
 updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-Sushi SaaS builds authentication on Better Auth with its Drizzle adapter and PostgreSQL schema. The starter supplies the surrounding product rules that a library cannot decide for you.
+This guide is for adopters making authentication a product decision rather than treating it as a login screen. Sushi SaaS uses Better Auth for identity mechanics and adds the tenant, recovery, moderation, and audit rules required by the rest of the starter.
 
-## Supported sign-in paths
+## The default user journey
 
-Email and password are enabled, email verification is required, and signup sends a verification message. Password recovery revokes existing sessions after the reset. Google OAuth is registered only when both Google credentials are present, so a missing optional provider does not create a broken button.
+1. A user signs up with email and password, or with Google when both OAuth credentials are configured.
+2. Email/password signup requires email verification. Successful verification can enqueue the one-time signup credit grant.
+3. Signup creates a personal organization. A repair path creates it later if the original hook was interrupted.
+4. Sign-in creates a session only after lifecycle and suspension checks pass.
+5. Password reset revokes existing sessions.
 
-Two-factor authentication is available through Better Auth. The separate admin console goes further: an account needs an admin role **and** MFA before it can enter. Google-only operators can set an initial password before enabling MFA.
+Two-factor authentication is available to customer accounts but is not mandatory for the customer application. It **is mandatory** for the separate admin console, in addition to an `admin_ro` or `admin_rw` operator role.
 
-The exact configuration is in [`src/lib/auth.ts` at `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/lib/auth.ts). Follow [Authentication and Admin](/docs/authentication-and-admin) for the required environment and callback settings.
+The configuration lives in [`src/lib/auth.ts` at `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/lib/auth.ts). Setup values and callback URLs are covered in [Authentication and Admin](/docs/authentication-and-admin).
 
-## Authentication creates product state
+## Choices to make before launch
 
-The organization plugin provides owner, admin, and member roles for membership operations. Sushi SaaS maps its snake-case schema explicitly, limits seats through the entitlement service, queues invitation email, and disables generic organization deletion because deleting auth rows alone would orphan billing and product data.
+| Decision | Shipped choice | Change it when |
+| --- | --- | --- |
+| Sign-in methods | Email/password; Google only when configured | Your users require passwordless, enterprise SSO, or another provider |
+| Email verification | Required for password signup | Your risk model permits unverified accounts; also decide when signup benefits are granted |
+| Customer MFA | Available, user-controlled | Your data sensitivity requires step-up or mandatory MFA |
+| Admin MFA | Required | Keep this unless you replace it with an equally strong operator access policy |
+| Bot protection | Turnstile on credential and mail endpoints when enabled; production config fails closed around the chosen setting | You use another edge or identity-provider control and update validation and tests with it |
+| Tenant creation | Every account gets a personal organization | The product is truly single-user and organization scoping is removed end to end |
 
-Authentication hooks also create or recover the user's personal organization and record sign-in events. Product authorization remains separate: a valid session does not automatically grant access to another organization's files, credits, or tasks. [Organizations and Teams](/docs/organizations-and-teams) explains those checks.
+Do not simply switch off verification while leaving signup credits attached to verification. Decide whether to move that grant, remove it, or require another proof of account quality.
 
-## Abuse and recovery controls
+## Identity is not authorization
 
-When configured, Cloudflare Turnstile protects credential and mail-sending endpoints. Signup and sign-in moderation checks can stop blocked or suspended accounts, and session creation is a final gate shared by password and OAuth flows. Errors are returned as catalog codes rather than raw server messages.
+A valid session answers “who is this?” It does not grant access to every organization's data. Membership roles answer which product actions a user may perform; plan entitlements answer which capabilities the organization bought. Sushi keeps those questions separate.
 
-Before production, test verification, password reset, Google callback, session revocation, MFA enrollment, and both admin roles. The [Admin Console Setup](/docs/admin-console-setup) guide covers the separate origin and operator bootstrap.
+The Better Auth organization plugin manages owner, admin, and member mechanics. Application services add rules such as seat limits, never removing the last owner, and never leaving a user without a workspace. Generic organization deletion is disabled because deleting auth rows alone would orphan billing and product data.
+
+Read [Organizations and Teams](/docs/organizations-and-teams) before changing roles or tenant selection.
+
+## Recovery and abuse controls
+
+Turnstile can protect credential and email-sending endpoints. Signup checks apply to password and OAuth account creation; session creation blocks suspended or erasing accounts regardless of sign-in method. User-visible failures resolve through localized error codes instead of exposing server messages.
+
+These controls still need your policy: who may suspend an account, how appeals work, how long sessions last, which events are retained, and what support may change.
+
+## A production test plan
+
+- Verify signup, resend, expiration, and sign-in after verification.
+- Reset a password and confirm old sessions stop working.
+- Test every configured OAuth callback in its production origin.
+- Enroll, verify, recover, and disable MFA; protect backup codes.
+- Exercise invitation seat limits and last-owner safeguards concurrently.
+- Bootstrap both admin roles and confirm MFA is enforced on the admin origin.
+
+Continue with [Admin Console Setup](/docs/admin-console-setup) for the operator path. This guide reflects starter commit `7580470`.

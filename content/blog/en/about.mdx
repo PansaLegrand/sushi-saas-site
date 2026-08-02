@@ -1,89 +1,71 @@
 ---
-title: About Sushi SaaS — What It Is and Why It’s Reliable
+title: "What Sushi SaaS Is"
 icon: "Info"
-description: "A production‑ready, MIT‑licensed SaaS starter focused on shipping real products: i18n, Better Auth, Drizzle ORM, Stripe billing, MDX docs, RBAC admin, and practical DX. Built to be cloned, extended, and trusted."
+description: "What the starter includes, which product decisions it makes, and how to decide whether to adopt all or part of it."
 keywords:
-  - SaaS template
+  - SaaS starter
   - Next.js
   - Better Auth
   - Drizzle ORM
   - Stripe
-  - MDX
-  - i18n
+  - PostgreSQL
   - MIT license
-tags: [overview, philosophy, trust]
-author: "Pansa Legrand"
+tags: [overview, evaluation, architecture]
+author: "Sushi SaaS"
 publishedAt: "2025-10-02T00:00:00.000Z"
-updatedAt: "2025-10-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-## What is Sushi SaaS?
+Sushi SaaS is an MIT-licensed source-code starter for subscription and usage-based products. It is not a hosted platform and it does not generate an application from a form. You clone the repository, own the resulting code, and adapt its product decisions to your users.
 
-Sushi SaaS is a pragmatic, production‑oriented Next.js starter for building and launching real SaaS products. It ships the pieces you actually need on day one—authentication, billing, organizations, credits, storage, admin, and internationalization—wired together with a typed database and explicit migrations.
+## Docs or Guides?
 
-Core stack:
+Use [Docs](/docs) when you know the task and need exact setup, extension, verification, or operating steps for the released code. Use [Guides](/blogs) when you are deciding whether a shipped choice fits, why Sushi made it, and what to keep, change, or remove. The two sections serve different moments in the same adoption journey.
 
-- Next.js App Router with localized routes (next‑intl)
-- Better Auth + Postgres via Drizzle ORM
-- Stripe Checkout + webhook finalization (credits ledger ready)
-- A separate Fumadocs website for public guides and engineering articles
-- Admin pages with server‑enforced RBAC
-- Sensible DX: pnpm, ESLint/Tailwind, health endpoint, clear envs
+## Who it is for
 
-GitHub repository: https://github.com/PansaLegrand/sushi-saas-template
+Evaluate Sushi SaaS if you are a developer or small engineering team already leaning toward Next.js, TypeScript, PostgreSQL, Drizzle, Better Auth, and Stripe. It is most useful when your product also needs organizations, pooled credits, private uploads, background jobs, localized UI, and an operator console.
 
-```bash
-git clone https://github.com/PansaLegrand/sushi-saas-template.git
-cd sushi-saas-template
-pnpm install && pnpm dev
-```
+Choose a smaller foundation if you are validating a landing page, building a single-user tool without billing, or expect to replace most of that stack. Starting with fewer contracts is cheaper than deleting contracts you never wanted.
 
----
+## What ships
 
-## Why you can rely on it
+The repository contains two applications:
 
-- Typed from data to UI: Drizzle schemas are the single source of truth; drizzle‑kit migrations keep your database in sync.
-- Real flows, not stubs: Auth, billing (Stripe), and admin permissions are connected and exercised in the UI.
-- Predictable i18n: Route‑prefixed locales with next‑intl and aligned message catalogs.
-- Operational clarity: `/api/health`, explicit env templates, and repository guidelines for builds, lint, and migrations.
-- Clear documentation: Every major capability (auth, billing, database, admin, emails) has an MDX guide with practical commands and file references.
-- Proven in the wild: The template reflects patterns used to ship real products (e.g., https://dojoclip.com, https://www.sushisaas.com).
+- the customer application under `src/app`, with authentication, organizations, billing, credits, storage, reservations, and an example usage-based task;
+- a separate admin application under `apps/admin`, with mandatory MFA, read-only/read-write operator roles, moderation, reconciliation, billing inspection, and audit records.
 
----
+Both use the same PostgreSQL schema and authentication data. The public website and the code repository are deliberately separate: this site explains the released starter, while engineering runbooks that must change with code stay in the repository.
 
-## What makes it unique
+## Decisions you inherit
 
-- MIT License: Use it commercially, modify it freely, and move fast. See `LICENSE` in the repository.
-- Full‑feature starter: Auth, billing, credits ledger, affiliates, reservations demo, admin, storage, and i18n are ready out of the box.
-- Independent documentation: this website owns MDX, SEO, and editorial releases without adding content dependencies to every cloned app.
-- Author consultancy available: Need help adapting this to your use case? The author offers implementation and advisory services so you can ship faster with confidence. Email: pansalegrand@gmail.com (English, French, Chinese — working proficiency)
+| Shipped choice | Why it was chosen | Revisit it when |
+| --- | --- | --- |
+| Horizontal route → service → model → database layers | Keeps business rules and queries in predictable places | Your team has committed to another architecture and is prepared to update its enforcement tests |
+| Every account owns or joins an organization | Gives billing, files, credits, and limits one tenant boundary | Your product is genuinely single-tenant and you are willing to remove organization scoping end to end |
+| Stripe events finalize billing state | Makes retries and delayed webhooks normal inputs | Your billing provider or commercial model is different |
+| Separate admin deployment | Isolates operator access from customer navigation | Your operations are simple enough to share one application and one deployment boundary |
+| Five product locales | Makes user-visible copy and errors localizable | You support fewer locales and remove their routes, catalogs, and tests together |
 
----
+These are defaults, not claims that every SaaS should make the same choices.
 
-## What you get on day one
+## Three ways to adopt it
 
-- Authentication & RBAC: Better Auth, typed DB adapter, secure admin with read‑only/read‑write roles.
-- Billing that sticks: Stripe Checkout sessions + signed webhooks to finalize and grant credits.
-- Credits & orders: A simple ledger to power usage‑based products and free trials.
-- Internationalization: Locale‑prefixed routes and message bundles for the product UI.
-- Public documentation: maintained here as a separately deployable Fumadocs project.
-- Developer experience: pnpm, Turbopack/Webpack toggle, ESLint/Tailwind, and repository conventions.
+1. **Use the full backbone.** Keep the boundaries, replace the brand and example product surface, then configure providers and policies.
+2. **Use selected patterns.** Copy a self-contained idea—such as the credit ledger or Stripe replay handling—along with its migrations, tests, and operational rules.
+3. **Use it as a reference.** Compare its failure handling and invariants with your own system without adopting the code.
 
----
+Avoid a half-migration where two architectures or two tenant models coexist. That creates two correct-looking places for every new change.
 
-## Why I built this open‑source project
+## What remains your responsibility
 
-I started Sushi SaaS to connect with other builders and to keep myself shipping. Open source makes that possible: it invites real conversations, sparks side projects, and sometimes opens the door to join a startup.
+The starter cannot choose your prices, refund policy, data retention, legal terms, support process, backup targets, fraud controls, or threat model. Referral rewards are disabled because a payout policy is a business and compliance decision. The example text-to-video provider and reservation flow are integration examples, not a finished product proposition.
 
-- Connection and momentum: I want to meet collaborators, explore side projects, and—if the chemistry is right—be part of a startup. Publishing real, working code is the best conversation starter I know.
-- Better software through openness: Boilerplates only get great when people use them, critique them, and improve them. This is my version of building in public—without a monetary incentive—just the joy of coding and seeing others build on top.
+## A practical evaluation
 
----
+1. Follow [Quick Start](/docs/quick-start) and open both the customer and admin applications.
+2. Trace one real flow you need—signup, Checkout, upload, or credit spend—from route to database.
+3. Read [When Sushi SaaS Is a Good Fit](/blogs/why-use-a-saas-template) and list the shipped decisions you would keep, change, or remove.
+4. Review [Deployment and Security](/docs/deployment-and-security) before estimating production work.
 
-## Links
-
-- GitHub: https://github.com/PansaLegrand/sushi-saas-template
-- Getting Started docs: [Quick Start](/docs/quick-start)
-
-
-If you want this template tailored to your product or to validate your MVP quickly, reach out at pansalegrand@gmail.com. I speak English, French, and Chinese (working proficiency).
+Source: [Sushi SaaS starter at commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470).

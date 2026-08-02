@@ -1,88 +1,71 @@
 ---
-title: Acerca de Sushi SaaS — Qué es y por qué confiar
+title: "Qué es Sushi SaaS"
 icon: "Info"
-description: "Un starter SaaS listo para producción, con licencia MIT, centrado en lanzar productos reales: i18n, Better Auth, Drizzle ORM, Stripe, MDX, admin con RBAC y una DX práctica. Pensado para clonar, extender y confiar."
+description: "Qué incluye el starter, qué decisiones de producto toma y cómo decidir si adoptar todo o solo una parte."
 keywords:
-  - plantilla SaaS
+  - starter SaaS
   - Next.js
   - Better Auth
   - Drizzle ORM
   - Stripe
-  - MDX
-  - i18n
+  - PostgreSQL
   - licencia MIT
-tags: [resumen, filosofía, confianza]
-author: "Pansa Legrand"
+tags: [resumen, evaluación, arquitectura]
+author: "Sushi SaaS"
 publishedAt: "2025-10-02T00:00:00.000Z"
-updatedAt: "2025-10-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-## ¿Qué es Sushi SaaS?
+Sushi SaaS es un starter de código fuente, con licencia MIT, para productos de suscripción y pago por uso. No es una plataforma alojada ni genera una aplicación a partir de un formulario. Clonas el repositorio, eres responsable del código resultante y adaptas sus decisiones de producto a tus usuarios.
 
-Sushi SaaS es un starter de Next.js pragmático y orientado a producción para crear y lanzar productos SaaS reales. Trae autenticación, cobros, organizaciones, créditos, almacenamiento, admin e internacionalización, conectados a una base de datos tipada y migraciones explícitas.
+## ¿Documentación o Guías?
 
-Pila principal:
+Usa [Documentación](/es/docs) cuando ya conoces la tarea y necesitas pasos exactos para configurar, ampliar, verificar u operar el código publicado. Usa [Guías](/es/blogs) cuando decides si una elección encaja, por qué Sushi la hizo y qué conservar, cambiar o eliminar. Son dos momentos del mismo recorrido de adopción.
 
-- Next.js App Router con rutas localizadas (next‑intl)
-- Better Auth + Postgres a través de Drizzle ORM
-- Stripe Checkout + finalización por webhooks (libreta de créditos lista)
-- Un sitio Fumadocs separado para guías públicas y artículos técnicos
-- Páginas de admin con RBAC reforzado en el servidor
-- DX sensata: pnpm, ESLint/Tailwind, endpoint de salud, variables de entorno claras
+## Para quién es
 
-Repositorio GitHub: https://github.com/PansaLegrand/sushi-saas-template
+Valora Sushi SaaS si eres desarrollador o formas parte de un equipo pequeño que ya se inclina por Next.js, TypeScript, PostgreSQL, Drizzle, Better Auth y Stripe. Aporta más valor cuando el producto también necesita organizaciones, créditos compartidos, cargas privadas, trabajos en segundo plano, interfaz localizada y consola de operaciones.
 
-```bash
-git clone https://github.com/PansaLegrand/sushi-saas-template.git
-cd sushi-saas-template
-pnpm install && pnpm dev
-```
+Elige una base menor si solo validas una landing page, creas una herramienta para un único usuario sin cobros o piensas sustituir casi toda esa pila. Empezar con menos contratos sale más barato que borrar contratos que nunca quisiste.
 
----
+## Qué incluye
 
-## Por qué puedes confiar
+El repositorio contiene dos aplicaciones:
 
-- Tipado de extremo a extremo: los esquemas Drizzle son la fuente de verdad; las migraciones con drizzle‑kit mantienen la base sincronizada.
-- Flujos reales, no maquetas: auth, cobros (Stripe) y permisos de admin están conectados y se ejercitan en la UI.
-- i18n predecible: rutas por locale con next‑intl y catálogos de mensajes alineados.
-- Claridad operativa: `/api/health`, plantillas de entorno y pautas de build, lint y migraciones en el repositorio.
-- Documentación clara: cada capacidad principal (auth, cobros, base de datos, admin, emails) tiene una guía MDX con comandos y rutas de archivos.
-- Probado en el mundo real: refleja patrones usados para lanzar productos reales (ver README “Showcase”; p. ej., https://dojoclip.com, https://www.sushisaas.com).
+- la aplicación para clientes en `src/app`, con autenticación, organizaciones, cobros, créditos, almacenamiento, reservas y una tarea de uso como ejemplo;
+- una aplicación de administración separada en `apps/admin`, con MFA obligatorio, roles de operador de solo lectura/lectura-escritura, moderación, conciliación, inspección de cobros y registros de auditoría.
 
----
+Ambas usan el mismo esquema PostgreSQL y los mismos datos de autenticación. El sitio público y el repositorio de código están separados a propósito: este sitio explica el starter publicado; los runbooks de ingeniería que deben cambiar con el código permanecen en el repositorio.
 
-## Qué lo hace único
+## Decisiones que heredas
 
-- Licencia MIT: úsalo comercialmente, modifícalo libremente y avanza rápido. Consulta `LICENSE` en el repo.
-- Starter con funciones completas: auth, cobros, libreta de créditos, afiliados, demo de reservas, admin, almacenamiento e i18n.
-- Documentación independiente: este sitio gestiona MDX, SEO y publicaciones sin añadir dependencias de contenido a cada aplicación clonada.
-- Consultoría del autor disponible: ¿necesitas adaptarlo a tu caso? El autor ofrece implementación y asesoría para que lances más rápido con confianza. Email: pansalegrand@gmail.com (Inglés, Francés, Chino — nivel de trabajo)
+| Elección incluida | Por qué se eligió | Cuándo revisarla |
+| --- | --- | --- |
+| Capas horizontales ruta → servicio → modelo → base de datos | Mantiene las reglas de negocio y consultas en lugares previsibles | El equipo ya adoptó otra arquitectura y actualizará también sus tests de cumplimiento |
+| Cada cuenta posee o integra una organización | Da a cobros, archivos, créditos y límites una única frontera de tenant | El producto es realmente de un solo tenant y vas a retirar el alcance por organización de extremo a extremo |
+| Los eventos de Stripe finalizan el estado de cobro | Trata los reintentos y webhooks tardíos como entradas normales | Tu proveedor o modelo comercial es distinto |
+| Despliegue de admin separado | Aísla el acceso de operadores de la navegación del cliente | Las operaciones son bastante simples para compartir aplicación y frontera de despliegue |
+| Cinco locales de producto | Permite localizar interfaz y errores visibles | Mantienes menos idiomas y retiras sus rutas, catálogos y tests a la vez |
 
----
+Son valores predeterminados, no una afirmación de que todo SaaS deba decidir igual.
 
-## Qué recibes desde el día uno
+## Tres formas de adoptarlo
 
-- Autenticación y RBAC: Better Auth, adaptador tipado de BD, admin seguro con roles de solo lectura/lectura‑escritura.
-- Cobros que se sostienen: Stripe Checkout + webhooks firmados para finalizar y otorgar créditos.
-- Créditos y pedidos: libreta simple para productos por uso y períodos de prueba.
-- Internacionalización: rutas por locale y paquetes de mensajes para la UI del producto.
-- Documentación pública: mantenida aquí como un proyecto Fumadocs desplegable por separado.
-- Experiencia de desarrollo: pnpm, Turbopack/Webpack, ESLint/Tailwind y convenciones claras.
+1. **Usar toda la base.** Conserva las fronteras, sustituye marca y ejemplos de producto, y configura proveedores y políticas.
+2. **Usar patrones concretos.** Copia una idea autocontenida—como la libreta de créditos o el manejo de reintentos de Stripe—junto con sus migraciones, tests y reglas operativas.
+3. **Usarlo como referencia.** Compara sus fallos e invariantes con tu sistema sin adoptar el código.
 
----
+Evita una migración a medias con dos arquitecturas o modelos de tenancy: cada cambio nuevo tendría dos lugares aparentemente correctos.
 
-## Por qué creé este proyecto de código abierto
+## Lo que sigue siendo tu responsabilidad
 
-Empecé Sushi SaaS para conectar con otros builders y para mantenerme enviando software. El open source lo hace posible: invita a conversaciones reales, enciende side projects y a veces abre la puerta para unirme a una startup.
+El starter no puede decidir precios, reembolsos, retención de datos, términos legales, soporte, objetivos de backup, controles antifraude ni modelo de amenazas. Las recompensas por recomendación están desactivadas porque el pago exige decisiones comerciales y de cumplimiento. El proveedor de texto a vídeo y el flujo de reservas son ejemplos de integración, no una propuesta de producto terminada.
 
-- Conexión y ritmo: quiero conocer colaboradores, explorar side projects y—si hay química—formar parte de una startup. Publicar código real y funcionando es el mejor rompehielos que conozco.
-- Mejor software gracias a la apertura: los boilerplates se vuelven excelentes cuando la gente los usa, los critica y los mejora. Esta es mi manera de construir en público—sin incentivo monetario—solo por la alegría de programar y ver a otros construir encima.
+## Una evaluación práctica
 
----
+1. Sigue [Inicio rápido](/es/docs/quick-start) y abre las aplicaciones de cliente y admin.
+2. Traza un flujo que realmente necesites—registro, Checkout, carga o gasto de créditos—desde la ruta hasta la base de datos.
+3. Lee [Cuándo encaja Sushi SaaS](/es/blogs/why-use-a-saas-template) y enumera qué decisiones conservarás, cambiarás o retirarás.
+4. Revisa [Despliegue y seguridad](/es/docs/deployment-and-security) antes de estimar el trabajo de producción.
 
-## Enlaces
-
-- GitHub: https://github.com/PansaLegrand/sushi-saas-template
-- Documentación de inicio: [Guía rápida](/es/docs/quick-start)
-
-Si quieres adaptar este template a tu producto o validar tu MVP rápidamente, escríbeme a pansalegrand@gmail.com. Hablo inglés, francés y chino (nivel de trabajo).
+Fuente: [Sushi SaaS starter en el commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470).

@@ -1,0 +1,12 @@
+{
+  "title": "ドキュメント",
+  "root": true,
+  "defaultOpen": true,
+  "pages": [
+    "(01-start-here)",
+    "(02-build-the-product)",
+    "(03-operate-and-launch)",
+    "(04-optional-examples)",
+    "(05-admin-console)"
+  ]
+}

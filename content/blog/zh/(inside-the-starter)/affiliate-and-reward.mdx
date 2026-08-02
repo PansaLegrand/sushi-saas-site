@@ -1,34 +1,58 @@
 ---
-title: "Sushi SaaS 推荐奖励的工作方式"
+title: "你应该添加推荐计划吗？"
 icon: "Gift"
-description: "了解可选推荐流程、首次触达归因、防重复佣金记录以及人工打款边界。"
+description: "在启用首次触达跟踪前，先判断你需要的究竟是推荐归因、现金佣金还是产品积分。"
 tags: [推荐, 计费, 幂等]
 author: "Sushi SaaS"
 publishedAt: "2025-10-09T00:00:00.000Z"
 updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-Sushi SaaS 提供的是可选推荐实现，而不是开箱即用的联盟营销业务。功能默认关闭；内置流程只记录待审核佣金，绝不会自动转账或发放积分。
+Sushi SaaS 提供推荐功能的技术基础，而不是完整联盟营销方案。它默认关闭。启用后，系统可以把新账户归因给推荐者，并在付款后记录 pending 奖励；它不会验证联盟成员、自动转账、发放积分或把打款标记为完成。
 
-## 从分享链接到归因
+## 默认用户旅程
 
-登录用户可通过 `/api/affiliate/invite-code` 创建八位邀请码。访问 `/i/abc12345` 形式的链接时，系统查找邀请者，把其 UUID 写入有效期 30 天的 `ref` cookie，然后跳转到首页。
+1. 登录用户创建短邀请码（通常为八位）并分享 `/i/<code>`。
+2. 访客打开链接，应用将推荐者 UUID 写入有效期 30 天的 `ref` cookie，然后跳转首页。
+3. 访客登录后，客户端把 cookie 提交到归因接口。
+4. Service 只认领一次推荐者；系统拒绝自我推荐，并让并发重试收敛到首次成功归因。
+5. 符合条件的已支付订单创建一条 pending 佣金；数据库唯一约束使 webhook 重放无害。
 
-共享的 theme provider 会自动挂载 `AffiliateInit`。推荐功能启用后，它在客户端调用 `captureAffiliateAttribution()`，向 `/api/affiliate/update-invite` 发起请求。该接口要求有效 session，并读取 `ref` cookie。成功后会在当前浏览器标签页的 `sessionStorage` 中写入标记；若调用失败，包括登录前的调用，则不写标记，之后再次挂载时可以重试。默认采用首次触达：若两个请求竞争，由条件数据库更新决定唯一结果。系统拒绝自我推荐，并通过唯一 signup 记录保证重试安全。
+用户可在现有 `my-invites` 页面查看邀请链接和汇总。运营人员可在管理后台 `affiliates` 页面检查记录，但该页面只读，并不是打款工作流。
 
-行为由 [`7580470` 的 `src/config/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/config/affiliate.ts)配置，并由 [`src/services/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/services/affiliate.ts)编排。
+默认示例取 5,000 个最小货币单位与已付金额 20% 中较大者。对于两位小数的美元收费，5,000 代表 50 美元。这只是示例，不是推荐佣金比例。
 
-## 付费订单之后
+配置见 [`7580470` 的 `src/config/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/config/affiliate.ts)，编排逻辑见 [`src/services/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/services/affiliate.ts)。
 
-启用后，一个已支付订单只会创建一条 pending 佣金。示例配置取 5,000 个最小货币单位（USD 下为 50 美元）与订单金额 20% 中较大的数值。`paid_order_no` 上的部分唯一索引能阻止两个 webhook worker 重复记录奖励。
+## 先选择计划，再选择代码
 
-退款或取消可以取消仍处于 pending 的奖励。完成打款被刻意留在自动资金链路之外：运营人员在管理后台审核，采用者自行接入 payout provider 与合规流程。
+| 目标 | 应采取的做法 |
+| --- | --- |
+| 不做推荐 | 保持 `enabled: false`；若要缩小产品，可再删除页面、路由、表和 provider |
+| 只做邀请归因 | 保留首次触达，停止创建和展示佣金，并明确允许保留哪些分析数据 |
+| 现金佣金 | 增加资格、身份/税务资料、反欺诈审核、打款 provider、可审计状态变更与对账 |
+| 产品积分奖励 | 增加幂等的积分台账发放；只修改 `payoutType` **不会**移动积分 |
+| 最后触达归因 | 在 service 中实现并测试新的认领规则；仅使用已有 enum **不会**改变默认首次触达行为 |
 
-## 启用前的工作
+佣金计算已支持纯固定、纯比例、取较大值和相加。归因逻辑目前不会根据 `AttributionModel` 切换，因此应把首次触达视为已实现的契约。
 
-1. 明确币种、比例、归因窗口与资格政策。
-2. 决定身份验证、税务资料、欺诈审核与打款状态流程。
-3. 替换示例奖励值，完整政策就绪前保持 `enabled` 为 false。
-4. 测试链接访问、并发归因、Stripe webhook 重放、取消与后台审核。
+## 仍需制定的政策
 
-推荐记录依赖可靠订单处理。先配置 [Stripe 计费](/docs/stripe-setup)，再通过[管理后台页面与操作](/docs/admin-console-operations)了解审核界面。
+- 哪些购买符合条件，pending 奖励何时可打款？
+- 退款、争议、取消或账户擦除后如何处理？
+- 使用哪种货币和最小单位规则？
+- 员工、现有客户或同一家庭是否可以参与？
+- 在服务地区，推荐 cookie 是否需要征得同意？
+- 运营如何调查滥用并修正记录，同时保留审计线索？
+
+Stripe 退款处理可取消仍为 pending 的奖励，但已完成打款的追回并未实现。政策和失败路径完成前，不要自动移动资金。
+
+## 安全启用
+
+1. 先配置并测试 [Stripe 计费](/zh/docs/stripe-setup)。
+2. 替换 `src/config/affiliate.ts` 中的示例窗口和奖励数值。
+3. 在开启功能前完成打款或积分工作流及其管理操作。
+4. 测试匿名访问 → 注册/登录 → 首次归因 → 付款 → webhook 重放 → 退款。
+5. 测试自我推荐、两个竞争链接、cookie 过期和并发事件。
+
+具体配置与验证步骤见[配置推荐与联盟奖励](/zh/docs/referrals)，当前审核界面见[管理后台页面与操作](/zh/docs/admin-console-operations)。

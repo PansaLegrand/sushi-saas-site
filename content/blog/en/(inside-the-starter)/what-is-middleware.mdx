@@ -1,35 +1,53 @@
 ---
 title: "How Sushi SaaS Routes Requests"
 icon: "Workflow"
-description: "How the starter combines locale routing, request IDs, and inspectable organization context in Next.js middleware."
+description: "See what the middleware does for users and operators, why organization selection stays visible in the URL, and which routing choices you can change."
 tags: [middleware, routing, i18n]
 author: "Sushi SaaS"
 publishedAt: "2025-10-13T00:00:00.000Z"
 updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-Sushi SaaS uses one middleware boundary for three request-level concerns: locale routing, correlation IDs, and organization context. Authentication and business authorization still happen deeper in the application.
+Sushi SaaS middleware handles request-level context, not authentication or business authorization. Its three jobs—locale routing, request correlation, and organization transport—produce user-visible behavior that you should choose deliberately.
 
-## Every request gets a correlation ID
+## What users experience
 
-The middleware normalizes an incoming `x-request-id` or creates one, forwards it to the route, and returns it on the response. Route and service logs can therefore refer to the same request without trusting an arbitrary malformed header.
+- A page resolves to the appropriate localized route through `next-intl`.
+- Two tabs can stay on two different workspaces because the selected organization is represented by `?org=<slug>`, not only by session state.
+- A shared account link shows which workspace it targets.
 
-## API and page requests take different paths
+Operators receive an `x-request-id` on every response, allowing a support report to be matched to structured logs. API requests skip locale negotiation but receive the same request and organization context.
 
-Requests under `/api` skip locale negotiation. They continue directly with the normalized request ID and API organization context.
+The implementation is [`src/middleware.ts` at `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/middleware.ts).
 
-Page requests pass through `next-intl`. The middleware then copies Next.js request-header override metadata onto that localized response, so the changed headers reach the eventual page or handler instead of appearing only on the outgoing response.
+## What the middleware actually trusts
 
-This detail is easy to miss when combining two middleware responses. The implementation is visible in [`src/middleware.ts` at `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/middleware.ts).
+For a page request, organization context comes from the URL query parameter. A caller-supplied organization header is removed. For an API request, the shared client may send `x-organization-slug`; a URL value takes precedence when both exist.
 
-## Organization context stays inspectable
+Neither value authorizes access. `src/services/authz.ts` still proves that the signed-in user belongs to the requested organization and refuses ambiguous multi-organization API requests. Middleware only validates that context is safe to transport.
 
-A page selects an organization only through the URL query parameter. A caller-provided organization header is deliberately removed from page requests, so a copied link represents the context that will be used.
+Incoming request IDs are accepted only when they match a bounded, log-safe format; otherwise the application creates a new UUID. The ID is forwarded to the route and copied to the response.
 
-API clients may provide the configured organization header. If the URL contains an organization slug, it takes precedence. Services still validate membership and permissions; middleware only normalizes and transports context.
+## Choices you can make
 
-## What the matcher covers
+### Locale routing
 
-The matcher includes locale routes, API routes, and ordinary application pages. It excludes Next.js assets, Vercel internals, files with extensions, and the separately deployed admin application.
+Keep `next-intl` middleware when locale-prefixed pages and detection are part of the product. For a single-language product, remove the middleware branch together with localized routes, message catalogs, and tests. Leaving half of the locale contract usually produces redirects and links that disagree.
 
-For the surrounding route/service/model boundaries, read [Architecture and Error Contracts](/docs/architecture-and-errors). For tenant selection and authorization, continue with [Organizations and Teams](/docs/organizations-and-teams).
+### Workspace selection
+
+The shipped query-string model is tab-local and easy to add to existing account URLs. Path-based tenancy such as `/acme/account` gives the workspace stronger URL hierarchy but requires changing link builders, callbacks, matchers, and context resolution. Session-only selection looks simpler, but two tabs can overwrite one shared active organization; use it only if that behavior is acceptable.
+
+### Request tracing
+
+Keep correlation IDs for almost every deployed product. If your proxy or observability provider owns trace IDs, map its trusted value into the logger contract or carry both values. Do not accept unbounded caller text into logs.
+
+### API context
+
+Requiring an explicit organization for multi-workspace API users prevents an operation from silently landing in the last active tenant. You can simplify this only if the API is provably single-tenant.
+
+## When to add middleware logic
+
+Add a concern here only when it must run before routing and can remain fast and edge-compatible. Put membership checks, database-dependent authorization, billing decisions, and other business rules in services instead.
+
+After changing the boundary, test localized pages, `/api` routes, static assets, request-ID forwarding, malformed context, and two-tab workspace switching. Then review [Architecture and Error Contracts](/docs/architecture-and-errors) and [Organizations and Teams](/docs/organizations-and-teams).

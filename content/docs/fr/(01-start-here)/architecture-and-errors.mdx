@@ -1,0 +1,78 @@
+---
+title: Architecture et contrats d’erreur
+icon: "Workflow"
+description: Étendez Sushi SaaS sans contourner ses frontières de données, d’autorisation ou d’erreurs sûres pour l’utilisateur.
+keywords: [architecture, services, modèles, erreurs, Next.js, TypeScript]
+tags: [architecture, erreurs, tests]
+author: "Sushi SaaS"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Vérifié avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) du starter.
+
+Lisez cette page avant d’ajouter la première fonction propre à votre produit. L’objectif est concret : savoir où placer chaque fichier, quelle frontière protège les données client et quels tests prouvent qu’une extension est sûre.
+
+## Décisions d’architecture déjà prises
+
+Sushi SaaS choisit une architecture horizontale unique, des appels directs aux services depuis les Server Components, des wrappers API typés pour les Client Components, des contrôles de plan par capacité et des erreurs publiques traduites. Conserver ces choix rend les nouveaux domaines prévisibles. Vous pouvez remplacer une convention, mais faites-en une migration d’architecture : mettez à jour simultanément les tests d’application et la documentation afin de ne pas maintenir deux modèles concurrents.
+
+## Un seul sens côté serveur
+
+```text
+src/app/**       routes et pages : entrée/sortie HTTP
+  ↓
+src/services/**  règles métier, orchestration et invariants
+  ↓
+src/models/**    persistance typée ; seule couche autorisée à appeler db()
+  ↓
+src/db/**        schéma, migrations et connexion
+```
+
+Les routes authentifient, valident et traduisent HTTP. Toute écriture passe par un service. Les modèles possèdent les requêtes, le filtrage tenant et les transactions. `tests/unit/architecture.test.ts` refuse les imports qui franchissent ces frontières.
+
+Ne créez pas `src/features/` : chaque domaine se répartit horizontalement entre modèles, services, configuration et composants.
+
+## Flux de données du navigateur
+
+```text
+Server Component → service direct
+Client Component → src/api/** → client API partagé → /api/**
+```
+
+Un Server Component n’appelle pas l’API de sa propre application. Un Client Component n’utilise pas `fetch` directement ; il passe par un module de domaine sous `src/api/`.
+
+## Deux questions d’autorisation
+
+Le rôle d’organisation et le plan d’abonnement restent indépendants :
+
+```ts
+const ctx = await getOrgContext(request);
+if (!ctx || !can(ctx, "file:delete", file)) return respForbidden();
+await requireEntitlement(ctx.orgUuid, "storage.upload");
+```
+
+`can()` décide si le rôle autorise l’action. Les entitlements décident si le plan effectif de l’organisation inclut la capacité ou la limite.
+
+## Contrat d’erreur sans fuite
+
+Le serveur lève `AppError` avec un code stable du catalogue. Chaque route termine ses exceptions dans `respError`, qui journalise le détail interne et renvoie un message sûr et traduit.
+
+L’interface branche sur `error_code` et résout le texte avec `resolveErrorMessage` ou `resolveAuthError` ; elle n’affiche jamais `error.message`. Les traductions sont dans `src/lib/errors/i18n/locales/` et chaque code doit exister dans les cinq langues.
+
+## Ajouter un domaine proprement
+
+1. Définir les constantes dans `src/config/`.
+2. Ajouter le CRUD typé dans `src/models/`.
+3. Placer invariants, autorisation, idempotence et effets dans `src/services/`.
+4. Garder les routes minces et utiliser le catalogue d’erreurs.
+5. Ajouter les tests du niveau adapté.
+6. Exécuter `pnpm lint`, `pnpm test:run` et `pnpm build`.
+
+Pour une fonction visible dans le navigateur, décidez aussi où elle est rendue. Préférez un Server Component lorsqu’il peut appeler directement un service ; utilisez un Client Component uniquement pour l’interaction et ajoutez un wrapper sous `src/api/` plutôt qu’un `fetch` brut.
+
+Le domaine est terminé lorsque la route ne contient aucune règle métier, que le service possède tous les invariants d’écriture, le modèle toutes les requêtes, qu’une requête rejetée n’expose qu’un code du catalogue et que le niveau de test correspondant passe.
+
+Les contrats complets restent versionnés dans `docs/errors.md`, `docs/frontend.md` et `AGENTS.md` du starter.
+
+**Étape suivante :** observez comment ces couches composent une requête complète dans [Comment Sushi SaaS est structuré](/fr/blogs/anatomy-of-modern-saas).

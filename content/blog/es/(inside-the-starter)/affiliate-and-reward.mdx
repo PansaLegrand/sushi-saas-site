@@ -1,34 +1,58 @@
 ---
-title: "Cómo funcionan las recompensas por referidos en Sushi SaaS"
+title: "¿Deberías añadir un programa de referidos?"
 icon: "Gift"
-description: "El flujo opcional de referidos, atribución de primer contacto, comisiones seguras ante reintentos y pagos manuales."
-tags: [referidos, facturación, idempotencia]
+description: "Decide si necesitas atribución, comisiones en efectivo o créditos antes de habilitar el seguimiento first-touch del starter."
+tags: [referidos, cobros, idempotencia]
 author: "Sushi SaaS"
 publishedAt: "2025-10-09T00:00:00.000Z"
 updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-Sushi SaaS incluye una implementación opcional de referidos, no un negocio de afiliación listo para activar. Está deshabilitada por defecto y el flujo integrado solo registra comisiones para revisión: nunca mueve dinero ni créditos automáticamente.
+Sushi SaaS incluye la base técnica para referidos, no un programa de afiliación terminado. Está desactivada por defecto. Al activarla puede atribuir una cuenta nueva y registrar una recompensa pendiente tras el pago; no verifica afiliados, envía dinero, concede créditos ni marca pagos como completados.
 
-## Del enlace a la atribución
+## Recorrido incluido
 
-Una persona autenticada puede crear un código de ocho caracteres mediante `/api/affiliate/invite-code`. Un enlace como `/i/abc12345` busca al invitador, guarda su UUID en una cookie `ref` durante 30 días y redirige al inicio.
+1. Un usuario autenticado crea un código corto (normalmente de ocho caracteres) y comparte `/i/<code>`.
+2. El visitante abre el enlace; la app guarda el UUID del referente en una cookie `ref` de 30 días y redirige al inicio.
+3. Tras iniciar sesión, el cliente envía la cookie al endpoint de atribución.
+4. El servicio reclama un referente una sola vez. Rechaza autorreferidos y los reintentos concurrentes convergen en la primera atribución correcta.
+5. Un pago válido crea una comisión pendiente. Una regla única de base hace inocua la repetición del webhook.
 
-El proveedor de tema compartido monta `AffiliateInit` automáticamente. Cuando los referidos están habilitados, llama en el cliente a `captureAffiliateAttribution()`, que envía un POST a `/api/affiliate/update-invite`. El endpoint exige una sesión autenticada y lee la cookie `ref`. Un intento correcto deja una marca en `sessionStorage` para la pestaña actual; un fallo, incluido el intento previo al login, no deja marca y permite reintentar en un montaje posterior. El modelo por defecto es primer contacto: una actualización condicional decide el ganador si dos solicitudes compiten. Se rechazan autorreferidos y una fila única de registro vuelve inocuos los reintentos.
+El usuario ve enlace y resumen en `my-invites`. El operador inspecciona filas en `affiliates` del admin, pero esa página es de solo lectura, no un flujo de pagos.
 
-El comportamiento se define en [`src/config/affiliate.ts` en `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/config/affiliate.ts) y se coordina en [`src/services/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/services/affiliate.ts).
+El ejemplo usa el mayor valor entre 5.000 unidades monetarias menores y el 20% pagado. Con USD de dos decimales, 5.000 significa 50 $. Es un ejemplo, no una recomendación.
 
-## Después de una orden pagada
+Consulta [`src/config/affiliate.ts` en `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/config/affiliate.ts) y [`src/services/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/services/affiliate.ts).
 
-Al habilitarlo, una orden pagada crea una sola comisión pendiente. La configuración incluida usa el mayor entre 5.000 unidades monetarias menores (50 USD si la moneda es dólar) y el 20 % de la orden. Un índice único parcial sobre el número de orden impide que dos workers de webhook dupliquen el premio.
+## Decide el programa antes que el código
 
-Un reembolso puede cancelar un premio aún pendiente. El pago completado queda fuera de la ruta automática: los operadores revisan los referidos en la consola y cada producto conecta su proveedor de pagos y proceso de cumplimiento.
+| Objetivo | Qué hacer |
+| --- | --- |
+| Sin referidos | Mantén `enabled: false`; elimina después páginas, rutas, tablas y provider si quieres reducir el producto |
+| Solo atribución | Conserva first touch, deja de crear y mostrar comisiones y define qué analítica puedes guardar |
+| Comisiones en efectivo | Añade elegibilidad, identidad/impuestos, fraude, proveedor de pagos, estados auditados y conciliación |
+| Recompensas en créditos | Añade una concesión idempotente a la libreta; cambiar solo `payoutType` **no** mueve créditos |
+| Last touch | Implementa y prueba otra regla en el servicio; el enum exportado por sí solo **no** cambia first touch |
 
-## Antes de habilitarlo
+El cálculo admite solo fijo, solo porcentaje, el mayor y suma. La atribución no selecciona actualmente por `AttributionModel`; first touch es el contrato implementado.
 
-1. Define moneda, tasa, ventana de atribución y elegibilidad.
-2. Decide identidad, fiscalidad, revisión de fraude y estados de pago.
-3. Sustituye los valores de ejemplo y mantén `enabled` en false hasta cerrar la política.
-4. Prueba visitas, atribución concurrente, replay de webhooks, cancelación y revisión admin.
+## Políticas pendientes
 
-Configura primero [Stripe](/docs/stripe-setup) y consulta [Páginas y operaciones de la consola admin](/docs/admin-console-operations) para la superficie de revisión.
+- ¿Qué compras cuentan y cuándo se paga una recompensa pendiente?
+- ¿Qué ocurre con devolución, disputa, cancelación o borrado de cuenta?
+- ¿Qué moneda y regla de unidad menor se usa?
+- ¿Pueden participar empleados, clientes existentes o el mismo hogar?
+- ¿La cookie requiere consentimiento en las regiones atendidas?
+- ¿Cómo investigará operaciones y corregirá registros sin perder auditoría?
+
+Un reembolso de Stripe puede cancelar una recompensa pendiente, pero no se recupera un pago completado. No automatices dinero antes de definir políticas y fallos.
+
+## Habilítalo con seguridad
+
+1. Configura y prueba [Cobros con Stripe](/es/docs/stripe-setup).
+2. Sustituye ventana y valores de ejemplo en `src/config/affiliate.ts`.
+3. Crea el flujo de pago o créditos y sus acciones administrativas antes de activarlo.
+4. Prueba visita anónima → alta/login → first touch → pago → replay → reembolso.
+5. Prueba autorreferido, dos enlaces competidores, caducidad y concurrencia.
+
+Sigue [Configurar referidos y recompensas de afiliación](/es/docs/referrals) para la configuración y verificación exactas; consulta la superficie actual en [Páginas y operaciones del admin](/es/docs/admin-console-operations).

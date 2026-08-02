@@ -32,6 +32,8 @@ export default async function BlogIndex({
       title={t("title")}
       description={t("intro")}
       emptyLabel={t("empty")}
+      topicsLabel={t("topics")}
+      order="tree"
     />
   );
 }

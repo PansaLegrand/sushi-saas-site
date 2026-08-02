@@ -1,0 +1,96 @@
+---
+title: Configuration et accès à la console d’administration
+icon: "ShieldCheck"
+description: Exécutez et déployez l’application d’administration séparée, attribuez les rôles, imposez la MFA et configurez son origine dédiée.
+keywords: [console d’administration, RBAC, MFA, déploiement]
+tags: [administration, sécurité, opérations]
+author: "Sushi SaaS"
+publishedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Synchronisé avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) du starter.
+
+Utilisez cette page lorsqu’une personne doit enquêter sur clients, facturation ou incidents en dehors de l’application. La console est déjà livrée ; vous devez décider de la déployer, qui y accède et à quel point protéger son origine dédiée.
+
+**Point de départ recommandé :** déployez sur un hostname dédié, donnez `admin_ro` à l’opérateur quotidien, réservez `admin_rw` à un petit groupe pour des changements délibérés et imposez MFA à tous. Une petite équipe peut ne pas déployer la console avant d’avoir ces contrôles ; l’application client n’en dépend pas.
+
+À la fin, un opérateur autorisé doit entrer dans l’application séparée, tandis qu’un utilisateur ordinaire et un opérateur en lecture seule ne peuvent effectuer aucune écriture.
+
+Le starter fournit une console opérationnelle dans `apps/admin`. Il s’agit d’une deuxième application Next.js, et non d’une route `/admin` dans l’application destinée aux clients. Cette séparation permet de déployer la console sur une origine dédiée et protégée, et de la publier indépendamment, tout en partageant l’authentification, le schéma de base de données, les modèles et les services.
+
+## Exécution locale
+
+Effectuez d’abord la configuration habituelle du starter, créez un utilisateur dans l’application publique, puis lancez l’application d’administration :
+
+```bash
+pnpm dev:admin
+```
+
+Elle écoute sur `http://localhost:3001`. Les commandes associées sont :
+
+```bash
+pnpm build:admin
+pnpm start:admin
+```
+
+Définissez l’origine locale de la console dans `.env` :
+
+```dotenv
+NEXT_PUBLIC_ADMIN_WEB_URL=http://localhost:3001
+```
+
+Lorsque cette valeur existe, le build de la console l’utilise comme origine Better Auth, sauf si le shell ou l’environnement de déploiement fournit explicitement `BETTER_AUTH_URL` ou `NEXT_PUBLIC_AUTH_BASE_URL`. Puisque `NEXT_PUBLIC_ADMIN_WEB_URL` est intégrée lors du build, sa modification en production exige un nouveau déploiement.
+
+## Promouvoir un opérateur
+
+L’accès à la plateforme est stocké dans `users.role` et reste distinct des rôles d’organisation `owner`, `admin` et `member`.
+
+- `admin_ro` peut ouvrir la console et lire les données opérationnelles.
+- `admin_rw` peut également exécuter les écritures proposées par la console.
+
+Promouvez un compte existant depuis la racine du dépôt :
+
+```bash
+pnpm admin:promote operator@example.com admin_rw
+```
+
+La commande choisit `admin_rw` par défaut, accepte `--dry-run` et refuse de deviner lorsqu’une même adresse appartient à plusieurs fournisseurs de connexion. Dans ce cas, sélectionnez précisément le compte avec `--provider`, par exemple :
+
+```bash
+pnpm admin:promote operator@example.com --role admin_ro --provider google
+```
+
+L’autorisation ne résout jamais un rôle à partir de l’adresse e-mail. Le serveur charge l’utilisateur de la base correspondant à l’ID ou à l’UUID unique de la session, puis vérifie le rôle stocké sur chaque page et route API protégée.
+
+## La MFA est obligatoire
+
+Le rôle d’administration ne suffit pas. Chaque opérateur doit activer l’authentification à deux facteurs Better Auth depuis l’interface publique du compte. Un opérateur ayant un rôle d’administration sans MFA est redirigé vers `/mfa-required` ; après l’activation, il termine le défi `/two-factor` propre à l’application d’administration.
+
+Un compte utilisant uniquement Google doit définir un mot de passe avant que Better Auth puisse activer la MFA. L’interface publique du compte propose **Définir un mot de passe** dans ce cas. La connexion avec Google continue de fonctionner ensuite.
+
+La connexion à la console utilise le même endpoint e-mail protégé par un challenge que l’application publique. Le déploiement d’administration a donc également besoin de `NEXT_PUBLIC_TURNSTILE_SITE_KEY` et `TURNSTILE_SECRET_KEY` lorsque la protection captcha est active.
+
+## Déploiement séparé
+
+Créez un second projet d’hébergement depuis le même dépôt et exécutez `pnpm build:admin`. Attribuez-lui une origine dédiée, par exemple `https://admin.example.com`.
+
+L’application d’administration importe le validateur partagé de l’environnement de production. Elle requiert donc actuellement l’ensemble complet des variables obligatoires de production, même lorsqu’une page d’administration n’utilise pas directement chaque fournisseur. Partez des variables de production de l’application cliente, comparez-les à `.env.example` et suivez [Déploiement et sécurité](/fr/docs/deployment-and-security). Ajustez ensuite les valeurs propres à l’administration :
+
+- conservez les mêmes `DATABASE_URL` et `BETTER_AUTH_SECRET` que l’application cliente ;
+- configurez `NEXT_PUBLIC_ADMIN_WEB_URL` sur l’origine d’administration (le build l’utilise aussi pour les URL Better Auth sauf surcharge explicite) ;
+- fournissez une paire de clés Turnstile valide pour le nom d’hôte d’administration ; ne réutilisez les clés du site public que si leur configuration autorise ce nom d’hôte ;
+- choisissez une limite `ADMIN_MAX_CREDIT_GRANT` adaptée au produit (la valeur par défaut est `100000`).
+
+Gardez des origines distinctes pour le web et l’administration. L’application d’administration envoie les en-têtes `noindex`, `nofollow`, `noarchive` et `no-store`, ainsi que des politiques restrictives d’intégration, de référent et de sécurité du contenu. Ces en-têtes réduisent l’exposition, mais ne remplacent pas l’autorisation : le layout serveur et chaque API d’administration contrôlent le rôle et la MFA.
+
+## Liste de contrôle avant lancement
+
+1. Construisez la console avec `pnpm build:admin`.
+2. Vérifiez que l’origine d’administration et l’URL de base d’authentification ciblent le même déploiement.
+3. Connectez-vous en `admin_ro` et vérifiez que les données sont visibles, mais que les écritures sont indisponibles.
+4. Connectez-vous en `admin_rw`, terminez la MFA et testez une écriture réversible.
+5. Vérifiez que l’action apparaît dans `/audit`.
+6. Vérifiez qu’un utilisateur ordinaire ne peut ni ouvrir une page ni appeler une API d’administration.
+
+Poursuivez avec [Pages et opérations de la console](/fr/docs/admin-console-operations) pour découvrir les surfaces réellement livrées.

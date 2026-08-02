@@ -1,35 +1,53 @@
 ---
 title: "Sushi SaaS 如何路由请求"
 icon: "Workflow"
-description: "Starter 如何在 Next.js middleware 中组合多语言路由、请求 ID 与可检查的组织上下文。"
+description: "了解 middleware 为用户和运营做了什么、为何组织选择保留在 URL 中，以及你可以修改哪些路由决策。"
 tags: [middleware, 路由, i18n]
 author: "Sushi SaaS"
 publishedAt: "2025-10-13T00:00:00.000Z"
 updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-Sushi SaaS 用一个 middleware 边界处理三项请求级职责：语言路由、关联 ID 与组织上下文。认证和业务授权仍在应用更深层完成。
+Sushi SaaS middleware 处理请求级上下文，不负责认证或业务授权。它的三项工作——语言路由、请求关联和组织上下文传递——都会产生用户可感知的行为，因此应该由你明确选择。
 
-## 每个请求都有可关联的 ID
+## 用户会感受到什么
 
-Middleware 会规范化传入的 `x-request-id`，没有时就创建一个，然后把它转发给路由并写回响应。路由和服务日志因此可以引用同一次请求，同时不会盲目信任格式异常的请求头。
+- 页面通过 `next-intl` 进入正确的本地化路由。
+- 两个标签页可停留在两个不同 workspace，因为当前组织由 `?org=<slug>` 表达，而非只存于 session。
+- 分享账户链接时，链接本身会显示目标 workspace。
 
-## API 与页面走不同路径
+每个响应也包含 `x-request-id`，运营人员可把客服报告与结构化日志对应起来。API 请求跳过语言协商，但仍获得相同的请求与组织上下文。
 
-`/api` 下的请求不参与语言协商，直接携带规范化后的请求 ID 与 API 组织上下文继续执行。
+实现见 [`7580470` 的 `src/middleware.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/middleware.ts)。
 
-页面请求则先经过 `next-intl`。Middleware 随后把 Next.js 的请求头覆盖元数据复制到本地化响应上，确保修改后的请求头真正传到页面或 handler，而不是只出现在响应端。
+## Middleware 实际信任什么
 
-两个 middleware 响应组合时很容易遗漏这一点。实现位于 [`7580470` 的 `src/middleware.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/middleware.ts)。
+页面请求的组织上下文来自 URL query parameter，调用者自行提供的组织 header 会被移除。API 请求中，共享 client 可以发送 `x-organization-slug`；若 URL 也提供值，则 URL 优先。
 
-## 组织上下文保持可检查
+二者都不能直接授权。`src/services/authz.ts` 仍会证明登录用户属于目标组织，并拒绝多组织用户发起的模糊 API 请求。Middleware 只校验上下文是否适合传递。
 
-页面只允许通过 URL 查询参数选择组织。调用者自行提供的组织请求头会从页面请求中删除，因此复制后的链接能明确表达实际上下文。
+只有符合长度与日志安全格式的外部 request ID 才会被接受，否则应用生成新的 UUID。这个 ID 会同时转发给路由并写入响应。
 
-API 客户端可以提供配置的组织请求头；若 URL 同时包含组织 slug，则 URL 优先。服务仍会校验成员关系和权限，middleware 只负责规范化和传递上下文。
+## 你可以做出的选择
 
-## Matcher 覆盖范围
+### 语言路由
 
-Matcher 包含语言路由、API 和普通应用页面，并排除 Next.js 静态资源、Vercel 内部路径、带扩展名的文件以及独立部署的管理应用。
+如果产品需要带 locale 的页面和语言检测，应保留 `next-intl` middleware。单语言产品可以移除这条分支，但应同时调整本地化路由、消息目录和测试；只移除一半契约通常会导致重定向与链接互相矛盾。
 
-调用分层见[架构与错误契约](/docs/architecture-and-errors)，租户选择与授权见[组织与团队](/docs/organizations-and-teams)。
+### Workspace 选择
+
+默认 query-string 模式能按标签页独立工作，也容易加到现有账户 URL。`/acme/account` 这类 path-based tenancy 层级更清晰，但需要修改链接生成、callback、matcher 与上下文解析。只用 session 虽然看似简单，两个标签页却可能覆盖同一个 active organization；只有接受这一行为时才适合。
+
+### 请求追踪
+
+几乎所有线上产品都应保留关联 ID。如果代理或可观测平台负责 trace ID，可以把可信值映射到日志契约中，或同时保留两者。不要让无限制的外部文本进入日志。
+
+### API 上下文
+
+多 workspace 用户的 API 必须显式指定组织，能避免操作悄悄落入上一次活跃的租户。只有 API 确定是单租户时才应简化。
+
+## 何时在 middleware 添加逻辑
+
+只有必须在路由前运行、并且快速且 edge-compatible 的关注点才放在这里。成员检查、依赖数据库的授权、计费决策和其他业务规则应留在 service。
+
+修改后测试本地化页面、`/api` 路由、静态资源、request ID 转发、异常上下文和双标签页切换。然后阅读[架构与错误契约](/zh/docs/architecture-and-errors)与[组织与团队](/zh/docs/organizations-and-teams)。

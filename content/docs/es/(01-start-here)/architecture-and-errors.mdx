@@ -1,0 +1,78 @@
+---
+title: Arquitectura y contratos de error
+icon: "Workflow"
+description: Amplía Sushi SaaS sin saltarte las fronteras de datos, autorización ni errores seguros para el usuario.
+keywords: [arquitectura, servicios, modelos, errores, Next.js, TypeScript]
+tags: [arquitectura, errores, pruebas]
+author: "Sushi SaaS"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Verificado con el commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) del starter.
+
+Lee esta página antes de añadir la primera función propia de tu producto. El objetivo es práctico: saber dónde va cada archivo, qué frontera protege los datos del cliente y qué pruebas demuestran que una extensión es segura.
+
+## Decisiones arquitectónicas ya tomadas
+
+Sushi SaaS elige una arquitectura horizontal única, llamadas directas a servicios desde Server Components, wrappers API tipados para Client Components, comprobaciones de plan por capacidad y errores públicos traducidos. Mantener estos valores hace predecibles los nuevos dominios. Puedes sustituir una convención, pero hazlo como una migración arquitectónica: actualiza a la vez las pruebas de cumplimiento y la documentación para no mantener dos patrones rivales.
+
+## Una sola dirección en el servidor
+
+```text
+src/app/**       rutas y páginas: entrada y salida HTTP
+  ↓
+src/services/**  reglas de negocio, coordinación e invariantes
+  ↓
+src/models/**    persistencia tipada; única capa que llama a db()
+  ↓
+src/db/**        esquema, migraciones y conexión
+```
+
+Las rutas autentican, validan y traducen HTTP. Toda escritura pasa por un servicio. Los modelos son dueños de consultas, filtros de tenant y transacciones. `tests/unit/architecture.test.ts` rechaza importaciones que rompen estas fronteras.
+
+No crees `src/features/`: cada dominio se reparte horizontalmente entre modelos, servicios, configuración y componentes.
+
+## Flujo de datos del navegador
+
+```text
+Server Component → servicio directo
+Client Component → src/api/** → cliente API común → /api/**
+```
+
+Los Server Components no llaman a la API propia. Los Client Components no usan `fetch` directamente; usan un módulo de dominio en `src/api/` que procesa el sobre y los errores de forma uniforme.
+
+## Dos preguntas de autorización
+
+El rol de organización y el plan de suscripción son independientes:
+
+```ts
+const ctx = await getOrgContext(request);
+if (!ctx || !can(ctx, "file:delete", file)) return respForbidden();
+await requireEntitlement(ctx.orgUuid, "storage.upload");
+```
+
+`can()` responde si el rol permite la acción. Los entitlements responden si el plan efectivo de la organización incluye la capacidad o el límite.
+
+## Contrato de errores sin filtraciones
+
+El servidor lanza `AppError` con un código estable del catálogo. Cada ruta termina sus excepciones en `respError`, que registra el detalle interno y devuelve texto seguro traducido.
+
+La interfaz decide por `error_code` y resuelve el texto con `resolveErrorMessage` o `resolveAuthError`; nunca muestra `error.message`. Las traducciones viven en `src/lib/errors/i18n/locales/` y cada código debe existir en los cinco idiomas.
+
+## Añadir un dominio con seguridad
+
+1. Define constantes en `src/config/`.
+2. Añade CRUD tipado en `src/models/`.
+3. Coloca invariantes, autorización, idempotencia y efectos en `src/services/`.
+4. Mantén las rutas finas y usa el catálogo de errores.
+5. Añade pruebas del nivel adecuado.
+6. Ejecuta `pnpm lint`, `pnpm test:run` y `pnpm build`.
+
+Para una función visible en el navegador también decide dónde se renderiza. Prefiere un Server Component si puede llamar directamente al servicio; usa un Client Component solo cuando necesites interacción y añade un wrapper en `src/api/` en vez de `fetch` directo.
+
+El dominio está terminado cuando la ruta no contiene reglas de negocio, el servicio posee todos los invariantes de escritura, el modelo todas las consultas, una petición rechazada solo expone un código del catálogo y pasa el nivel de pruebas correspondiente.
+
+Los contratos completos siguen versionados en `docs/errors.md`, `docs/frontend.md` y `AGENTS.md` del starter.
+
+**Siguiente paso:** observa cómo estas capas forman una petición completa en [Anatomía de una SaaS moderna](/es/blogs/anatomy-of-modern-saas).

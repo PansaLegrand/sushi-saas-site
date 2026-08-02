@@ -1,0 +1,104 @@
+---
+title: Configurer le parrainage et les commissions d'affiliation
+icon: "Share2"
+description: Décidez si le parrainage convient au produit, configurez attribution et commissions, comblez les manques opérationnels et testez le parcours complet.
+keywords: [parrainage SaaS, affiliation, commissions, attribution, liens d'invitation]
+tags: [parrainage, affiliation, croissance]
+author: "Sushi SaaS"
+publishedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+À la fin de cette page, vous saurez s'il faut laisser le parrainage désactivé ou transformer la base livrée en véritable programme. Le défaut sûr est **désactivé** : `AffiliateConfig.enabled` vaut `false`, et l'activation crée des obligations financières et de support que le code seul ne résout pas.
+
+## Ce qui est livré
+
+| Comportement | Valeur livrée |
+| --- | --- |
+| Activation | Drapeau de code dans `src/config/affiliate.ts` ; aucune variable d'environnement |
+| Liens | `/i/{code}` et route localisée `/[locale]/i/{code}` ; les URL générées utilisent actuellement la route sans préfixe |
+| Attribution | Premier contact, cookie `ref` de 30 jours et auto-parrainage interdit |
+| Capture à l'inscription | Tentative côté client après authentification ; en cas d'échec, aucun marqueur de session n'est posé et un montage ultérieur peut réessayer |
+| Prime d'inscription | Zéro ; la ligne conserve l'attribution sans paiement |
+| Commission payante | Le maximum entre 5 000 unités monétaires mineures et 20 % de la commande |
+| État | Écriture cash en attente de revue et paiement manuels ; aucun argent ni crédit n'est transféré |
+| Vue client | `/[locale]/my-invites` authentifiée, masquée par une 404 lorsque désactivée |
+| Vue opérateur | Tableau `/affiliates` en lecture seule dans l'admin |
+
+Les contraintes de base rendent l'attribution et les commandes rejouables sans doublon. Le premier contact gagne même si deux onglets rivalisent ; rejouer un paiement ne crée pas une seconde commission pour la même commande, et le flux de commande peut annuler une récompense encore en attente.
+
+## Décider si un programme convient
+
+Gardez-le désactivé tant que vous ne pouvez pas répondre :
+
+- Qui peut parrainer : tout utilisateur, des partenaires approuvés ou une cohorte précise ?
+- Qu'est-ce qui compte : inscription, premier achat, chaque achat ou revenu conservé après délai de remboursement ?
+- Quelle devise représente le montant fixe en unités mineures, et comment traiter plusieurs devises ?
+- Qui gère fraude, identités multiples, remboursements, fiscalité et litiges de paiement ?
+- Quand et comment une ligne pending devient-elle approuvée, payée, annulée ou reprise ?
+- Que promettent les conditions publiques du programme ?
+
+Le code n'utilise pas le champ utilisateur `is_affiliate` pour limiter la création de liens. Une fois activé, tout utilisateur authentifié qui atteint la page ou l'API peut créer un code. Ajoutez une éligibilité serveur avant lancement si le programme n'est pas ouvert à tous.
+
+## Configurer la politique dans le code
+
+Modifiez `src/config/affiliate.ts` et examinez chaque valeur de `AffiliateConfig` :
+
+```ts
+export const AffiliateConfig = {
+  enabled: true,
+  attributionWindowDays: 30,
+  allowSelfReferral: false,
+  attributionModel: AttributionModel.FirstTouch,
+  payoutType: "cash",
+  commissionMode: CommissionMode.GreaterOf,
+  paid: { fixed: 5_000, percent: 20 },
+  // ...
+} as const;
+```
+
+Les modes `FixedOnly`, `PercentOnly`, `GreaterOf` et `Sum` sont implémentés. Les montants fixes sont en unités mineures ; l'affichage livré suppose des centimes USD. Conservez `FirstTouch` : bien que l'enum contienne `LastTouch`, le service n'écrit `invited_by` que s'il est vide ; changer l'enum seul n'implémente donc pas le dernier contact.
+
+De même, `payoutType: "credits"` est réservé aux équipes qui ajoutent une écriture de ledger déterministe. Le flux livré enregistre seulement des montants proches du cash et ne transfère aucune valeur. Ne changez pas l'étiquette sans implémenter l'effet et tester les relectures.
+
+## Terminer l'expérience et les opérations
+
+La route localisée existe, mais My Invites et ses composants utilisent des textes anglais et affichent les récompenses en USD. Aucun lien ne figure non plus dans la navigation principale. Avant lancement :
+
+1. Ajoutez traductions, formatage par devise, états vides/erreur et lien de compte visible.
+2. Décidez si le lien partagé conserve la langue ; l'API renvoie actuellement `/i/{code}`.
+3. Ajoutez l'éligibilité serveur, les conditions du programme et les contrôles d'abus.
+4. Créez une approbation et un paiement auditables. L'admin observe les lignes, mais ne paie pas et ne les marque pas terminées.
+5. Définissez remboursements, annulations et reprises pour vos flux de paiement.
+
+## Vérifier de bout en bout
+
+Testez d'abord l'état désactivé : les liens redirigent normalement, My Invites renvoie 404 et les API d'affiliation renvoient introuvable.
+
+Activez ensuite dans un déploiement de test avec des comptes jetables :
+
+1. Générez un lien comme parrain.
+2. Ouvrez-le dans un navigateur propre et confirmez un cookie `ref` de 30 jours.
+3. Inscrivez ou connectez le filleul ; vérifiez `invited_by` et une seule ligne d'inscription.
+4. Visitez le lien d'un autre parrain : le premier contact ne doit pas changer. L'auto-parrainage doit être ignoré.
+5. Terminez une commande et vérifiez une ligne pending avec `max(5 000, floor(montant × 20 %))`.
+6. Rejouez le paiement et confirmez l'absence de doublon. Testez annulation et remboursement selon votre politique.
+7. Vérifiez l'accord entre résumé utilisateur et table admin, sans aucun paiement automatique.
+8. Simulez un échec temporaire de capture et vérifiez qu'un nouveau montage ou un rechargement complet réessaie avec succès.
+
+Exécutez les tests de service et de base avant lancement. Continuez avec [Facturation Stripe](/fr/docs/stripe-setup) et [Opérations de la console admin](/fr/docs/admin-console-operations) : le parrainage dépend de la vérité du paiement et d'une revue opérateur.
+
+Pour décider d’abord si ce programme vous convient, lisez [Faut-il ajouter un programme de parrainage ?](/fr/blogs/affiliate-and-reward).
+
+## Ce qui n'est pas terminé pour vous
+
+Il n'existe ni rail de paiement automatique, ni attribution de crédits, ni approbation des partenaires, ni revue antifraude, ni traitement fiscal, ni UI client entièrement localisée, ni modèle multidevise, ni entrée de navigation, ni mode dernier contact fonctionnel. Le starter fournit une attribution et des écritures rejouables ; votre politique et vos opérations doivent les compléter.
+
+## Instantané des sources
+
+Vérifié avec le commit `7580470` du starter :
+
+- [`src/config/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/affiliate.ts)
+- [`src/services/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/services/affiliate.ts)
+- [`src/providers/affiliate-init.tsx`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/providers/affiliate-init.tsx)
+- [`src/app/[locale]/my-invites/page.tsx`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/app/%5Blocale%5D/my-invites/page.tsx)

@@ -1,0 +1,97 @@
+---
+title: Customize Your Product
+icon: "SlidersHorizontal"
+description: Set the starter's identity, languages, visual preset, theme, legal details, and optional systems before you build product-specific features.
+keywords: [SaaS customization, branding, locales, theme, legal setup, feature decisions]
+tags: [setup, product decisions, customization]
+author: "Sushi SaaS"
+publishedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+By the end of this page, the starter will look and route like **your** product, and you will have an explicit keep, configure, or remove decision for every optional system. Do this before changing individual screens: identity and product boundaries affect URLs, emails, legal copy, analytics, billing, and the admin console.
+
+## What ships and what you decide
+
+| Area | Shipped behavior | Your decision |
+| --- | --- | --- |
+| Product identity | `NEXT_PUBLIC_APP_NAME` falls back to `Your SaaS`; `NEXT_PUBLIC_DOCS_URL` is optional | Set the public name and the reviewed documentation URL |
+| Support | `SiteConfig.contactEmail` is `null`, so no support address is shown | Edit `src/config/site.ts` to add an address, or deliberately leave support elsewhere |
+| Languages | English, Chinese, Spanish, French, and Japanese are available; URL prefixes are `as-needed` | Choose the default, enabled set, and browser-locale detection |
+| Visual language | `studio` is the build-time preset shared by the web and admin apps | Keep it or choose `glass`, `soft`, `editorial`, or `brutalist` in code |
+| Color mode | The customer app defaults to `system` through an environment variable | Choose `system`, `light`, or `dark`; the admin app does not yet have a theme-mode switch |
+| Legal pages | A visible draft skeleton describes the starter's default data flows | Fill every identity and policy decision, then obtain legal review |
+| Optional systems | Billing, storage, email, Slack, analytics, referrals, tasks, and reservations have code or adapters | Keep and configure each one, or remove its UI, validation, routes, and documentation together |
+
+## Recommended starting point
+
+Use a real product name, keep `system` color mode and the `studio` preset until the product's information architecture settles, and enable only languages your team can maintain. Keep analytics, advertising, referrals, and demo features off until you have a reason, user-facing copy, and an operating process for them.
+
+The alternatives are valid, but they create work. More locales widen your audience and your translation obligation. A stronger visual preset creates differentiation but needs a complete light/dark and admin review. Enabling an integration is faster than building one, but it also adds credentials, failure modes, privacy disclosures, and support work.
+
+## Set identity and locale behavior
+
+Start with the public values in `.env`:
+
+```bash
+NEXT_PUBLIC_APP_NAME=Acme Cloud
+NEXT_PUBLIC_DOCS_URL=https://docs.example.com
+NEXT_PUBLIC_DEFAULT_THEME=system
+NEXT_PUBLIC_DEFAULT_LOCALE=en
+NEXT_PUBLIC_LOCALES=en,fr
+NEXT_PUBLIC_LOCALE_DETECTION=true
+```
+
+The default locale has no prefix; other enabled locales do. With the values above, English uses `/pricing` and French uses `/fr/pricing`. `NEXT_PUBLIC_LOCALE_DETECTION` controls whether a browser preference can select an enabled language. Public variables are compiled into the client build, so rebuild and redeploy after changing them.
+
+`NEXT_PUBLIC_DOCS_URL` may be blank. If you publish external documentation, set it to the reviewed production origin. Support contact is intentionally not an environment variable: set `SiteConfig.contactEmail` in `src/config/site.ts`, or leave it `null` if another support surface owns that promise.
+
+## Choose one visual preset
+
+Edit the typed constant in `src/config/style.ts`:
+
+```ts
+export const stylePreset: StylePreset = "glass";
+```
+
+The same value is rendered by the customer app and the admin console. This is a build-time product choice, not a per-user picker. Review common pages, forms, tables, dialogs, empty states, and errors in both apps before keeping a non-default preset. The customer app supports light, dark, and system modes; the admin currently renders the preset without a theme-mode provider.
+
+## Finish the legal identity
+
+Fill `LegalData` in `src/config/legal.ts`: registered entity name and address, privacy and legal contacts, governing law, effective date, and the actual sub-processors you use. Work through every bracketed policy placeholder. Until all required identity fields exist, `LegalConfig.isConfigured` remains false and the privacy and terms pages show an unreviewed-draft notice.
+
+The included text is a drafting skeleton, not legal advice or a finished policy. Remove providers you do not use, add providers that receive personal data, reconcile retention promises with account erasure, and have qualified counsel review the result.
+
+## Decide the product boundary
+
+For every optional system, record one of three decisions:
+
+1. **Keep:** configure credentials, user copy, monitoring, failure handling, and an owner.
+2. **Adapt:** change the policy or provider behind the existing service boundary, then update tests and public guidance.
+3. **Remove:** remove routes, UI, production validation, jobs, and documentation in the same change. An empty credential is not a product decision.
+
+Continue with [Plans and Entitlements](/docs/plans-and-entitlements), [Stripe Billing](/docs/stripe-setup), [Storage Uploads](/docs/storage-uploads), [Analytics and Consent](/docs/analytics-and-consent), and [Deployment and Security](/docs/deployment-and-security) for systems you keep.
+
+## Verify before feature work
+
+```bash
+pnpm lint
+pnpm test:run
+pnpm build:web
+pnpm build:admin
+```
+
+Then verify the default locale is unprefixed, each enabled non-default locale resolves, the language selector cannot choose a disabled locale, the docs and support links go where promised, both apps use the selected preset, and the customer app behaves in light and dark mode. Open privacy and terms: a public launch is not ready while the draft warning or policy placeholders remain.
+
+## What is not finished for you
+
+The starter does not include a brand configurator, runtime preset picker, admin dark-mode provider, environment-driven support address, reviewed legal policy, or a decision about which optional systems belong in your product. Those are adopter decisions by design.
+
+## Source snapshot
+
+Verified against starter commit `7580470`:
+
+- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/site.ts)
+- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/i18n/locale.ts)
+- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/style.ts)
+- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/legal.ts)

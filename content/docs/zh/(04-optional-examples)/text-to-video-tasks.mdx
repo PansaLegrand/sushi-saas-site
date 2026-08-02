@@ -1,0 +1,32 @@
+---
+title: 文生视频任务模式
+icon: "Clapperboard"
+description: 通过组织 entitlement、配额、积分、幂等与退款扩展可选的文生视频演示。
+keywords: [任务, 文生视频, 积分, 幂等]
+tags: [任务, AI]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> 已与启动模板提交 [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) 同步。
+
+本页是构建按量计费 AI 功能的参考，不是可直接上线的视频产品。模板提供本地 mock 页面，以及租户隔离、套餐能力、月度上限、共享积分、幂等、失败状态与退款这些难点。生产环境忽略 demo 开关，因此克隆仓库不会启用真实视频生成。
+
+## 确定真实供应商契约
+
+- 替换 `src/services/ai/video.ts` 中的适配器；不要把供应商代码放进 route。
+- 内置 mock 在请求内完成。若供应商需要数秒以上，请改为持久异步任务，保存外部 job ID、验证 callback，并让供应商请求幂等。
+- 审查每秒 1 积分、画幅倍率、套餐能力、月度任务上限和每月积分赠送。这些是示例产品经济，不是定价建议。
+
+**可以上线的标准：** 生产没有 mock；重复请求只产生一个任务和一次扣费；余额不足有清晰说明；供应商失败只产生一次退款；callback 不能跨组织；UI 能表达排队、执行中和失败。
+
+文生视频页面是可选开发模式，不是生产 AI 供应商。仅在启用 demo 与 text-to-video mock 时可用，生产会忽略 demo 开关。接入真实服务时只替换 `src/services/ai/video.ts` provider adapter。
+
+`POST /api/tasks/text-to-video` 要求同源、限流、认证、组织 `tasks.text_to_video` entitlement、共享月度任务上限和足够的组织积分。header 或 body 提供 `Idempotency-Key`。服务只创建一条组织任务，消费积分并记录根交易号，调用 provider 后标记成功；失败则标记任务并追加积分退款。
+
+成本在 `src/config/tasks.ts` 按秒数与画幅配置。Plus 当前为组织每月 50 个任务/500 积分，Max 任务不限/2,500 积分，Free 不含此能力。通过 `GET /api/tasks/[uuid]` 获取任务，访问按组织限定。
+
+真实长任务应保留这些不变量，但改为持久异步执行，使用 provider 幂等、验证 callback、保存外部 ID，并测试重复请求、余额不足、超时、callback replay 与退款失败。
+
+**相关内容：** 在[套餐与权益](/zh/docs/plans-and-entitlements)中设置权限与上限，用[积分账本](/zh/docs/account-ledger)记录消费与退款，并通过[持久任务](/zh/docs/jobs-and-readiness)执行长任务。

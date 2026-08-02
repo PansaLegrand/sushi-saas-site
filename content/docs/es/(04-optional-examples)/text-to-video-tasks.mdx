@@ -1,0 +1,32 @@
+---
+title: Patrón de tarea texto a vídeo
+icon: "Clapperboard"
+description: Extiende la demo opcional con entitlements, cuotas, créditos, idempotencia y reembolsos de organización.
+keywords: [tareas, texto a vídeo, créditos, idempotencia]
+tags: [tareas, IA]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Sincronizado con el commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) del starter.
+
+Usa esta página como patrón para una función de IA medida, no como producto de vídeo listo. Se incluye una pantalla mock solo local y las piezas difíciles: tenancy, capacidades, límites mensuales, créditos compartidos, idempotencia, estados de fallo y reembolsos. Producción ignora las flags demo, por lo que clonar el repositorio no activa vídeo real.
+
+## Define el contrato con tu proveedor real
+
+- Sustituye el adaptador de `src/services/ai/video.ts`; no lleves código del proveedor a las rutas.
+- El mock termina dentro de la petición. Para procesos más largos, encola trabajo durable, guarda el ID externo, verifica callbacks y aplica idempotencia también en el proveedor.
+- Revisa el crédito por segundo, multiplicadores, capacidades del plan, límites mensuales y créditos incluidos. Son ejemplos de economía de producto, no una recomendación de precios.
+
+**Está listo para producción cuando:** no hay mock en producción, duplicados crean una tarea y un cargo, saldo insuficiente se explica, un fallo genera un solo reembolso, callbacks no cruzan organizaciones y la UI muestra cola, ejecución y fallo.
+
+La pantalla es un patrón de desarrollo opt-in, no un proveedor IA productivo. Solo aparece con demo y mock activados; producción ignora esos flags. Sustituye únicamente el adaptador `src/services/ai/video.ts`.
+
+`POST /api/tasks/text-to-video` exige mismo origen, rate limit, auth, entitlement `tasks.text_to_video`, límite mensual compartido y créditos. Envía `Idempotency-Key` en header o body. Se inserta una tarea de organización, se gastan créditos y guarda la transacción raíz; tras el proveedor se marca éxito. Un fallo marca error y añade reembolso.
+
+El coste está en `src/config/tasks.ts`. Plus: 50 tareas por organización/mes y 500 créditos; Max: tareas ilimitadas y 2.500; Free: sin función. `GET /api/tasks/[uuid]` está limitado a la organización.
+
+Con un proveedor largo, conserva invariantes pero ejecuta de forma asíncrona duradera, usa idempotencia externa, valida callbacks, guarda IDs y prueba duplicado, saldo insuficiente, timeout, replay y fallo de reembolso.
+
+**Antes de conectar un proveedor:** alinea [Planes y derechos](/es/docs/plans-and-entitlements), el [Libro mayor de créditos](/es/docs/account-ledger) y [Trabajos duraderos y readiness](/es/docs/jobs-and-readiness).

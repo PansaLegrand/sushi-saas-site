@@ -16,7 +16,7 @@
     "heroLineOne": "The plumbing is done.",
     "heroLineTwo": "Build the product.",
     "subtitle": "Authentication, organizations, Stripe billing, a credit ledger, private storage, background jobs, and a separate admin console—connected through one enforceable architecture.",
-    "primaryAction": "Start with the docs",
+    "primaryAction": "See if it fits",
     "secondaryAction": "Inspect the source",
     "signalsLabel": "Project signals",
     "signals": [
@@ -53,14 +53,16 @@
     }
   },
   "docs": {
-    "title": "Next.js SaaS starter documentation",
-    "intro": "Reference steps for installing, configuring, extending, and operating the Sushi SaaS starter. For architecture decisions and patterns, see Guides.",
-    "empty": "Documentation is being prepared."
+    "title": "Build and operate Sushi SaaS",
+    "intro": "Choose a task for exact setup and verification steps. When you need to understand a choice or decide what to change, use Guides.",
+    "empty": "Documentation is being prepared.",
+    "topics": "Topics"
   },
   "blogs": {
-    "title": "Sushi SaaS guides",
-    "intro": "Architecture decisions and implementation patterns from the Sushi SaaS starter.",
-    "empty": "No guides have been published yet."
+    "title": "Understand and adapt Sushi SaaS",
+    "intro": "See what the starter chooses, why it chooses it, which alternatives fit, and what to keep, change, or remove for your product.",
+    "empty": "No guides have been published yet.",
+    "topics": "Topics"
   },
   "footer": {
     "label": "Footer navigation",

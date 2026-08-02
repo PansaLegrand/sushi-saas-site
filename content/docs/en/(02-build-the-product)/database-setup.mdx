@@ -1,0 +1,64 @@
+---
+title: Database and Migrations
+icon: "Database"
+description: Choose your PostgreSQL deployment and ship Drizzle schema changes without breaking the running application.
+keywords: [PostgreSQL, Drizzle, migrations, database]
+tags: [database, operations]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Verified against starter commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb).
+
+By the end of this page, you will know which database to point each environment at, how to turn a schema edit into reviewable SQL, and how to apply it separately from an application release.
+
+The starter deliberately supports PostgreSQL through Drizzle rather than offering several database adapters. Locally, `pnpm setup` can run PostgreSQL in Docker; in production, choose any compatible managed or self-hosted PostgreSQL service and set `DATABASE_URL`. `src/db/schema.ts` is the schema source of truth, while committed SQL under `src/db/migrations/` is the deployable history. Only files under `src/models/**` may call `db()`.
+
+## Local Workflow
+
+`pnpm setup` creates separate development and test databases. The test database name must contain `test`; the safety harness refuses to truncate any other database.
+
+After changing the schema:
+
+```bash
+pnpm db:generate
+pnpm db:migrate
+pnpm test:db:setup
+pnpm test:db
+```
+
+Commit the generated SQL and `meta/_journal.json` with the code. Do not edit an already deployed migration.
+
+## Production Workflow
+
+Migrations never run automatically during application deployment. This is the shipped safety choice: database and app releases can be observed, retried, and rolled out independently.
+
+```bash
+pnpm db:check:prod
+pnpm db:migrate:prod
+```
+
+The production runner is non-interactive, takes a PostgreSQL advisory lock, and verifies migration checksums. Back up first and use expand/contract changes so the currently deployed code and the next version can both run while schema and application releases are separated.
+
+## Data Conventions
+
+- Numeric `id` values are internal; public APIs use `uuid`.
+- Money uses integer minor units plus a currency code.
+- Tenant-owned rows carry `org_uuid`; every model query must scope by it.
+- Idempotency keys and transaction numbers have database uniqueness constraints.
+- The starter intentionally avoids broad foreign-key coupling; services and lifecycle policies therefore own deletion order and referential checks.
+- Reservations also use a PostgreSQL exclusion constraint to prevent overlapping confirmed/held slots.
+
+## Choices to Make Before Production
+
+- Choose who runs migrations: a CI release job or an operator. Do not run them from every web instance.
+- Choose a backup and restore policy appropriate to your data. The runner coordinates migrations; it does not replace backups.
+- Keep the starter's lighter foreign-key strategy, or add stricter constraints once you have defined deletion and retention behavior. Either choice must stay tenant-safe.
+- Prefer expand/contract migrations for zero-downtime releases. A destructive one-step rename is simpler, but it couples schema and code deployment and makes rollback unsafe.
+
+You are ready to deploy when `pnpm db:check:prod` reports the expected pending set, the backup is current, the migration works against a staging copy, and both old and new application versions can run during the rollout.
+
+Read `docs/database.md` and `DEPLOYMENT.md` in the starter before changing production data contracts.
+
+**Related:** Review [Architecture and Error Contracts](/docs/architecture-and-errors) for data-layer boundaries and [Authentication and Admin](/docs/authentication-and-admin) for the identities those records belong to.

@@ -1,0 +1,37 @@
+---
+title: Registre de crédits d’organisation
+icon: "Coins"
+description: Choisissez comment mesurer l’usage, puis attribuez, dépensez, expirez et remboursez les crédits mutualisés en sécurité.
+keywords: [crédits, registre, idempotence, organisations]
+tags: [crédits, comptabilité]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Vérifié avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) du starter.
+
+Les crédits sont un choix de packaging, pas une obligation pour chaque fonction. Utilisez-les lorsqu’une action a un coût variable ou que l’usage acheté doit être reporté ; utilisez un entitlement ou une limite si la seule question est de savoir si le client peut agir.
+
+## Décisions à prendre
+
+| Question | Choix livré | Alternative |
+| --- | --- | --- |
+| À qui appartiennent les crédits ? | À l’organisation ; les membres partagent le solde | Ajouter des budgets par membre tout en gardant le registre d’organisation |
+| Comment conserver le solde ? | Écritures append-only | Ne pas utiliser de compteur mutable sans remplacer audit et garanties de replay |
+| Que consommer d’abord ? | L’attribution qui expire le plus tôt | Changer la règle seulement avec des tests d’expiration |
+| Que faire en cas d’échec ? | Ajouter un remboursement lié à la dépense | Garder la charge uniquement si le contrat facture un travail échoué |
+
+Les crédits appartiennent à l’organisation et ses membres partagent le solde. Le registre est append-only : ne modifiez/supprimez aucune ligne et ne contournez pas `src/services/credit.ts` par SQL direct.
+
+Une attribution ajoute une ligne positive avec transaction unique et expiration optionnelle. La dépense prend un advisory lock d’organisation, rejoue tout le registre, consomme d’abord ce qui expire tôt et n’ajoute du négatif que si le solde utilisable suffit. Elle peut créer des lignes `:part:n`, regroupées par l’API en transaction logique. Un remboursement ajoute des compensations liées à la dépense.
+
+`balance_after` est le total comptable à l’insertion, pas toujours le disponible après expiration. Utilisez le résumé d’organisation pour disponible, attribué, consommé et expiré.
+
+Toute mutation économique exige une clé métier stable. Deux appels identiques produisent un effet ; les tests l’imposent. Renouvellements et Stripe emploient des numéros déterministes. Les attributions admin sont plafonnées et auditées.
+
+Pour une fonction payante : calculez le coût en configuration, exigez l’entitlement, dépensez via le service, gardez la transaction racine et remboursez si l’étape suivante échoue.
+
+La fonction est terminée lorsque deux dépenses simultanées ne dépassent pas le solde, qu’un retry avec la même clé n’a qu’un effet, que les attributions expirées sont exclues du disponible, que l’UI montre les transactions logiques et qu’un travail échoué laisse un remboursement compensatoire auditable.
+
+**Pour compléter le modèle :** consultez [Plans, limites et droits](/fr/docs/plans-and-entitlements) pour décider qui peut consommer, puis [Facturation Stripe](/fr/docs/stripe-setup) pour comprendre quand les crédits sont attribués.

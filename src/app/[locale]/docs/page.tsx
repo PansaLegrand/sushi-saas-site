@@ -32,7 +32,9 @@ export default async function DocsIndex({
       title={t("title")}
       description={t("intro")}
       emptyLabel={t("empty")}
+      topicsLabel={t("topics")}
       order="tree"
+      grouped
     />
   );
 }

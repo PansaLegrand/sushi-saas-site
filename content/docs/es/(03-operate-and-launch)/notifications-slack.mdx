@@ -1,0 +1,30 @@
+---
+title: Notificaciones operativas de Slack
+icon: "Bell"
+description: Envía eventos operativos a Slack mediante la cola duradera sin filtrar datos sensibles.
+keywords: [Slack, notificaciones, jobs, operaciones]
+tags: [Slack, operaciones]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Sincronizado con el commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) del starter.
+
+Usa Slack cuando una persona deba enterarse pronto de una excepción operativa, como un evento Stripe aparcado; no lo uses como registro permanente. La integración es opcional: sin `SLACK_WEBHOOK_URL` no se envían mensajes.
+
+## Decide qué alertas necesitan entrega durable
+
+- Las alertas de webhooks y barrido de Stripe ya usan trabajos `slack_event` o `slack_error` con reintentos.
+- Algunas alertas de protección de almacenamiento y suscripciones aún usan los helpers `notifySlack*` de mejor esfuerzo y pueden perderse si una instancia serverless se congela. Si una alerta es obligatoria, encola un trabajo Slack.
+- Incluye un identificador seguro de petición, pedido, evento o trabajo y explica dónde investigar. Nunca incluyas tokens, payloads completos, URLs firmadas ni datos personales innecesarios.
+
+**Está listo para producción cuando:** un evento inocuo llega al canal correcto, un 429/5xx simulado queda visible como reintento o fallo, se suprime el duplicado y el identificador lleva a la base de datos o a los logs.
+
+Crea un Incoming Webhook y define `SLACK_WEBHOOK_URL`. El SDK se construye en `src/integrations/slack.ts`. Facturación y sweep encolan `slack_event` o `slack_error`; algunos guardrails antiguos usan helpers de mejor esfuerzo, así que toda nueva alerta obligatoria debe ser un job.
+
+Usa claves deterministas para ruido, añade IDs de request/order/job y omite credenciales, tokens, cuerpos crudos, URLs de descarga y datos personales innecesarios. La ausencia del webhook debe ser una decisión explícita, no un fallo oculto.
+
+El runner duradero reintenta la entrega. Mantén `/api/cron/jobs` autenticado y programado, observa jobs fallidos y prueba duplicado, timeout/429/5xx, redacción y recuperación. Slack alerta; base y logs son la fuente de verdad.
+
+**Antes de activar alertas:** completa los controles de [Despliegue y seguridad](/es/docs/deployment-and-security).

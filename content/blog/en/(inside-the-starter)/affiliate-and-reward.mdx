@@ -1,34 +1,58 @@
 ---
-title: "How Sushi SaaS Referral Rewards Work"
+title: "Should You Add a Referral Program?"
 icon: "Gift"
-description: "The starter's opt-in referral flow, first-touch attribution, replay-safe commission records, and manual payout boundary."
+description: "Decide whether you need referral attribution, cash commissions, or credits before enabling the starter's first-touch tracking."
 tags: [referrals, billing, idempotency]
 author: "Sushi SaaS"
 publishedAt: "2025-10-09T00:00:00.000Z"
 updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-Sushi SaaS includes an opt-in referral implementation, not a turnkey affiliate business. It is disabled by default, and its built-in workflow records commissions for review; it never sends money or credits automatically.
+Sushi SaaS ships referral plumbing, not a finished affiliate program. It is disabled by default. When enabled, it can attribute a new account to a referrer and record a pending reward after payment; it does not verify affiliates, send money, grant credits, or mark payouts complete.
 
-## From share link to attribution
+## The user journey that ships
 
-An authenticated user can create an eight-character invite code through `/api/affiliate/invite-code`. A link such as `/i/abc12345` looks up the inviter, stores their UUID in a `ref` cookie for 30 days, and redirects to the home page.
+1. A signed-in user creates a short invite code (normally eight characters) and shares `/i/<code>`.
+2. A visitor opens the link. The application stores the referrer's UUID in a 30-day `ref` cookie and redirects home.
+3. After the visitor signs in, the client posts that cookie to the attribution endpoint.
+4. The service claims the user's referrer once. Self-referrals are rejected and concurrent retries converge on the first successful attribution.
+5. A qualifying paid order creates one pending commission record. A database uniqueness rule makes webhook replay harmless.
 
-The shared theme provider mounts `AffiliateInit` automatically. When referrals are enabled, it calls `captureAffiliateAttribution()` on the client, which posts to `/api/affiliate/update-invite`. The endpoint requires an authenticated session and reads the `ref` cookie. A successful attempt is marked in `sessionStorage` for the current browser tab; a failed attempt, including one made before sign-in, leaves no marker so a later mount can retry. The default model is first touch: a conditional database update decides the winner if two requests race. Self-referrals are rejected, and a unique signup row makes retries harmless.
+Users can see their invite link and summary on the shipped `my-invites` page. Operators can inspect rows on the admin `affiliates` page, but that page is a read-only review surface—not a payout workflow.
 
-The behavior is configured in [`src/config/affiliate.ts` at `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/config/affiliate.ts) and orchestrated by [`src/services/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/services/affiliate.ts).
+The default example records the greater of 5,000 minor currency units or 20% of the paid amount. For a two-decimal USD charge, 5,000 means $50. Those values are examples, not a recommended commission.
 
-## What happens after a paid order
+See [`src/config/affiliate.ts` at `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/config/affiliate.ts) and the orchestration in [`src/services/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/services/affiliate.ts).
 
-When enabled, a paid order creates one pending commission record. The shipped configuration uses the greater of a fixed 5,000 minor units (for USD, $50) or 20 percent of the order. A partial unique index on the paid order number prevents two webhook workers from recording the same reward twice.
+## Choose the program before the code
 
-A refund or cancellation can cancel a still-pending reward. Completed payout is intentionally outside the automated money path: operators review referrals in the admin console and adopters connect their own payout provider and compliance process.
+| Goal | What to do |
+| --- | --- |
+| No referral program | Leave `enabled: false`. Remove the pages, routes, tables, and provider later if you want a smaller product |
+| Invitation attribution only | Keep first-touch attribution, stop creating and presenting commissions, and define what analytics you may retain |
+| Cash affiliate commissions | Add eligibility, identity/tax collection, fraud review, payout provider integration, audited state changes, and reconciliation |
+| Product-credit rewards | Add an idempotent credit-ledger grant; changing `payoutType` alone does **not** move credits |
+| Last-touch attribution | Implement and test a different claim rule in the service; the exported enum alone does **not** change the shipped first-touch behavior |
 
-## Before enabling it
+Commission calculation supports fixed-only, percent-only, greater-of, and sum modes. Attribution does not currently switch on `AttributionModel`, so treat first touch as the implemented contract.
 
-1. Decide currency, rate, attribution window, and eligibility policy.
-2. Decide how identity, tax forms, fraud review, and payout status will work.
-3. Replace the example reward values and keep `enabled` false until the full policy is ready.
-4. Test link visits, concurrent attribution, Stripe webhook replay, cancellation, and admin review.
+## Policies you still need
 
-Referral records depend on reliable order handling. Configure [Stripe Billing](/docs/stripe-setup) first, then use [Admin Console Pages and Operations](/docs/admin-console-operations) to understand the review surface.
+- Which purchases qualify, and when does a pending reward become payable?
+- What happens after refund, dispute, cancellation, or account erasure?
+- Which currency and minor-unit rules apply?
+- May employees, existing customers, or the same household participate?
+- Does the referral cookie require consent in the regions you serve?
+- How will operators investigate abuse and correct a record without losing an audit trail?
+
+Stripe refund handling can cancel a still-pending reward, but completed payout recovery is not implemented. Do not automate money movement until these policies and failure paths exist.
+
+## Enable it safely
+
+1. Configure and test [Stripe Billing](/docs/stripe-setup).
+2. Replace the example window and reward values in `src/config/affiliate.ts`.
+3. Build the payout or credit workflow and its admin actions before turning the feature on.
+4. Test anonymous visit → signup/sign-in → first-touch attribution → payment → webhook replay → refund.
+5. Test self-referral, two competing links, cookie expiration, and concurrent events.
+
+Use [Configure Referrals and Affiliate Rewards](/docs/referrals) for the exact setup and verification steps, then [Admin Console Pages and Operations](/docs/admin-console-operations) to understand the current review surface.

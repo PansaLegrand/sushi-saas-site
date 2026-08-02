@@ -1,0 +1,78 @@
+---
+title: Analytics and Consent
+icon: "ChartNoAxesCombined"
+description: Decide whether to enable Google Analytics or AdSense, configure consent safely, update your legal disclosures, and verify that no script loads early.
+keywords: [Google Analytics, GA4, AdSense, cookie consent, privacy, SaaS analytics]
+tags: [analytics, consent, privacy]
+author: "Sushi SaaS"
+publishedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+By the end of this page, you will have made a deliberate **off, analytics-only, advertising-only, or both** decision and verified it in a production build. The recommended default is off: collect data only when it answers a product question you own.
+
+## What ships
+
+- `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` enables the Google Analytics component.
+- `NEXT_PUBLIC_GOOGLE_ADCODE` enables the AdSense loader. It does **not** create ad placements for you.
+- Both script components return nothing outside production.
+- Analytics and advertising are separate consent categories. Accepting measurement does not accept advertising.
+- Missing, malformed, or old consent fails closed. Neither script renders until its category is explicitly allowed.
+- `cookie_consent` stores the versioned choice for 182 days with `SameSite=Lax` and `Secure` on HTTPS.
+- If neither vendor variable is configured, the banner and footer cookie-settings control are absent.
+- The footer can reopen settings so a visitor can change or withdraw a choice.
+- The separate admin app does not mount these scripts or the consent interface.
+
+## Choose the smallest useful setup
+
+| Choice | When it fits | Cost |
+| --- | --- | --- |
+| Off — recommended initially | You do not yet have an event question or reviewed privacy position | No traffic/product measurement from these providers |
+| Analytics only | You need aggregate acquisition and usage measurement | Consent, data-governance, provider configuration, and data quality work |
+| Advertising only | Advertising is part of the business model | Highest consent, policy, placement, and user-trust burden |
+| Both | Measurement and advertising are both genuinely required | Two independent choices and two provider configurations to operate |
+
+Do not enable analytics just to produce a dashboard. Define the decisions the data will change, the events needed, who reviews them, and when unused collection will be removed.
+
+## Configure the deployment
+
+Add only the identifiers you use to the production environment:
+
+```bash
+NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX
+NEXT_PUBLIC_GOOGLE_ADCODE=ca-pub-XXXXXXXXXXXXXXXX
+```
+
+These are public build-time identifiers, not secrets. Rebuild after changing them. Configure the matching GA4 property or AdSense account for your production domains, regions, data retention, access, and any provider-side consent requirements.
+
+Update `LegalData.subProcessors` and the privacy policy in `src/config/legal.ts` to match the providers and purposes you actually enable. Review the policy and banner wording with qualified counsel for the markets you serve. If you add a vendor or change what an existing consent category means, bump `CONSENT_VERSION` in `src/lib/consent.ts`; old choices will then be discarded and requested again.
+
+## Verify in production behavior
+
+Development is not the final check: both vendor components intentionally return `null` unless `NODE_ENV` is `production`. Test a production build or controlled production deployment with browser storage and cookies cleared.
+
+1. Before choosing, confirm there is no Analytics or AdSense script request.
+2. Reject all, reload, and confirm neither provider loads.
+3. Allow analytics only and confirm GA loads while AdSense does not.
+4. Allow advertising only and confirm AdSense loads while GA does not.
+5. Reopen settings from the footer, withdraw consent, reload, and confirm the rejected category stays off.
+6. Inspect `cookie_consent`: it should contain version `1`, two booleans, and a 182-day maximum age.
+7. Remove both environment variables and rebuild; the banner, settings control, and provider scripts should all disappear.
+8. Check the admin origin separately; it should contain none of this customer-site tracking UI.
+
+Use the browser network panel, not only the presence of a banner. The script components enforce consent; the banner is only the interface.
+
+## What is not finished for you
+
+The starter does not define a product event taxonomy, custom business events, dashboards, retention goals, an AdSense placement component, or a legally approved consent program. It also cannot configure Google account settings for you. Add the minimum measurement layer your product needs and keep provider settings, public policy, and code behavior aligned.
+
+For deployment checks, continue with [Deployment and Security](/docs/deployment-and-security). The customer-facing policy is available at [Privacy](/privacy).
+
+## Source snapshot
+
+Verified against starter commit `7580470`:
+
+- [`src/config/analytics.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/analytics.ts)
+- [`src/lib/consent.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/lib/consent.ts)
+- [`src/providers/google-analytics.tsx`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/providers/google-analytics.tsx)
+- [`src/providers/adsense.tsx`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/providers/adsense.tsx)

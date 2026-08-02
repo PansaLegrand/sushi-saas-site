@@ -1,35 +1,53 @@
 ---
 title: "Comment Sushi SaaS route les requêtes"
 icon: "Workflow"
-description: "Comment le starter combine routage localisé, identifiants de requête et contexte d’organisation inspectable dans le middleware."
+description: "Ce que fait le middleware pour utilisateurs et opérateurs, pourquoi l’organisation reste visible dans l’URL et quels choix modifier."
 tags: [middleware, routage, i18n]
 author: "Sushi SaaS"
 publishedAt: "2025-10-13T00:00:00.000Z"
 updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-Sushi SaaS utilise une seule frontière middleware pour trois préoccupations liées à la requête : langue, identifiant de corrélation et contexte d’organisation. L’authentification et l’autorisation métier restent plus profondes dans l’application.
+Le middleware Sushi SaaS gère le contexte de requête, pas l’authentification ni l’autorisation métier. Ses trois tâches—locale, corrélation et transport d’organisation—créent un comportement visible que vous devez choisir consciemment.
 
-## Chaque requête reçoit un identifiant
+## Ce que voit l’utilisateur
 
-Le middleware normalise le `x-request-id` entrant ou en crée un, le transmet à la route et le renvoie dans la réponse. Les logs de routes et services peuvent ainsi désigner la même requête sans faire confiance à un header arbitraire mal formé.
+- Une page arrive sur la bonne route localisée via `next-intl`.
+- Deux onglets peuvent rester sur deux workspaces car l’organisation est exprimée par `?org=<slug>`, pas seulement dans la session.
+- Un lien de compte partagé indique le workspace visé.
 
-## APIs et pages prennent des chemins différents
+Chaque réponse inclut `x-request-id`, ce qui relie une demande support aux logs structurés. Les requêtes API évitent la négociation de langue mais reçoivent le même contexte de requête et d’organisation.
 
-Les requêtes sous `/api` ne participent pas à la négociation de langue. Elles continuent directement avec l’identifiant normalisé et le contexte d’organisation API.
+L’implémentation est dans [`src/middleware.ts` au commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/middleware.ts).
 
-Les pages passent par `next-intl`. Le middleware copie ensuite les métadonnées internes de Next.js qui transmettent les headers modifiés vers la réponse localisée. Ces headers atteignent donc réellement la page ou le handler au lieu de n’exister que dans la réponse sortante.
+## Ce que le middleware considère fiable
 
-L’implémentation se trouve dans [`src/middleware.ts` au commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/middleware.ts).
+Pour une page, l’organisation vient du query parameter ; un header d’organisation fourni par l’appelant est supprimé. Pour une API, le client partagé peut envoyer `x-organization-slug` ; la valeur URL est prioritaire si les deux existent.
 
-## Le contexte d’organisation reste inspectable
+Aucune ne donne l’autorisation. `src/services/authz.ts` prouve toujours l’appartenance et refuse les APIs ambiguës pour un utilisateur multi-organisations. Le middleware vérifie seulement que le contexte peut être transporté.
 
-Une page choisit une organisation uniquement par le paramètre d’URL. Tout header d’organisation fourni par l’appelant est supprimé des pages, afin qu’un lien copié représente le contexte utilisé.
+Un request ID entrant n’est accepté qu’avec une longueur et un format sûrs ; sinon un UUID est créé. Il est transmis à la route et copié sur la réponse.
 
-Les clients API peuvent fournir le header configuré. Si l’URL contient aussi un slug d’organisation, l’URL l’emporte. Les services vérifient encore appartenance et permissions ; le middleware ne fait que normaliser et transporter le contexte.
+## Vos choix
 
-## Ce que couvre le matcher
+### Routage par locale
 
-Le matcher inclut routes localisées, APIs et pages ordinaires. Il exclut les assets Next.js, les chemins internes Vercel, les fichiers avec extension et l’application admin déployée séparément.
+Gardez `next-intl` si les pages préfixées et la détection font partie du produit. Pour une seule langue, retirez la branche avec routes localisées, catalogues et tests. Un contrat à moitié supprimé produit des redirects et liens contradictoires.
 
-Consultez [Architecture et contrats d’erreur](/docs/architecture-and-errors) pour les couches et [Organisations et équipes](/docs/organizations-and-teams) pour le tenant et les autorisations.
+### Sélection du workspace
+
+Le query string livré est propre à chaque onglet et facile à ajouter aux URLs existantes. Un tenant dans le path comme `/acme/account` donne une hiérarchie plus forte, mais exige de changer liens, callbacks, matchers et résolution. La session seule paraît simple, mais deux onglets peuvent écraser la même organisation active ; utilisez-la seulement si ce comportement convient.
+
+### Traçage
+
+Gardez les IDs de corrélation dans presque tout produit déployé. Si votre proxy ou outil d’observabilité possède les trace IDs, mappez sa valeur fiable ou gardez les deux. N’acceptez jamais de texte appelant non borné dans les logs.
+
+### Contexte API
+
+Exiger l’organisation pour un utilisateur multi-workspaces évite qu’une opération tombe silencieusement dans le dernier tenant actif. Simplifiez uniquement si l’API est certainement mono-tenant.
+
+## Quand ajouter une logique middleware
+
+Ajoutez un sujet seulement s’il doit précéder le routage et reste rapide et edge-compatible. L’appartenance, l’autorisation en base, la facturation et les règles métier vont dans les services.
+
+Après modification, testez pages localisées, `/api`, assets, transmission du request ID, contexte malformé et deux onglets. Relisez [Architecture et contrats d’erreur](/fr/docs/architecture-and-errors) et [Organisations et équipes](/fr/docs/organizations-and-teams).

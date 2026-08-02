@@ -1,34 +1,58 @@
 ---
-title: "Comment fonctionnent les récompenses de parrainage Sushi SaaS"
+title: "Faut-il ajouter un programme de parrainage ?"
 icon: "Gift"
-description: "Le flux de parrainage optionnel, l’attribution au premier contact, les commissions résistantes au rejeu et la frontière de paiement manuel."
+description: "Décider entre attribution, commission en espèces ou crédits avant d’activer le suivi first-touch du starter."
 tags: [parrainage, facturation, idempotence]
 author: "Sushi SaaS"
 publishedAt: "2025-10-09T00:00:00.000Z"
 updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-Sushi SaaS inclut une implémentation de parrainage optionnelle, pas un programme d’affiliation prêt à lancer. Elle est désactivée par défaut et le flux fourni ne fait qu’enregistrer des commissions à vérifier : il ne transfère jamais automatiquement de l’argent ou des crédits.
+Sushi SaaS fournit la plomberie du parrainage, pas un programme d’affiliation prêt à opérer. Il est désactivé par défaut. Une fois activé, il attribue un nouveau compte et enregistre une récompense pending après paiement ; il ne vérifie pas les affiliés, ne verse pas d’argent, n’accorde pas de crédits et ne marque pas un payout terminé.
 
-## Du lien à l’attribution
+## Le parcours livré
 
-Une personne connectée peut créer un code de huit caractères via `/api/affiliate/invite-code`. Un lien comme `/i/abc12345` retrouve le parrain, stocke son UUID dans un cookie `ref` pendant 30 jours et redirige vers l’accueil.
+1. Un utilisateur connecté crée un code court (généralement huit caractères) et partage `/i/<code>`.
+2. Le visiteur ouvre le lien ; l’application stocke l’UUID du parrain dans un cookie `ref` de 30 jours et redirige vers l’accueil.
+3. Après connexion, le client envoie le cookie à l’endpoint d’attribution.
+4. Le service réclame le parrain une seule fois. L’auto-parrainage est refusé et les appels concurrents convergent vers la première attribution réussie.
+5. Un paiement éligible crée une commission pending. Une unicité en base rend le replay webhook inoffensif.
 
-Le provider de thème partagé monte automatiquement `AffiliateInit`. Quand le parrainage est activé, il appelle côté client `captureAffiliateAttribution()`, qui envoie un POST à `/api/affiliate/update-invite`. L’endpoint exige une session authentifiée et lit le cookie `ref`. Une tentative réussie pose un marqueur dans `sessionStorage` pour l’onglet courant ; un échec, y compris avant la connexion, ne pose aucun marqueur et autorise une nouvelle tentative lors d’un montage ultérieur. Le modèle par défaut est le premier contact : une mise à jour conditionnelle en base désigne le gagnant si deux requêtes sont concurrentes. L’auto-parrainage est refusé et une ligne d’inscription unique rend les rejeux inoffensifs.
+L’utilisateur voit son lien et son résumé sur `my-invites`. L’opérateur inspecte les lignes sur la page admin `affiliates`, mais elle est en lecture seule : ce n’est pas un workflow de paiement.
 
-Le comportement est défini dans [`src/config/affiliate.ts` au commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/config/affiliate.ts) et orchestré par [`src/services/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/services/affiliate.ts).
+L’exemple prend le maximum entre 5 000 unités monétaires mineures et 20 % du paiement. Pour un USD à deux décimales, 5 000 signifie 50 $. Ce n’est pas un taux recommandé.
 
-## Après une commande payée
+Voir [`src/config/affiliate.ts` au commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/config/affiliate.ts) et [`src/services/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/services/affiliate.ts).
 
-Une fois activé, une commande payée produit une seule commission pending. La configuration livrée retient le plus grand montant entre 5 000 unités monétaires mineures (50 USD si la devise est le dollar) et 20 % de la commande. Un index unique partiel sur le numéro de commande empêche deux workers webhook de dupliquer la récompense.
+## Choisissez le programme avant le code
 
-Un remboursement peut annuler une récompense encore pending. Le paiement final reste volontairement hors du chemin automatisé : les opérateurs examinent les parrainages dans la console et chaque produit branche son fournisseur de payout et son processus de conformité.
+| Objectif | Action |
+| --- | --- |
+| Aucun parrainage | Gardez `enabled: false` ; retirez ensuite pages, routes, tables et provider pour alléger le produit |
+| Attribution seulement | Gardez first touch, cessez de créer et d’afficher des commissions et définissez les analytics conservables |
+| Commission en espèces | Ajoutez éligibilité, identité/fiscalité, fraude, provider de paiement, états audités et rapprochement |
+| Récompense en crédits | Ajoutez un grant idempotent au ledger ; changer seulement `payoutType` **ne déplace aucun crédit** |
+| Last touch | Implémentez et testez une autre règle dans le service ; l’enum exporté seul **ne change pas** le first touch livré |
 
-## Avant de l’activer
+Le calcul prend en charge fixe, pourcentage, maximum et somme. L’attribution ne branche pas actuellement sur `AttributionModel` : first touch est le contrat implémenté.
 
-1. Définissez devise, taux, fenêtre d’attribution et éligibilité.
-2. Décidez identité, fiscalité, contrôle anti-fraude et états de paiement.
-3. Remplacez les valeurs d’exemple et gardez `enabled` à false tant que la politique n’est pas prête.
-4. Testez visites, attribution concurrente, rejeu webhook, annulation et revue admin.
+## Politiques à définir
 
-Configurez d’abord [Stripe](/docs/stripe-setup), puis consultez [Pages et opérations de la console admin](/docs/admin-console-operations).
+- Quels achats sont éligibles et quand une récompense devient-elle payable ?
+- Que se passe-t-il après remboursement, litige, annulation ou effacement de compte ?
+- Quelle devise et quelle règle d’unité mineure ?
+- Employés, clients existants ou même foyer peuvent-ils participer ?
+- Le cookie exige-t-il un consentement dans vos régions ?
+- Comment enquêter et corriger sans perdre l’audit ?
+
+Un remboursement Stripe peut annuler une récompense encore pending, mais la récupération d’un payout terminé n’est pas implémentée. N’automatisez pas l’argent avant politiques et échecs.
+
+## Activation sûre
+
+1. Configurez et testez [Stripe Billing](/fr/docs/stripe-setup).
+2. Remplacez fenêtre et valeurs d’exemple dans `src/config/affiliate.ts`.
+3. Construisez le workflow paiement/crédits et ses actions admin avant activation.
+4. Testez visite anonyme → inscription/connexion → first touch → paiement → replay → remboursement.
+5. Testez auto-parrainage, deux liens concurrents, expiration et événements simultanés.
+
+Suivez [Configurer les parrainages et récompenses d’affiliation](/fr/docs/referrals) pour la configuration et les vérifications, puis consultez [Pages et opérations de la console](/fr/docs/admin-console-operations) pour la surface actuelle.

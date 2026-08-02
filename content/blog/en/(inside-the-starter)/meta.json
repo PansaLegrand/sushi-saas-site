@@ -1,10 +1,10 @@
 {
-  "title": "Inside the starter",
+  "title": "Evaluate and adapt",
   "pages": [
+    "why-use-a-saas-template",
     "anatomy-of-modern-saas",
-    "what-is-middleware",
     "web-authentication-deep-dive",
-    "affiliate-and-reward",
-    "why-use-a-saas-template"
+    "what-is-middleware",
+    "affiliate-and-reward"
   ]
 }

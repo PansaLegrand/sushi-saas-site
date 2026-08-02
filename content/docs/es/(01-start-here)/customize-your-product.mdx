@@ -1,0 +1,99 @@
+---
+title: Personaliza tu producto
+icon: "SlidersHorizontal"
+description: Define la identidad, los idiomas, el estilo visual, el tema, los datos legales y los sistemas opcionales antes de crear funciones propias.
+keywords: [personalización SaaS, marca, idiomas, tema, configuración legal, decisiones de producto]
+tags: [configuración, decisiones de producto, personalización]
+author: "Sushi SaaS"
+publishedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Al terminar esta página, el starter tendrá el nombre, las rutas, los idiomas y el aspecto de **tu producto**, y cada sistema opcional tendrá una decisión explícita: conservar, adaptar o eliminar. Hazlo antes de cambiar pantallas concretas; la identidad y los límites del producto afectan a las URL, el correo, los textos legales, la analítica, la facturación y la consola de administración.
+
+## Qué incluye y qué debes decidir
+
+| Área | Comportamiento incluido | Tu decisión |
+| --- | --- | --- |
+| Identidad | `NEXT_PUBLIC_APP_NAME` usa `Your SaaS` como reserva; `NEXT_PUBLIC_DOCS_URL` es opcional | Define el nombre público y la URL de documentación revisada |
+| Soporte | `SiteConfig.contactEmail` es `null`, por lo que no se muestra un correo | Edita `src/config/site.ts` o decide que otro canal asuma el soporte |
+| Idiomas | Están disponibles inglés, chino, español, francés y japonés; los prefijos son `as-needed` | Elige idioma predeterminado, conjunto habilitado y detección del navegador |
+| Lenguaje visual | `studio` es el preset de compilación compartido por web y admin | Consérvalo o elige en código `glass`, `soft`, `editorial` o `brutalist` |
+| Modo de color | La app de clientes usa `system` por defecto mediante una variable | Elige `system`, `light` o `dark`; admin aún no tiene selector de modo |
+| Páginas legales | Un borrador visible refleja los flujos de datos predeterminados | Completa identidad y políticas y obtén revisión jurídica |
+| Sistemas opcionales | Hay código o adaptadores para cobros, almacenamiento, correo, Slack, analítica, referidos, tareas y reservas | Conserva y configura cada uno, o elimina a la vez UI, validación, rutas y documentación |
+
+## Punto de partida recomendado
+
+Usa un nombre real, conserva el modo `system` y el preset `studio` hasta estabilizar la arquitectura de información, y habilita solo los idiomas que tu equipo pueda mantener. Mantén desactivados analítica, publicidad, referidos y funciones de demostración hasta tener un motivo, textos para usuarios y un proceso operativo.
+
+Las alternativas son válidas, pero añaden trabajo. Más idiomas amplían el público y la obligación de traducir. Un preset más marcado diferencia el producto, pero exige revisar modos claro/oscuro y admin. Activar una integración ahorra desarrollo, pero añade credenciales, fallos, divulgaciones de privacidad y soporte.
+
+## Configura identidad e idiomas
+
+Empieza por los valores públicos de `.env`:
+
+```bash
+NEXT_PUBLIC_APP_NAME=Acme Cloud
+NEXT_PUBLIC_DOCS_URL=https://docs.example.com
+NEXT_PUBLIC_DEFAULT_THEME=system
+NEXT_PUBLIC_DEFAULT_LOCALE=es
+NEXT_PUBLIC_LOCALES=es,en
+NEXT_PUBLIC_LOCALE_DETECTION=true
+```
+
+El idioma predeterminado no lleva prefijo; los demás sí. Con estos valores, español usa `/pricing` e inglés `/en/pricing`. `NEXT_PUBLIC_LOCALE_DETECTION` decide si la preferencia del navegador puede seleccionar un idioma habilitado. Las variables `NEXT_PUBLIC_*` se incorporan al cliente durante la compilación: vuelve a compilar y desplegar tras cambiarlas.
+
+`NEXT_PUBLIC_DOCS_URL` puede quedar vacío. Si publicas documentación externa, usa su origen de producción revisado. El contacto de soporte no es una variable de entorno de forma intencionada: configura `SiteConfig.contactEmail` en `src/config/site.ts` o déjalo en `null` si otra superficie asume esa promesa.
+
+## Elige un preset visual
+
+Modifica la constante tipada en `src/config/style.ts`:
+
+```ts
+export const stylePreset: StylePreset = "glass";
+```
+
+La app de clientes y la consola usan el mismo valor. Es una decisión de producto en compilación, no un selector por usuario. Antes de conservar un preset no predeterminado, revisa páginas, formularios, tablas, diálogos, estados vacíos y errores en ambas apps. La web admite claro, oscuro y sistema; admin todavía se renderiza sin proveedor de modo de tema.
+
+## Completa la identidad legal
+
+Rellena `LegalData` en `src/config/legal.ts`: razón social y domicilio, contactos de privacidad y asuntos legales, ley aplicable, fecha de vigencia y los subencargados reales. Resuelve todos los marcadores entre corchetes. Mientras falte algún dato obligatorio, `LegalConfig.isConfigured` seguirá siendo false y privacidad y términos mostrarán un aviso de borrador no revisado.
+
+El texto incluido es una estructura de trabajo, no asesoramiento jurídico ni una política terminada. Elimina proveedores que no uses, añade los que reciban datos personales, alinea la retención con el borrado de cuentas y solicita revisión profesional.
+
+## Define el límite del producto
+
+Registra una de estas decisiones para cada sistema opcional:
+
+1. **Conservar:** configura credenciales, textos, monitorización, manejo de fallos y responsable.
+2. **Adaptar:** cambia la política o el proveedor tras la frontera de servicio existente y actualiza pruebas y guías.
+3. **Eliminar:** quita rutas, UI, validación de producción, trabajos y documentación en el mismo cambio. Una credencial vacía no es una decisión de producto.
+
+Para lo que conserves, continúa con [Planes y derechos](/es/docs/plans-and-entitlements), [Facturación con Stripe](/es/docs/stripe-setup), [Carga de archivos](/es/docs/storage-uploads) y [Despliegue y seguridad](/es/docs/deployment-and-security).
+
+## Verifica antes de crear funciones
+
+```bash
+pnpm lint
+pnpm test:run
+pnpm build:web
+pnpm build:admin
+```
+
+Comprueba que el idioma predeterminado no tenga prefijo, que cada idioma adicional resuelva, que el selector no ofrezca idiomas deshabilitados, que los enlaces de documentación y soporte cumplan lo prometido, que ambas apps compartan preset y que la web sea legible en claro y oscuro. Abre privacidad y términos: no publiques mientras siga el aviso de borrador o queden marcadores de política.
+
+## Lo que no está terminado por ti
+
+El starter no incluye configurador de marca, selector de preset en ejecución, modo oscuro de admin, correo de soporte por entorno, política legal revisada ni una decisión sobre qué sistemas opcionales pertenecen a tu producto. Son decisiones del equipo que adopta el starter.
+
+Si activas medición o publicidad, toma esa decisión junto con [Analítica y consentimiento](/es/docs/analytics-and-consent), no como un valor de entorno aislado.
+
+## Instantánea del código fuente
+
+Verificado con el commit `7580470` del starter:
+
+- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/site.ts)
+- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/i18n/locale.ts)
+- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/style.ts)
+- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/legal.ts)

@@ -7,6 +7,7 @@ export const COLLECTIONS = ["docs", "blog"];
 export const SITE_ORIGIN = "https://www.sushisaas.com";
 export const STARTER_REPOSITORY =
   "https://github.com/PansaLegrand/sushi-saas-template";
+export const STARTER_COMMIT = "7580470";
 
 const LEGACY_DOC_SLUGS = new Set([
   "quick-start",
@@ -166,6 +167,18 @@ export function checkContent(root = process.cwd()) {
     }
     if (!frontmatter.values.title) errors.push(`${label}: missing title`);
     if (!frontmatter.values.description) errors.push(`${label}: missing description`);
+    if (frontmatter.values.author !== "Sushi SaaS") {
+      errors.push(`${label}: author must use the shared Sushi SaaS byline`);
+    }
+    if (!source.includes(STARTER_COMMIT)) {
+      errors.push(`${label}: missing starter source pin ${STARTER_COMMIT}`);
+    }
+    if (/sushi-saas-template\/(?:tree|blob)\/(?:main|master|HEAD)(?:\/|\b)/i.test(source)) {
+      errors.push(`${label}: starter source links must pin a commit, not a moving branch`);
+    }
+    if (/^\+[^\s+-]/m.test(source)) {
+      errors.push(`${label}: contains an accidental leading patch marker`);
+    }
     if (/^canonical:/m.test(frontmatter.block)) {
       errors.push(`${label}: canonical must be derived by the route, not frontmatter`);
     }

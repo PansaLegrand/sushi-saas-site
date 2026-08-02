@@ -1,0 +1,76 @@
+---
+title: アーキテクチャとエラー契約
+icon: "Workflow"
+description: データ、認可、ユーザー向けエラーの境界を破らずに Sushi SaaS を拡張します。
+keywords: [アーキテクチャ, サービス, モデル, エラー, Next.js, TypeScript]
+tags: [アーキテクチャ, エラー, テスト]
+author: "Sushi SaaS"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> スターターのコミット [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) で検証済みです。
+
+製品固有の最初の機能を追加する前に読んでください。目的は実務的です。各ファイルの置き場所、顧客データを守る境界、安全に拡張できたことを証明するテストが分かるようになります。
+
+## すでに決められている設計
+
+Sushi SaaS は、一つの水平レイヤー構造、Server Component からサービスへの直接呼び出し、Client Component 用の型付き API ラッパー、機能単位のプラン確認、翻訳済みで安全な公開エラーを採用しています。この既定を保てば、新しい機能領域の構成も予測できます。規約を置き換えることはできますが、アーキテクチャの移行として扱い、強制テストと技術文書も同時に更新してください。二つの方式を混在させてはいけません。
+
+## サーバーは一方向に流れる
+
+```text
+src/app/**       ルートとページ：HTTP の入出力
+  ↓
+src/services/**  業務ルール、調整、不変条件
+  ↓
+src/models/**    型付き永続化；db() を呼べる唯一の層
+  ↓
+src/db/**        スキーマ、マイグレーション、接続
+```
+
+ルートは認証、入力検証、HTTP 変換だけを担当し、書き込みは必ずサービスを通ります。モデルはクエリ、テナント条件、トランザクションを一手に引き受けます。`tests/unit/architecture.test.ts` が境界違反を検出します。
+
+`src/features/` は作りません。各機能領域は、モデル、サービス、設定、コンポーネントの水平レイヤーへ配置します。
+
+## ブラウザのデータフロー
+
+```text
+Server Component → サービスを直接呼ぶ
+Client Component → src/api/** → 共通 API クライアント → /api/**
+```
+
+Server Component は自分の API を HTTP 経由で呼びません。Client Component は `fetch` を直接使わず、`src/api/` の機能別ラッパーを使います。
+
+## 認可の二つの問い
+
+組織ロールとサブスクリプションプランは別です。
+
+```ts
+const ctx = await getOrgContext(request);
+if (!ctx || !can(ctx, "file:delete", file)) return respForbidden();
+await requireEntitlement(ctx.orgUuid, "storage.upload");
+```
+
+`can()` は組織内の役割が操作を許すかを判断し、エンタイトルメントは組織の有効なプランに機能や上限が含まれるかを判断します。
+
+## 情報を漏らさないエラー契約
+
+サーバーは安定したカタログコードを持つ `AppError` を投げます。ルート境界の `respError` が内部詳細をログに残し、安全な翻訳文だけを返します。
+
+UI は `error_code` で分岐し、`resolveErrorMessage` または `resolveAuthError` で文言を解決します。`error.message` は表示しません。翻訳は `src/lib/errors/i18n/locales/` にあり、新しいエラーコードは五言語すべてに追加します。
+
+## 機能領域を追加する手順
+
+1. `src/config/` に定数を置く。
+2. `src/models/` に型付き CRUD を追加する。
+3. 不変条件、認可、冪等性、副作用を `src/services/` に置く。
+4. ルートを薄く保ち、エラーカタログを使う。
+5. 適切な階層のテストを追加する。
+6. `pnpm lint`、`pnpm test:run`、`pnpm build` を実行する。
+
+ブラウザー向け機能では、どこで描画するかも選びます。サービスを直接呼べるなら Server Component を優先し、ブラウザー操作が必要な場合だけ Client Component を使います。その際も `fetch` を直接呼ばず、`src/api/` にラッパーを追加してください。
+
+ルートに業務ルールがなく、サービスが書き込みの不変条件を、モデルがすべてのクエリを担当し、拒否レスポンスがカタログのコードだけを公開し、対応する階層のテストが通れば、その機能領域は完成です。
+
+詳細な契約はスターターの `docs/errors.md`、`docs/frontend.md`、`AGENTS.md` にあります。設計を選んだ理由と別方式へ移行する際の考え方は、[Sushi SaaS の構造](/ja/blogs/anatomy-of-modern-saas)で確認できます。

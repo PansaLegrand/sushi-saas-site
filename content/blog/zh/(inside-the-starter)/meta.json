@@ -1,10 +1,10 @@
 {
-  "title": "深入了解 starter",
+  "title": "评估与调整",
   "pages": [
+    "why-use-a-saas-template",
     "anatomy-of-modern-saas",
-    "what-is-middleware",
     "web-authentication-deep-dive",
-    "affiliate-and-reward",
-    "why-use-a-saas-template"
+    "what-is-middleware",
+    "affiliate-and-reward"
   ]
 }

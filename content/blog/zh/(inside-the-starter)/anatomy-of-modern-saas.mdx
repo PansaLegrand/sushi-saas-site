@@ -1,51 +1,69 @@
 ---
 title: "Sushi SaaS 的代码结构"
 icon: "Blocks"
-description: "了解 starter 强制执行的路由、服务、模型与数据库分层，以及独立管理应用。"
+description: "理解 starter 强制执行的分层、背后的取舍，以及如何添加功能而不引入第二套架构。"
 tags: [架构, nextjs, starter]
 author: "Sushi SaaS"
 publishedAt: "2025-10-07T00:00:00.000Z"
 updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-Sushi SaaS 围绕一条规则组织：数据沿明确的分层向下流动。这不只是文件夹建议；架构测试会拒绝跨越边界的 import。
+本指南面向正在判断第一个产品功能应放在哪里的采用者。Sushi SaaS 的所有业务域共用一套水平架构，并由测试强制执行。
 
-## 应用中的调用路径
+## 一次请求经过的路径
 
 ```text
-src/app/**       路由与页面
+src/app/**       路由与页面——接收并返回 HTTP
   ↓
-src/services/**  业务规则与编排
+src/services/**  业务规则、编排与不变量
   ↓
-src/models/**    类型化持久化
+src/models/**    类型化持久化；唯一可调用 db() 的层
   ↓
 src/db/**        schema、migration 与连接
 ```
 
-路由负责转换 HTTP。服务负责幂等、授权、账本规则与副作用等不变量。模型是应用中唯一允许调用 `db()` 的层，数据库约束则提供最终的并发边界。
+路由负责解析与响应，服务判断操作是否允许并协调副作用，模型负责数据库读写，数据库约束则是并发请求的最后一道保护。
 
-浏览器侧也有明确分工：Server Component 直接调用服务；Client Component 调用 `src/api/**` 中的封装，再经过统一 API client。这既避免服务端调用自己的 HTTP 接口，也避免每个组件自行处理响应和错误。
+浏览器侧还有一条边界：
 
-[架构与错误契约](/docs/architecture-and-errors)详细说明了这些可执行规则。
+```text
+Server Component  → 直接调用 service
+Client Component  → src/api/** → 公共 API client → /api/**
+```
 
-## 所有业务域使用同一套分层
+这样既避免服务端对自身发起 HTTP 请求，也让客户端错误统一遵循一个响应契约。完整规则见[架构与错误契约](/zh/docs/architecture-and-errors)。
 
-组织、计费、积分、存储、预约与任务不是各自封闭的小应用。每个业务域都横跨相同的分层。例如积分消费从路由进入，由服务完成授权与幂等控制，通过模型写入，并最终由账本约束保护。
+## 为什么选择水平分层
 
-这种一致性比功能数量更重要：新增业务域时，每种职责都有唯一位置。[组织与团队](/docs/organizations-and-teams)展示了租户边界如何沿用该结构。
+计费、积分、存储、预约和任务都需要认证、租户作用域、错误处理和持久化。统一分层能让每项职责的位置可预测，并让架构测试发现不经意的捷径。
 
-## 管理后台是独立应用
+代价是一个功能会分散在多个目录。大型产品中，垂直 feature 目录可能更容易浏览；但同时混用水平与垂直结构比任一种都更差，因为下一条查询或业务规则会有两个合理位置。
 
-`apps/admin` 是独立的 Next.js 应用，拥有自己的页面、管理 API、数据访问、MFA 门禁和读写角色。它与主应用共享 schema 和核心认证，但可部署在不同域名，从客户应用中隔离运营入口。
+### 你的选择
 
-部署前请阅读[管理后台设置与访问](/docs/admin-console-setup)。
+- **保留现有结构**：适合希望用强约定共享基础设施的小团队。
+- **完整迁移为垂直切片**：如果这已经是团队标准，可以移动完整业务域并更新 `tests/unit/architecture.test.ts`；不要在原规则旁新增孤立的 `src/features`。
+- **为短期原型简化**：前提是接受之后的迁移。如果路由直接写数据库，应明确修改或移除测试，而不是逐个增加例外。
 
-## 扩展时应保留的边界
+## 租户模型也是架构选择
 
-- 业务不变量放在服务，而不是路由。
-- 数据库访问放在模型，而不是组件或服务。
-- 通过 capability 判断权限，不直接比较套餐名称。
-- 管理专用查询与接口保留在 `apps/admin`。
-- 实现契约变化时同步更新随代码版本管理的 runbook。
+每位用户都会获得个人组织，因此个人客户与团队共用组织作用域下的计费、积分、文件和限额，不需要同时维护“归用户”和“归团队”两套查询。
 
-本文已按 [starter commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470)核对。
+如果未来可能有团队，建议保留。如果产品确定永远是单用户，移除组织也合理——但这会同时影响授权、schema、模型、计费、存储和测试，并非一个 UI 开关。决策前请阅读[组织与团队](/zh/docs/organizations-and-teams)。
+
+## 为什么管理后台是独立应用
+
+`apps/admin` 有自己的页面、管理 API、数据访问、MFA 门禁和运营角色。它共享 schema 和认证数据，但可运行在不同 origin。代价是多一次构建与部署，收益是清晰的运营边界。
+
+如果团队更希望单次部署，可以把它合并到客户应用，但必须保留服务端管理授权和审计规则；仅隐藏导航不构成安全边界。先查看[管理后台设置](/zh/docs/admin-console-setup)。
+
+## 添加第一个业务域
+
+1. 在 `src/types` 与 `src/config` 定义产品词汇和限额。
+2. 在 `src/db` 添加 schema 与可安全扩展的 migration。
+3. 把类型化 CRUD 放入 `src/models`。
+4. 把授权、幂等和副作用放入 `src/services`。
+5. 在 `src/app` 添加路由或 Server Component；客户端调用使用 `src/api`。
+6. 测试 service 规则、路由认证门禁，以及资金或积分操作的重放行为。
+
+通过 capability 检查功能，不要直接比较套餐名称；契约变化时同步更新仓库 runbook。本文基于 [starter commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470)。

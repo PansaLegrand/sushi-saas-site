@@ -10,7 +10,7 @@
     "heroLineOne": "La infraestructura está lista.",
     "heroLineTwo": "Construye el producto.",
     "subtitle": "Autenticación, organizaciones, Stripe, libro de créditos, almacenamiento privado, tareas en segundo plano y una consola admin separada, conectados por una arquitectura verificable.",
-    "primaryAction": "Empezar con la documentación",
+    "primaryAction": "Comprueba si encaja",
     "secondaryAction": "Ver el código",
     "signalsLabel": "Señales del proyecto",
     "signals": [
@@ -43,8 +43,8 @@
     },
     "closing": { "title": "Empieza más cerca de la parte que solo tu empresa puede construir.", "action": "Abrir inicio rápido" }
   },
-  "docs": { "title": "Documentación del starter SaaS para Next.js", "intro": "Pasos de referencia para instalar, configurar, ampliar y operar el starter Sushi SaaS. Para decisiones y patrones de arquitectura, consulta Guías.", "empty": "La documentación está en preparación." },
-  "blogs": { "title": "Guías de Sushi SaaS", "intro": "Decisiones de arquitectura y patrones de implementación del starter Sushi SaaS.", "empty": "Todavía no hay guías publicadas." },
+  "docs": { "title": "Construye y opera Sushi SaaS", "intro": "Elige una tarea para ver pasos exactos de configuración y verificación. Si necesitas entender una decisión o elegir qué cambiar, consulta Guías.", "empty": "La documentación está en preparación.", "topics": "Temas" },
+  "blogs": { "title": "Entiende y adapta Sushi SaaS", "intro": "Descubre qué elige el starter, por qué, qué alternativas encajan y qué conviene conservar, cambiar o eliminar para tu producto.", "empty": "Todavía no hay guías publicadas.", "topics": "Temas" },
   "footer": { "label": "Navegación del pie", "description": "Documentación y guías de implementación del starter open source Sushi SaaS.", "docs": "Documentación", "blog": "Guías", "privacy": "Privacidad", "terms": "Términos" },
   "privacy": {
     "title": "Aviso de privacidad",

@@ -1,0 +1,42 @@
+---
+title: Facturation Stripe
+icon: "CreditCard"
+description: Reliez votre catalogue Stripe, choisissez une politique sûre de changement et vérifiez qu’un paiement n’a qu’un effet local.
+keywords: [Stripe, abonnements, checkout, webhooks]
+tags: [facturation, Stripe]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Vérifié avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) du starter.
+
+À la fin, un client pourra acheter un plan configuré, Stripe notifiera l’application, l’organisation recevra ses droits et crédits exactement une fois et un opérateur pourra réconcilier tout état incertain.
+
+## Décidez d’abord du modèle commercial
+
+Le starter livre des abonnements à prix fixe par organisation pour Plus et Max, mensuels et annuels. Il autorise plusieurs abonnements indépendants, applique le niveau actif le plus haut et additionne leurs crédits. Billing Portal permet factures, moyens de paiement et annulation, mais bloque les changements de plan ou de quantité sur place.
+
+Gardez ce modèle pour un lancement rapide et sûr. Pour facturer par siège, appliquer un prorata ou ajuster automatiquement les crédits, définissez et testez ces règles avant d’activer les contrôles de mise à jour Stripe.
+
+Créez des Prices Stripe stables mensuels/annuels pour Plus et Max, puis définissez `STRIPE_PRICE_*`, `STRIPE_PRIVATE_KEY` et `STRIPE_WEBHOOK_SECRET`. Les Prices CNY sont optionnels. Montants et catalogue sont dans `src/config/billing.ts` ; les IDs restent serveur.
+
+Le checkout est réservé à l’owner et exige `Idempotency-Key`. Une intention/commande précède Stripe : rejouer la même requête produit un seul effet ; un second achat volontaire utilise une nouvelle clé. Plusieurs abonnements peuvent coexister et le resolver combine leurs entitlements.
+
+## Webhooks
+
+Exposez `/api/pay/webhook/stripe` et abonnez checkout terminé/expiré, abonnement créé/modifié/supprimé, facture payée/échouée et remboursement/litige. Le handler vérifie la signature, déduplique, respecte le temps d’événement et accorde chaque bénéfice une fois. Un renouvellement crée une commande et l’attribution de crédits configurée pour la période ; les prix annuels accordent douze mois de crédits une fois par période annuelle.
+
+Remboursements et litiges sont signalés pour revue ; les crédits consommés ne sont pas repris silencieusement. Utilisez la commande de réconciliation et la vue admin pour les états incertains.
+
+## Portail et tests
+
+Créez la configuration Billing Portal et son ID en production. Les changements d’abonnement dans le portail doivent être désactivés ; sinon le starter échoue fermé.
+
+```bash
+stripe listen --forward-to localhost:3000/api/pay/webhook/stripe
+```
+
+Testez doublons, webhooks retardés, renouvellement, échec, annulation, remboursement et portail. En production, clés live et événements live uniquement. Vous êtes prêt lorsqu’un retry crée une commande, qu’un replay de webhook accorde une fois, qu’un ancien événement ne remplace pas le nouvel état, qu’un portail dangereux échoue fermé et que la réconciliation locale n’a aucun constat inexpliqué.
+
+**Gardez l’offre cohérente :** reliez chaque Price aux [Plans, limites et droits](/fr/docs/plans-and-entitlements) et confirmez ses attributions dans le [Registre de crédits d’organisation](/fr/docs/account-ledger).

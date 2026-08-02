@@ -1,0 +1,9 @@
+{
+  "title": "Optional product examples",
+  "defaultOpen": false,
+  "pages": [
+    "text-to-video-tasks",
+    "reservations-feature",
+    "referrals"
+  ]
+}

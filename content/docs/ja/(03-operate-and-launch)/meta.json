@@ -1,0 +1,13 @@
+{
+  "title": "運用とリリース",
+  "defaultOpen": false,
+  "pages": [
+    "jobs-and-readiness",
+    "email-service",
+    "logging",
+    "notifications-slack",
+    "analytics-and-consent",
+    "account-data-lifecycle",
+    "deployment-and-security"
+  ]
+}

@@ -1,0 +1,66 @@
+---
+title: Account Export and Erasure
+icon: "ShieldCheck"
+description: Configure privacy data inventory, authenticated exports, delayed account erasure, provider cleanup, pseudonymization, and cancellation safeguards.
+keywords: [account deletion, data export, privacy, erasure, GDPR, retention]
+tags: [privacy, account, lifecycle]
+author: "Sushi SaaS"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Synced with starter commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb). Review this technical workflow and its retention settings with counsel before production.
+
+Use this page if customers must be able to receive a copy of their data or request account erasure. The starter ships authenticated APIs, durable workers, a tested table-by-table policy, and private export artifacts. It does **not** ship a finished account-settings screen for these actions; add the confirmation UI and policy copy your product requires.
+
+## Make the policy decisions before exposing the buttons
+
+- Decide which records are deleted, pseudonymized, retained, or excluded from export. The included map is a safe technical starting point, not a legal conclusion.
+- Review the default seven-day erasure grace period and export retention, the 15-minute fresh-session requirement, Stripe Customer deletion, and security-blocklist retention.
+- Decide how shared organizations transfer ownership and how each external provider deletes user output. The worker blocks erasure rather than silently abandoning those obligations.
+
+**Ready to launch means:** counsel has reviewed the policy and public copy, a disposable user can export and open the archive, cancellation works during the grace period, owner/admin blockers explain the next action, and the final run removes or pseudonymizes every expected record without leaking signed URLs into logs.
+
+## A Tested Data Inventory
+
+`src/config/account-data-policy.ts` assigns every database table one disposition: delete, pseudonymize, retain, or not personal. It also states whether the table is included in an export. A test compares the policy with `src/db/schema.ts`, so adding a table without making a privacy decision fails the build.
+
+Credentials, password hashes, sessions, verification tokens, and TOTP secrets are never exported. Financial, audit, ledger, and shared-workspace records may remain after irreversible identifiers are replaced.
+
+## Requesting an Export
+
+`POST /api/account/data-export` requires authentication, same-origin protection, rate limiting, and an `Idempotency-Key`. It returns 202 and queues `account_data_export`.
+
+Poll `GET /api/account/data-export/{requestUuid}`. When complete, the response contains a five-minute signed manifest URL and signed links to active private files. Export artifacts are private and expire after seven days by default.
+
+## Requesting Erasure
+
+`POST /api/account/deletion` uses the same controls and additionally requires a session created within the last 15 minutes. The default seven-day grace period allows cancellation with `DELETE /api/account/deletion`; `GET` returns status.
+
+The request is blocked when the account is the last owner of a shared organization or the last full-access administrator. Transfer ownership or promote another administrator first.
+
+After the grace period, the durable worker:
+
+- revokes sessions and removes authentication credentials;
+- cancels subscriptions and optionally deletes the Stripe customer;
+- deletes solo-workspace objects and external task outputs through provider adapters;
+- removes memberships, invitations, feedback, and other deletable records;
+- pseudonymizes retained orders, credits, subscriptions, reservations, audit records, and shared-workspace ownership;
+- cancels or scrubs queued jobs;
+- records each external effect so retries cannot claim work that did not happen.
+
+## Policy You Must Review
+
+`src/config/account-lifecycle.ts` controls the grace period, export retention, fresh-session window, Stripe-customer deletion, security-blocklist retention, and signed-download lifetime.
+
+The shipped defaults are technical choices, not legal advice. Align them with the privacy policy in `src/config/legal.ts`, your provider contracts, tax/financial retention duties, and the jurisdictions where you operate.
+
+## Production Checklist
+
+1. Keep private storage and the job runner configured; both workflows depend on them.
+2. Implement any external-data deletion hook you add to a new provider.
+3. Add every new table to the data policy in the same change.
+4. Test export, cancellation during grace, owner-transfer blockers, retry safety, and final erasure against a disposable account.
+5. Never log export payloads, credentials, or signed download URLs.
+
+**Related:** Exports and erasure depend on [Durable Jobs and Readiness](/docs/jobs-and-readiness); include both workflows in the [Deployment and Security](/docs/deployment-and-security) launch test.

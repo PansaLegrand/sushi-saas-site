@@ -1,0 +1,78 @@
+---
+title: Analítica y consentimiento
+icon: "ChartNoAxesCombined"
+description: Decide si habilitar Google Analytics o AdSense, configura el consentimiento, actualiza las declaraciones legales y verifica que nada cargue antes de tiempo.
+keywords: [Google Analytics, GA4, AdSense, consentimiento de cookies, privacidad, analítica SaaS]
+tags: [analítica, consentimiento, privacidad]
+author: "Sushi SaaS"
+publishedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Al terminar esta página, habrás elegido de forma consciente entre **desactivado, solo analítica, solo publicidad o ambos**, y lo habrás verificado en una compilación de producción. La recomendación inicial es desactivarlo: recoge datos solo cuando respondan una pregunta de producto con responsable.
+
+## Qué incluye
+
+- `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` habilita el componente de Google Analytics.
+- `NEXT_PUBLIC_GOOGLE_ADCODE` habilita el cargador de AdSense, pero **no** crea ubicaciones publicitarias.
+- Ambos componentes devuelven vacío fuera de producción.
+- Analítica y publicidad son categorías de consentimiento separadas. Aceptar medición no implica aceptar publicidad.
+- Un consentimiento ausente, malformado o antiguo falla de forma cerrada. Ningún script se renderiza hasta permitir expresamente su categoría.
+- `cookie_consent` guarda durante 182 días una elección versionada, con `SameSite=Lax` y `Secure` bajo HTTPS.
+- Si no se configura ninguno de los dos proveedores, no aparecen ni el banner ni el control de cookies del pie.
+- El pie puede reabrir los ajustes para cambiar o retirar la elección.
+- La app de administración separada no monta estos scripts ni la interfaz de consentimiento.
+
+## Elige la configuración mínima útil
+
+| Elección | Cuándo encaja | Coste |
+| --- | --- | --- |
+| Desactivado (recomendado al inicio) | Aún no hay una pregunta de eventos ni una postura de privacidad revisada | No obtienes medición de estos proveedores |
+| Solo analítica | Necesitas adquisición y uso agregados | Consentimiento, gobierno de datos, configuración y calidad |
+| Solo publicidad | La publicidad forma parte real del negocio | Máxima carga de consentimiento, política, ubicaciones y confianza |
+| Ambos | Medición y publicidad son necesarias | Dos elecciones independientes y dos configuraciones que operar |
+
+No actives analítica solo para tener un panel. Define qué decisiones cambiarán los datos, qué eventos hacen falta, quién los revisa y cuándo se retirará una recogida que ya no se use.
+
+## Configura el despliegue
+
+Añade al entorno de producción solo los identificadores que utilices:
+
+```bash
+NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX
+NEXT_PUBLIC_GOOGLE_ADCODE=ca-pub-XXXXXXXXXXXXXXXX
+```
+
+Son identificadores públicos de compilación, no secretos. Vuelve a compilar al cambiarlos. Configura la propiedad GA4 o la cuenta AdSense correspondiente para tus dominios, regiones, retención, acceso y requisitos de consentimiento del proveedor.
+
+Actualiza `LegalData.subProcessors` y la política de privacidad en `src/config/legal.ts` para reflejar proveedores y finalidades reales. Pide revisión jurídica del texto y el banner para los mercados en los que operas. Si añades un proveedor o cambia el significado de una categoría, incrementa `CONSENT_VERSION` en `src/lib/consent.ts`; las decisiones antiguas se descartarán y volverán a solicitarse.
+
+## Verifica el comportamiento de producción
+
+Desarrollo no es la prueba final: los dos componentes devuelven `null` salvo cuando `NODE_ENV` es `production`. Borra almacenamiento y cookies y prueba una compilación de producción o un despliegue controlado.
+
+1. Antes de elegir, confirma que no hay peticiones de scripts de Analytics ni AdSense.
+2. Rechaza todo, recarga y confirma que ninguno carga.
+3. Permite solo analítica y confirma que carga GA pero no AdSense.
+4. Permite solo publicidad y confirma que carga AdSense pero no GA.
+5. Reabre los ajustes desde el pie, retira el consentimiento, recarga y comprueba que la categoría sigue desactivada.
+6. Inspecciona `cookie_consent`: debe contener versión `1`, dos booleanos y una duración máxima de 182 días.
+7. Elimina ambas variables y recompila; deben desaparecer banner, control y scripts.
+8. Revisa por separado el origen de admin: no debe incluir esta UI ni estos rastreadores.
+
+Usa el panel de red, no solo la presencia del banner. Los componentes de script aplican la regla; el banner es únicamente la interfaz.
+
+## Lo que no está terminado por ti
+
+El starter no define una taxonomía de eventos, eventos de negocio personalizados, paneles, objetivos de retención, componentes de ubicación AdSense ni un programa de consentimiento con aprobación legal. Tampoco puede configurar tu cuenta de Google. Añade la capa mínima que necesite el producto y mantén alineados proveedor, política pública y código.
+
+Para las comprobaciones de despliegue, continúa con [Despliegue y seguridad](/es/docs/deployment-and-security). La política visible para clientes está en [Privacidad](/es/privacy).
+
+## Instantánea del código fuente
+
+Verificado con el commit `7580470` del starter:
+
+- [`src/config/analytics.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/analytics.ts)
+- [`src/lib/consent.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/lib/consent.ts)
+- [`src/providers/google-analytics.tsx`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/providers/google-analytics.tsx)
+- [`src/providers/adsense.tsx`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/providers/adsense.tsx)

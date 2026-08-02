@@ -1,0 +1,13 @@
+{
+  "title": "Construye el producto",
+  "defaultOpen": false,
+  "pages": [
+    "database-setup",
+    "authentication-and-admin",
+    "organizations-and-teams",
+    "plans-and-entitlements",
+    "stripe-setup",
+    "account-ledger",
+    "storage-uploads"
+  ]
+}

@@ -1,0 +1,30 @@
+---
+title: Notifications opérationnelles Slack
+icon: "Bell"
+description: Envoyez les événements opérationnels vers Slack par la file durable sans fuite de données sensibles.
+keywords: [Slack, notifications, jobs, opérations]
+tags: [Slack, opérations]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Synchronisé avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) du starter.
+
+Utilisez Slack lorsqu’une personne doit rapidement remarquer une exception opérationnelle, par exemple un événement Stripe bloqué ; n’en faites pas le registre permanent. L’intégration est optionnelle : sans `SLACK_WEBHOOK_URL`, aucun message n’est envoyé.
+
+## Choisir les alertes qui exigent une livraison durable
+
+- Les alertes de webhook et de sweep Stripe utilisent déjà les jobs `slack_event` ou `slack_error` et leurs retries.
+- Certaines alertes de garde-fou storage et abonnement utilisent encore les helpers `notifySlack*` en best effort ; elles peuvent disparaître si une instance serverless gèle. Pour une alerte indispensable, mettez plutôt un job Slack en file.
+- Rendez le message actionnable avec un identifiant sûr de requête, commande, événement ou job et la prochaine étape. N’incluez jamais token, payload brut, URL signée ni donnée personnelle inutile.
+
+**Prêt pour la production signifie :** un événement inoffensif arrive au bon canal, un 429/5xx simulé devient un retry ou un échec visible, le doublon est supprimé et l’identifiant ramène aux données ou aux logs.
+
+Créez un Incoming Webhook et définissez `SLACK_WEBHOOK_URL`. Le SDK reste dans `src/integrations/slack.ts`. Facturation et sweep enfilent `slack_event` ou `slack_error` ; quelques garde-fous anciens utilisent des helpers best effort, donc toute nouvelle alerte indispensable doit devenir un job.
+
+Employez des clés déterministes pour les événements bruyants, ajoutez les IDs request/order/job, et omettez identifiants, tokens, corps bruts, URL de téléchargement et données personnelles inutiles. Un webhook absent doit être un choix explicite, pas une panne cachée.
+
+Le runner durable réessaie. Gardez `/api/cron/jobs` authentifié et planifié, surveillez les échecs et testez doublon, timeout/429/5xx, masquage et reprise. Slack alerte ; base et logs structurés font foi.
+
+**Avant d’activer les alertes :** terminez la [Checklist de déploiement et sécurité](/fr/docs/deployment-and-security).

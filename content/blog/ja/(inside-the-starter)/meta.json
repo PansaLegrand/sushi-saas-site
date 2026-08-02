@@ -1,10 +1,10 @@
 {
-  "title": "スターターの内側",
+  "title": "評価と調整",
   "pages": [
+    "why-use-a-saas-template",
     "anatomy-of-modern-saas",
-    "what-is-middleware",
     "web-authentication-deep-dive",
-    "affiliate-and-reward",
-    "why-use-a-saas-template"
+    "what-is-middleware",
+    "affiliate-and-reward"
   ]
 }

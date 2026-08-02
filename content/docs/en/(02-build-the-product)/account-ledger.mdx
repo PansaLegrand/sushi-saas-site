@@ -1,0 +1,37 @@
+---
+title: Organization Credit Ledger
+icon: "Coins"
+description: Choose how your product meters usage, then grant, spend, expire, and refund pooled organization credits safely.
+keywords: [credits, ledger, idempotency, organizations]
+tags: [credits, accounting]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Verified against starter commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb).
+
+Credits are optional product packaging, not a requirement for every feature. Use them when one plan action has variable cost or when purchased usage should carry forward. Use a simple entitlement or limit when the only question is whether a customer may perform an action.
+
+## Decisions to Make
+
+| Question | Shipped choice | Alternative |
+| --- | --- | --- |
+| Who owns credits? | The organization; members share one pool | Add per-member budgets while retaining the org ledger |
+| How are balances stored? | Append-only entries | Do not replace with a mutable counter unless you also replace audit and replay guarantees |
+| What is consumed first? | Earliest-expiring grant | Choose another allocation rule only with expiry tests |
+| What happens on failure? | Append a refund tied to the spend | Keep the charge only if your customer contract says failed work is billable |
+
+Credits belong to an organization, so every member uses one pooled balance. The ledger is append-only: never update or delete entries, and never bypass `src/services/credit.ts` with direct SQL.
+
+Grants create positive rows with a unique transaction number and optional expiry. Spending runs under an organization advisory lock, replays the full ledger, consumes the earliest-expiring grants first, and inserts negative rows only when sufficient usable balance exists. A spend may be split into physical `:part:n` rows; API views collapse them back into one logical transaction. Refunds append compensating rows tied to the original spend.
+
+`balance_after` records the accounting ledger total at insertion, not necessarily the currently spendable amount after expiry. Use the supplied organization credit summary for available, granted, consumed, and expired totals.
+
+All money- or credit-affecting calls need a stable business idempotency key. Two calls with the same key must produce one ledger effect; tests enforce replay behavior. Monthly subscription grants and Stripe fulfillment also use deterministic transaction numbers. Admin grants are capped and audited.
+
+When adding a paid feature, calculate cost in configuration, verify its plan entitlement, spend through the credit service, retain the root transaction number on the domain row, and append a refund if the downstream operation fails.
+
+You are done when two simultaneous spends cannot overdraw the pool, retrying the same business key creates one effect, expired grants are excluded from available balance, the UI shows logical transactions rather than internal split rows, and a failed downstream task leaves an auditable compensating refund.
+
+**Related:** [Plans and Entitlements](/docs/plans-and-entitlements) decides who may consume credits; [Stripe Billing](/docs/stripe-setup) explains how paid subscriptions grant them.

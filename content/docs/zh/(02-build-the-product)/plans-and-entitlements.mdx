@@ -1,0 +1,82 @@
+---
+title: 方案、上限与功能权限
+icon: "BadgeCheck"
+description: 把默认 Free、Plus、Max 目录改造成你的定价模型，同时避免在应用中散落档位判断。
+keywords: [方案, 功能权限, 上限, 订阅, Stripe, SaaS 定价]
+tags: [方案, 计费, 权限]
+author: "Sushi SaaS"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> 已根据 starter 提交 [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) 验证。
+
+替换演示定价时从这里开始。你需要决定每个方案允许哪些客户操作、限制哪些数量，以及付款失败或降级时发生什么。模板提供单一目录和单一执行边界，让这些决定始终一致。
+
+## 唯一的权限入口
+
+路由、组件和领域 service 都不导入 `src/config/plans.ts`，也不比较 `tier === "max"`。调用方通过 `src/services/entitlements.ts` 查询能力或上限：
+
+```ts
+await requireEntitlement(orgUuid, "tasks.text_to_video");
+await enforceLimit(orgUuid, "storage.totalMb", { current, adding });
+const maximum = await limitOf(orgUuid, "storage.maxFileMb");
+```
+
+因此重命名方案或增加第四档不会让分散的条件失效，架构测试会强制这条边界。
+
+## 默认目录
+
+这些是可运行的默认值，不是定价建议。上线前可以重命名档位、修改数值或增加档位，但每个能力必须在每个档位中都有明确值。
+
+| 能力或上限 | Free | Plus | Max |
+| --- | ---: | ---: | ---: |
+| 组织成员 | 1 | 5 | 20 |
+| 存储上传 | 是 | 是 | 是 |
+| 单文件上限 | 5 MB | 25 MB | 200 MB |
+| 总存储 | 100 MB | 5,000 MB | 50,000 MB |
+| 文本生成视频 | 否 | 是 | 是 |
+| 每月任务 | 0 | 50 | 不限 |
+| 每月包含积分 | 0 | 500 | 2,500 |
+
+`null` 表示不限。注册积分是一次性发放；Free 没有周期性积分任务。
+
+## 有效方案解析
+
+方案属于组织。`subscriptions` 保存 Stripe 或人工订阅的当前状态，`orders` 保存不可变的财务历史。
+
+解析器选择当前有效且 rank 最高的订阅。`active`、`trialing` 有效；`past_due` 有七天宽限期；取消、未支付、不完整、暂停或已过期的周期不授权。
+
+组织可以同时拥有多个订阅。成功周期的积分会叠加，但功能上限只由最高有效档位提供。计费页面会展示全部当前订阅。
+
+## 自定义
+
+1. 在 `src/types/plan.ts` 添加功能或上限名称。
+2. 在 `src/config/plans.ts` 为每个档位定义值。
+3. 在 `src/config/billing.ts` 定义金额、周期、积分、币种和 Stripe Price 映射。
+4. 用 `requireEntitlement` 或 `enforceLimit` 保护服务端操作。
+5. 通过已有 provider 把 `PlanSnapshot` 提供给客户端。
+
+请明确做出三个产品决定：
+
+1. **打包方式：**哪些能力由方案开关控制，哪些使用积分计量。
+2. **付款失败：**保留默认七天 `past_due` 宽限期，还是采用你的客户策略。
+3. **方案变更：**保留独立的叠加订阅，还是先设计并测试升级、按比例计费与积分调整，再启用原地变更。
+
+新 checkout 使用服务端 `STRIPE_PRICE_*` 环境变量；旧的 public 别名仅为已有部署和历史订阅保留。
+
+## 降级与例外
+
+降级不会删除数据或成员，只会在用量超出新上限时阻止新的上传、任务或邀请。
+
+客服可设置带审计的组织席位例外，优先级为：
+
+```text
+有效组织例外 → 有效方案上限 → 目录默认值
+```
+
+人工赠送方案是 `source = "manual"` 的普通订阅记录。功能权限决定能否操作，积分账本记录实际消耗。
+
+当公开价格卡、Stripe Price、计费配置、entitlement 测试和降级行为描述同一份产品时，才可以发布定价。至少验证 Free、每个付费档位、宽限期内外的 `past_due`、人工赠送方案，以及降级后超出新上限的组织。
+
+**下一步：** 将套餐目录连接到 [Stripe 计费](/zh/docs/stripe-setup)，再用[组织积分账本](/zh/docs/account-ledger)核对每笔套餐赠送与计量消费。

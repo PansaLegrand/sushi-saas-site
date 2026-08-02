@@ -1,0 +1,8 @@
+{
+  "title": "管理控制台",
+  "defaultOpen": false,
+  "pages": [
+    "admin-console-setup",
+    "admin-console-operations"
+  ]
+}

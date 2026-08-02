@@ -1,0 +1,42 @@
+---
+title: Stripe 计费
+icon: "CreditCard"
+description: 连接 Stripe 产品目录、选择安全的订阅变更策略，并验证每笔付款只产生一次本地效果。
+keywords: [Stripe, 订阅, 结账, Webhook]
+tags: [计费, Stripe]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> 已根据启动模板提交 [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) 验证。
+
+完成本页后，客户可以购买已配置的方案，Stripe 能通知应用，组织只会收到一次对应的权限与积分，运营人员也能对账处理不确定状态。
+
+## 先决定商业模型
+
+模板默认提供按组织固定价格的 Plus/Max 月付与年付订阅。一个组织可拥有多个独立订阅，系统使用最高有效档位，并叠加各订阅的积分。Billing Portal 允许查看发票、更换付款方式和取消，但默认禁止原地修改方案或数量。
+
+为了最快且安全地上线，可以保留这一模型。如果要按席位计费、按比例升级或自动调整积分，请先定义并测试这些规则，再启用 Stripe 的订阅修改功能。
+
+为 Plus 与 Max 创建稳定的月付/年付 Stripe Price，设置 `STRIPE_PRICE_*`、`STRIPE_PRIVATE_KEY` 与 `STRIPE_WEBHOOK_SECRET`。CNY Price 可选。金额与产品目录在 `src/config/billing.ts`，Price ID 只留在服务端。
+
+结账仅限组织 owner，并要求 `Idempotency-Key`。服务会先创建购买意图/订单，因此同一请求重试只产生一次效果；主动再次购买必须使用新 key。多个订阅可共存，entitlement resolver 会合并它们。
+
+## Webhook 契约
+
+公开 `/api/pay/webhook/stripe`，至少订阅 checkout 完成/过期、subscription 新增/更新/删除、invoice paid/payment failed 与 refund/dispute。处理器验证签名、按 Stripe event ID 去重、用事件时间处理乱序，并确保积分权益只发一次；续费 invoice 会创建新订单，并发放该计费周期配置的积分。年付价格每个年度周期一次性发放 12 个月积分。
+
+退款与争议会被评估并提示人工处理，模板不会静默扣回已消费积分。使用内置 Stripe 对账命令和管理端事件视图修复不确定状态。
+
+## Portal 与本地测试
+
+创建 Stripe Billing Portal 配置并在生产设置其 ID。Portal 内必须禁用订阅变更；不安全时模板会 fail closed。
+
+```bash
+stripe listen --forward-to localhost:3000/api/pay/webhook/stripe
+```
+
+上线前测试重复结账、延迟/重复 webhook、续费、失败、取消、退款与 Portal。生产只用 live key，并只接收 live-mode 事件。当网络重试只创建一笔订单、webhook 重放只发放一次、旧事件不能覆盖新状态、不安全 Portal 会 fail closed，且本地对账没有无法解释的问题时，才算准备完成。
+
+**相关内容：** 让 Stripe Price 与[套餐与权益](/zh/docs/plans-and-entitlements)保持一致，并通过[组织积分账本](/zh/docs/account-ledger)追踪每笔订阅积分赠送。

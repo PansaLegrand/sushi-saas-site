@@ -1,0 +1,39 @@
+---
+title: Deployment and Security Checklist
+icon: "Rocket"
+description: Deploy the web and admin apps with explicit migrations, cron, readiness, trusted networking, and production security controls.
+keywords: [deployment, security, Vercel, production]
+tags: [deployment, security]
+author: "Sushi SaaS"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Synced with starter commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb).
+
+Use this as the final adopter checklist, after the app works locally. The goal is not merely a green deployment: it is a release you can authenticate, bill, operate, restore, and administer without development shortcuts.
+
+## Choose the deployment shape
+
+- The web app and admin console are separate builds and should use separate origins. They may share one repository, database, auth secret, and release tag.
+- Vercel is documented because `vercel.json` supplies cron scheduling, but any Node host works if it provides PostgreSQL, Redis, HTTPS, environment secrets, and an authenticated scheduler.
+- Use a pooled PostgreSQL URL for serverless traffic and, when the provider requires it, a direct URL for migrations. Run migrations before promoting code; they are intentionally not part of the build.
+- Start CSP in report-only mode, observe the hosts your analytics, Turnstile, Stripe, and storage actually use, then choose when to enforce it.
+
+**Ready to launch means:** both apps build from the same release, migrations are verified, `/api/ready` is healthy, backups can be restored, cron and Stripe webhooks complete a real test, no demo flags exist in production, and read-only/read-write admin access behaves as intended.
+
+Deploy the web app and `apps/admin` as separate services with separate origins. Use Node `>=20.19.0 <23` and pnpm `10.22.0`, run `pnpm lint`, `pnpm test:cov`, and `pnpm build`, then apply database migrations explicitly with `pnpm db:check:prod` and `pnpm db:migrate:prod`. Migrations are never an automatic build step.
+
+## Required Production Controls
+
+- Strong `BETTER_AUTH_SECRET`, correct public/auth URLs, production PostgreSQL, and backups with restore drills.
+- Redis-backed distributed rate limiting and an explicitly trusted client-IP header/source.
+- Turnstile for protected auth flows; demo flags and development auth-link logging disabled.
+- `CRON_SECRET` and a five-minute schedule for `/api/cron/jobs` (the included `vercel.json` provides the schedule).
+- Stripe live keys, verified webhook, safe Billing Portal configuration, and configured Price IDs when billing is enabled.
+- Private S3-compatible objects, least-privilege credentials, correct CORS, and short signed URLs when storage is enabled.
+- Verified email domain and data-retention/legal policy reviewed for your jurisdiction.
+
+Use `/api/health` for liveness and `/api/ready` for deployment readiness. The latter checks environment, database, migration state, Redis, and queue health; a degraded queue is an operational signal even if requests still serve.
+
+Security headers include production HSTS and a report-only CSP path. Observe CSP reports before enforcing a policy compatible with your analytics, captcha, payments, and storage hosts. After deploy, smoke-test auth, organization isolation, checkout/webhooks, cron jobs, exports/deletion, and admin MFA. Read `DEPLOYMENT.md`, `docs/security-headers.md`, and `.env.example` in the starter before launch.

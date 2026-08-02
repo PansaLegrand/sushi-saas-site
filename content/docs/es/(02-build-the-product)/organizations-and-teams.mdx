@@ -1,0 +1,71 @@
+---
+title: Organizaciones, equipos y tenancy
+icon: "Users"
+description: Decide cómo colaboran tus clientes y adapta los roles, invitaciones, plazas y límites de tenant incluidos.
+keywords: [organizaciones, equipos, tenancy, RBAC, invitaciones, plazas]
+tags: [organizaciones, autorización, tenancy]
+author: "Sushi SaaS"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Verificado con el commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) del starter.
+
+Responde primero a una pregunta de producto: ¿tu SaaS vende a una persona, a un espacio compartido o a alguien que gestiona varios espacios? Sushi SaaS incluye el modelo habitual de “equipo de una persona que puede crecer”. Cada cliente empieza con una organización personal y todos los recursos facturables pertenecen a ella.
+
+## Modelo de colaboración incluido
+
+| Comportamiento | Predeterminado | Opción futura |
+| --- | --- | --- |
+| Propiedad de recursos | Compartida por la organización | Añadir autoría o uso compartido por recurso en `can()` |
+| Roles | `owner`, `admin`, `member` | Añadir roles de producto o acceso dinámico de Better Auth |
+| Facturación | Precio plano por organización | Añadir cantidad por asiento y prorrateo probado |
+| Navegación | Selector de espacio con `?org=<slug>` | Añadir segmentos de ruta por organización si la URL debe expresar una jerarquía más fuerte |
+| Equipos | Membresía e invitaciones de organización | Activar equipos anidados solo si necesitas subgrupos |
+
+## Cada cuenta tiene una organización
+
+El registro crea una organización personal y una membresía de propietario. No existe una ruta paralela de recursos del usuario: archivos, tareas, pedidos, suscripciones, créditos y reservas usan `org_uuid`.
+
+Better Auth aporta las membresías e invitaciones. Sushi añade aislamiento de tenant, permisos, límites de plazas, saldos compartidos y controles de concurrencia.
+
+## Roles
+
+La jerarquía es `owner` ⊃ `admin` ⊃ `member`.
+
+| Acción | Member | Admin | Owner |
+| --- | :---: | :---: | :---: |
+| Leer datos, crear/eliminar archivos y gastar créditos | ✓ | ✓ | ✓ |
+| Invitar, eliminar miembros y cambiar roles |  | ✓ | ✓ |
+| Actualizar la organización |  | ✓ | ✓ |
+| Gestionar facturación o eliminar la organización |  |  | ✓ |
+
+Usa `getOrgContext(request, optionalSlug)` para resolver usuario, organización y rol, y `can(ctx, action, resource)` para autorizar. Nunca aceptes `org_uuid` desde el cuerpo de una petición.
+
+## Aislamiento y plazas
+
+Todas las consultas de tablas tenant usan `scopedToOrg(column, ctx.orgUuid)` dentro de los modelos. Las pruebas de arquitectura detectan consultas o inserciones sin organización.
+
+Las invitaciones caducan en 72 horas, están ligadas al email y reservan plaza mientras siguen activas.
+
+| Plan | Plazas totales |
+| --- | ---: |
+| Free | 1 |
+| Plus | 5 |
+| Max | 20 |
+
+La capacidad se comprueba al enviar y al aceptar bajo el mismo bloqueo advisory de PostgreSQL. Soporte puede aplicar una excepción temporal o permanente con auditoría.
+
+## Invariantes
+
+- Nunca se elimina el último owner.
+- Nadie puede abandonar su única organización.
+- Un miembro no puede conceder un rol superior al propio.
+- Un downgrade conserva miembros y datos; bloquea nuevas altas hasta volver al límite.
+- Créditos y cliente Stripe pertenecen a la organización.
+
+La interfaz vive en `/{locale}/account/team` y la API en `/api/account/team/*`. Se incluye un selector basado en parámetros de consulta; no hay rutas por slug de organización, roles personalizados, equipos anidados ni cobro Stripe por asiento.
+
+Antes de cambiar el modelo, define quién posee los datos, quién invita o elimina personas, si un miembro puede borrar contenido compartido y quién paga. Está validado cuando dos organizaciones no pueden leer filas ajenas, no puede eliminarse el último owner, invitaciones simultáneas no ocupan dos veces la última plaza y un downgrade conserva datos y miembros.
+
+**Siguiente paso:** conecta plazas y capacidades con [Planes y derechos](/es/docs/plans-and-entitlements) y revisa su impacto transversal en [Anatomía de una SaaS moderna](/es/blogs/anatomy-of-modern-saas).

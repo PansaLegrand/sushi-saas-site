@@ -1,0 +1,64 @@
+---
+title: Base de datos y migraciones
+icon: "Database"
+description: Elige tu despliegue PostgreSQL y publica cambios Drizzle sin romper la aplicación que ya está en ejecución.
+keywords: [PostgreSQL, Drizzle, migraciones, base de datos]
+tags: [base de datos, operaciones]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Verificado con el commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) del starter.
+
+Al terminar sabrás qué base usa cada entorno, cómo convertir una modificación del esquema en SQL revisable y cómo aplicarlo por separado del lanzamiento de la aplicación.
+
+El starter elige deliberadamente PostgreSQL con Drizzle en vez de mantener varios adaptadores. En local, `pnpm setup` puede ejecutar PostgreSQL con Docker; en producción elige cualquier servicio PostgreSQL compatible, gestionado o propio, y define `DATABASE_URL`. `src/db/schema.ts` es la fuente del esquema y el SQL versionado en `src/db/migrations/` es su historial desplegable. Solo `src/models/**` puede llamar a `db()`.
+
+## Flujo local
+
+`pnpm setup` crea bases separadas de desarrollo y pruebas. El nombre de pruebas debe contener `test`; el arnés se niega a truncar cualquier otra base.
+
+Tras cambiar el esquema:
+
+```bash
+pnpm db:generate
+pnpm db:migrate
+pnpm test:db:setup
+pnpm test:db
+```
+
+Confirma el SQL y `meta/_journal.json` junto al código. No edites una migración ya desplegada.
+
+## Producción
+
+Las migraciones nunca se ejecutan automáticamente al desplegar. Es la decisión de seguridad incluida: base y aplicación pueden observarse, reintentarse y publicarse por separado.
+
+```bash
+pnpm db:check:prod
+pnpm db:migrate:prod
+```
+
+El ejecutor es no interactivo, usa un advisory lock de PostgreSQL y verifica checksums. Haz copia de seguridad y aplica cambios expand/contract para que las versiones actual y nueva funcionen durante despliegues separados.
+
+## Convenciones
+
+- `id` es interno; las API públicas usan `uuid`.
+- El dinero usa unidades menores enteras y moneda.
+- Las filas del tenant llevan `org_uuid` y toda consulta se limita a él.
+- Claves idempotentes y números de transacción tienen unicidad en base.
+- Se evita el acoplamiento general por claves foráneas; servicios y políticas de ciclo de vida controlan borrado e integridad.
+- Reservas usa además una restricción de exclusión PostgreSQL contra intervalos solapados.
+
+## Decisiones antes de producción
+
+- Elige si ejecuta migraciones un trabajo de CI o un operador; nunca cada instancia web.
+- Define copia y restauración según el valor de tus datos. El bloqueo del runner no sustituye una copia.
+- Mantén la estrategia ligera de claves foráneas o añade restricciones cuando hayas definido borrado y retención; ambas opciones deben conservar el aislamiento entre tenants.
+- Prefiere migraciones expand/contract para despliegues sin parada. Un renombrado destructivo en un paso es más simple, pero acopla esquema y código y hace inseguro el rollback.
+
+Estás listo cuando `pnpm db:check:prod` muestra exactamente el conjunto pendiente esperado, la copia está actualizada, la migración funciona sobre una copia de staging y las versiones antigua y nueva pueden convivir durante el despliegue.
+
+Lee `docs/database.md` y `DEPLOYMENT.md` del starter antes de cambiar contratos de datos.
+
+**Antes de cambiar tablas:** revisa [Arquitectura y contratos de error](/es/docs/architecture-and-errors) y [Autenticación y administración](/es/docs/authentication-and-admin) para conservar los límites de capa e identidad.

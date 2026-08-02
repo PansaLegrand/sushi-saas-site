@@ -1,0 +1,104 @@
+---
+title: Configura referidos y recompensas de afiliación
+icon: "Share2"
+description: Decide si los referidos encajan en tu producto, configura atribución y comisiones, cubre sus carencias operativas y pruébalo de extremo a extremo.
+keywords: [referidos SaaS, afiliados, comisiones, atribución, enlaces de invitación]
+tags: [referidos, afiliados, crecimiento]
+author: "Sushi SaaS"
+publishedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Al terminar esta página, sabrás si debes mantener desactivados los referidos o convertir la base incluida en un programa real. El valor seguro es **desactivado**: `AffiliateConfig.enabled` es `false`, y activarlo crea obligaciones financieras y de soporte que el código no resuelve por sí solo.
+
+## Qué incluye
+
+| Comportamiento | Valor incluido |
+| --- | --- |
+| Activación | Indicador en `src/config/affiliate.ts`; no existe variable de entorno |
+| Enlaces | `/i/{code}` y ruta localizada `/[locale]/i/{code}`; las URL generadas usan ahora la ruta sin prefijo |
+| Atribución | Primer contacto, cookie `ref` de 30 días y autorreferido deshabilitado |
+| Captura de alta | Intento del cliente tras autenticar; si falla no marca la sesión, por lo que un montaje posterior puede reintentarlo |
+| Recompensa de alta | Cero; la fila conserva atribución sin pago |
+| Recompensa de compra | El mayor entre 5.000 unidades monetarias menores y el 20 % del pedido |
+| Estado | Registro de efectivo pendiente para revisión y pago manual; no mueve dinero ni créditos |
+| Vista de usuario | `/[locale]/my-invites` autenticada; devuelve 404 mientras está desactivado |
+| Vista de operador | Tabla `/affiliates` de solo lectura en admin |
+
+Las restricciones de base de datos hacen seguras las repeticiones. Gana el primer contacto aunque compitan dos pestañas; repetir un evento de pago no duplica una recompensa para el mismo pedido y el flujo de pedido puede cancelar una recompensa pendiente.
+
+## Decide si encaja
+
+Mantén el sistema apagado hasta responder:
+
+- ¿Quién refiere: cualquier usuario, socios aprobados o un grupo concreto?
+- ¿Qué cuenta: alta, primer pago, cada pedido o ingreso retenido tras devoluciones?
+- ¿Qué moneda representa el fijo en unidades menores y cómo funcionarán varias monedas?
+- ¿Quién revisa fraude, identidades duplicadas, reembolsos, impuestos y disputas?
+- ¿Cómo pasa un registro de pendiente a aprobado, pagado, cancelado o recuperado?
+- ¿Qué prometen las condiciones públicas del programa?
+
+El código incluido no usa el campo `is_affiliate` del usuario para limitar la generación de enlaces. Al activarlo, cualquier usuario autenticado que alcance la página o API puede crear un código. Añade elegibilidad en servidor si no quieres abrir el programa a todos.
+
+## Configura la política en código
+
+Edita `src/config/affiliate.ts` y revisa cada valor de `AffiliateConfig`:
+
+```ts
+export const AffiliateConfig = {
+  enabled: true,
+  attributionWindowDays: 30,
+  allowSelfReferral: false,
+  attributionModel: AttributionModel.FirstTouch,
+  payoutType: "cash",
+  commissionMode: CommissionMode.GreaterOf,
+  paid: { fixed: 5_000, percent: 20 },
+  // ...
+} as const;
+```
+
+Los modos `FixedOnly`, `PercentOnly`, `GreaterOf` y `Sum` sí están implementados. Los fijos usan unidades menores; la UI incluida supone centavos USD. Conserva `FirstTouch`: aunque el enum contiene `LastTouch`, el servicio solo escribe `invited_by` cuando está vacío, así que cambiar el enum no implementa último contacto.
+
+Del mismo modo, `payoutType: "credits"` está reservado para quien añada una concesión determinista al libro mayor. El flujo incluido solo registra importes similares a efectivo y nunca transfiere valor. No cambies la etiqueta sin implementar y probar el efecto con repeticiones.
+
+## Completa la experiencia y las operaciones
+
+La ruta localizada existe, pero My Invites y sus componentes tienen textos ingleses y muestran recompensas en USD. Tampoco hay enlace en la navegación principal. Antes de publicar:
+
+1. Añade traducciones, formato por moneda, estados vacíos/de error y un enlace visible en la cuenta.
+2. Decide si la URL compartida conserva idioma; la API devuelve ahora `/i/{code}`.
+3. Añade elegibilidad en servidor, condiciones del programa y controles de abuso.
+4. Crea aprobación y pago auditables. Admin solo observa filas; no paga ni marca como completado.
+5. Define reembolsos, cancelaciones y recuperaciones para tus pagos.
+
+## Verifica de extremo a extremo
+
+Primero prueba el estado apagado: los enlaces redirigen con normalidad, My Invites devuelve 404 y las API de afiliación devuelven no encontrado.
+
+Después, actívalo en un despliegue de prueba y usa cuentas desechables:
+
+1. Genera un enlace como referidor.
+2. Ábrelo en un navegador limpio y confirma una cookie `ref` de 30 días.
+3. Registra o autentica al referido; confirma `invited_by` y una sola fila de alta.
+4. Visita el enlace de otro referidor: el primer contacto no debe cambiar. El autorreferido debe ignorarse.
+5. Completa un pedido y verifica una fila pendiente con `max(5.000, floor(importe × 20 %))`.
+6. Repite el evento de pago y confirma que no hay duplicado. Prueba cancelación y reembolso según tu política.
+7. Confirma que el resumen del usuario y la tabla de admin coinciden, sin que ocurra pago automático.
+8. Simula un fallo temporal de captura y verifica que un montaje posterior o una recarga completa lo reintente con éxito.
+
+Ejecuta las pruebas de servicio y base de datos antes de lanzar. Continúa con [Facturación con Stripe](/es/docs/stripe-setup) y [Operaciones de la consola admin](/es/docs/admin-console-operations): el programa depende de la verdad del pago y de revisión humana.
+
+Para decidir primero si este programa encaja, lee [Referidos y recompensas: decide antes de programar](/es/blogs/affiliate-and-reward).
+
+## Lo que no está terminado por ti
+
+No hay vía de pago automático, concesión de créditos, aprobación de socios, revisión antifraude, gestión fiscal, UI de usuario totalmente localizada, modelo multidivisa, entrada de navegación ni modo funcional de último contacto. El starter aporta atribución y registros repetibles; tu política y operaciones deben completarlos.
+
+## Instantánea del código fuente
+
+Verificado con el commit `7580470` del starter:
+
+- [`src/config/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/affiliate.ts)
+- [`src/services/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/services/affiliate.ts)
+- [`src/providers/affiliate-init.tsx`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/providers/affiliate-init.tsx)
+- [`src/app/[locale]/my-invites/page.tsx`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/app/%5Blocale%5D/my-invites/page.tsx)

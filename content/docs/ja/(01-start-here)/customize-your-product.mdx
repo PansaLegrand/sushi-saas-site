@@ -1,0 +1,97 @@
+---
+title: プロダクトをカスタマイズする
+icon: "SlidersHorizontal"
+description: 独自機能を作る前に、プロダクト名、対応言語、ビジュアル、テーマ、法務情報、オプション機能の方針を決めます。
+keywords: [SaaS カスタマイズ, ブランド, 多言語, テーマ, 法務設定, プロダクト判断]
+tags: [セットアップ, プロダクト判断, カスタマイズ]
+author: "Sushi SaaS"
+publishedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+このページを終えると、スターターは**あなたのプロダクト**の名前、URL、言語、見た目で動き、各オプション機能について「維持・変更・削除」の判断が明確になります。個別画面を変更する前に決めてください。プロダクトのアイデンティティと範囲は、URL、メール、法務文書、解析、課金、管理コンソールに影響します。
+
+## 同梱されるものと選ぶこと
+
+| 領域 | 同梱時の動作 | あなたが決めること |
+| --- | --- | --- |
+| プロダクト名 | `NEXT_PUBLIC_APP_NAME` が未設定なら `Your SaaS`。`NEXT_PUBLIC_DOCS_URL` は任意 | 公開名と、内容を確認済みのドキュメント URL |
+| サポート | `SiteConfig.contactEmail` は `null` で、メールアドレスは表示されない | `src/config/site.ts` に設定するか、別の窓口が担うと明示する |
+| 言語 | 英語、中国語、スペイン語、フランス語、日本語を利用可能。URL 接頭辞は必要な場合だけ付く | 既定の言語、提供する言語、ブラウザ言語の自動判定 |
+| ビジュアル | Web と管理画面で共有するビルド時プリセットは `studio` | 維持するか、コードで `glass`、`soft`、`editorial`、`brutalist` を選ぶ |
+| カラーモード | 顧客向けアプリは環境変数で `system` が既定 | `system`、`light`、`dark` を選ぶ。管理画面にはまだモード切替がない |
+| 法務ページ | 既定のデータフローに沿った、草稿警告付きのひな型 | 身元情報と方針を完成させ、専門家のレビューを受ける |
+| オプション機能 | 課金、ストレージ、メール、Slack、解析、紹介、タスク、予約のコードまたはアダプター | 維持して設定するか、UI・検証・ルート・文書を一緒に削除する |
+
+## 推奨する開始点
+
+実際のプロダクト名を設定し、情報設計が固まるまでは `system` モードと `studio` を維持し、チームが継続して管理できる言語だけを有効にするのがおすすめです。明確な目的、ユーザー向け説明、運用手順が整うまでは、アクセス解析、広告、紹介、デモ機能を無効にしておきます。
+
+別の選択もできますが、作業が増えます。言語を増やすと対象市場と翻訳保守が増えます。強いプリセットは差別化になりますが、ライト・ダーク・管理画面の確認が必要です。既存連携の有効化は速い一方、認証情報、障害、プライバシー開示、サポートが増えます。
+
+## アイデンティティと言語を設定する
+
+まず `.env` の公開値を変更します。
+
+```bash
+NEXT_PUBLIC_APP_NAME=Acme Cloud
+NEXT_PUBLIC_DOCS_URL=https://docs.example.com
+NEXT_PUBLIC_DEFAULT_THEME=system
+NEXT_PUBLIC_DEFAULT_LOCALE=ja
+NEXT_PUBLIC_LOCALES=ja,en
+NEXT_PUBLIC_LOCALE_DETECTION=true
+```
+
+デフォルト言語には接頭辞がなく、それ以外には付きます。この例では日本語が `/pricing`、英語が `/en/pricing` です。`NEXT_PUBLIC_LOCALE_DETECTION` はブラウザ設定から有効言語を選ぶかを制御します。`NEXT_PUBLIC_*` はクライアントビルドに埋め込まれるため、変更後は再ビルド・再デプロイが必要です。
+
+`NEXT_PUBLIC_DOCS_URL` は空でも構いません。外部ドキュメントを公開するなら、レビュー済みの本番 URL を設定します。サポート連絡先は意図的に環境変数ではありません。`src/config/site.ts` の `SiteConfig.contactEmail` に設定するか、別の窓口が責任を持つなら `null` のままにします。
+
+## ビジュアルプリセットを 1 つ選ぶ
+
+`src/config/style.ts` の型付き定数を変更します。
+
+```ts
+export const stylePreset: StylePreset = "glass";
+```
+
+顧客向けアプリと管理コンソールは同じ値を使います。これはビルド時に決まるプロダクト設定で、ユーザーごとに実行時に選ぶものではありません。既定以外を採用する前に、両アプリの代表的なページ、フォーム、表、ダイアログ、空の状態、エラーを確認してください。顧客向けアプリはライト、ダーク、システム設定に対応しますが、管理画面にはまだテーマモードを提供する仕組みがありません。
+
+## 法的な身元情報を完成させる
+
+`src/config/legal.ts` の `LegalData` に、登記上の名称と住所、プライバシー・法務の連絡先、準拠法、発効日、実際のサブプロセッサーを設定します。角括弧の判断項目をすべて処理してください。必須項目が欠ける間は `LegalConfig.isConfigured` が false のままで、プライバシーと利用規約ページに未レビュー草稿の警告が表示されます。
+
+同梱文書は起草用の骨組みであり、法律相談や完成済みポリシーではありません。使わない事業者を削除し、個人データを受け取る事業者を追加し、保持期間とアカウント削除を一致させ、資格を持つ専門家のレビューを受けてください。
+
+## プロダクトの範囲を決める
+
+各オプション機能について、次のいずれかを記録します。
+
+1. **維持：**認証情報、ユーザー向け文言、監視、障害対応、責任者を設定する。
+2. **変更：**既存のサービス境界の内側で方針や事業者を変え、テストと公開ガイドを更新する。
+3. **削除：**ルート、UI、本番検証、ジョブ、文書を同じ変更で削除する。空の認証情報は判断ではありません。
+
+維持する機能については、[プランと権限](/ja/docs/plans-and-entitlements)、[Stripe 課金](/ja/docs/stripe-setup)、[ファイルアップロード](/ja/docs/storage-uploads)、[デプロイとセキュリティ](/ja/docs/deployment-and-security)へ進んでください。アクセス解析を使うかどうかと同意取得の選択は、[アクセス解析と同意管理](/ja/docs/analytics-and-consent)で決めます。
+
+## 機能開発前に検証する
+
+```bash
+pnpm lint
+pnpm test:run
+pnpm build:web
+pnpm build:admin
+```
+
+デフォルト言語に接頭辞がないこと、追加言語が解決すること、無効な言語が選択肢に出ないこと、ドキュメントとサポートのリンクが約束どおりであること、両アプリが同じプリセットを使うこと、顧客向けアプリがライトとダークの両方で読めることを確認します。プライバシーと利用規約を開き、草稿警告や方針のプレースホルダーが残る間は公開しないでください。
+
+## まだ完成していないもの
+
+ブランド設定ウィザード、実行時のプリセット選択、管理画面のダークモード、環境変数によるサポート先、レビュー済みの法務文書、採用するオプション機能の判断は含まれません。これらは導入するチームが決める設計です。
+
+## ソーススナップショット
+
+スターターのコミット `7580470` で確認済みです。
+
+- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/site.ts)
+- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/i18n/locale.ts)
+- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/style.ts)
+- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/legal.ts)

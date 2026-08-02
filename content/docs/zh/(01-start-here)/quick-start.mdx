@@ -1,0 +1,65 @@
+---
+title: 快速开始
+icon: "Zap"
+description: 在本地启动 Sushi SaaS Web、管理控制台、PostgreSQL 与 Redis，并决定产品在生产环境使用哪些服务。
+keywords: [快速开始, 安装, Next.js, pnpm, Docker]
+tags: [安装, 本地开发]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> 已根据启动模板提交 [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) 验证。
+
+完成本页后，你将拥有运行在 3000 端口的用户应用、可选的 3001 端口运营控制台、已迁移的开发/测试数据库以及本地 Redis。只是体验本地产品时，不需要 Stripe、Resend 或对象存储凭据。
+
+## 已提供的能力与需要你的选择
+
+| 范围 | 默认提供 | 你的决定 |
+| --- | --- | --- |
+| 本地基础设施 | Docker Compose 运行 PostgreSQL 与 Redis | 继续用 Docker，或在 `.env` 中指向已有服务 |
+| 用户应用 | 支持五种语言的 Next.js 应用 | 设置品牌、URL 与启用的语言 |
+| 管理控制台 | 可用 `pnpm dev:admin` 启动的独立应用 | 仅为可信运营人员部署，并使用独立域名 |
+| 外部集成 | 已包含 Stripe、Resend、Slack 与 S3 adapter | 上生产前选择供应商并填写凭据 |
+
+## 环境要求
+
+- Node.js `>=20.19.0 <23`
+- pnpm `10.22.0`
+- Docker Compose，用于默认的 PostgreSQL 与 Redis
+
+## 本地启动
+
+```bash
+git clone https://github.com/PansaLegrand/sushi-saas-template.git
+cd sushi-saas-template
+pnpm install
+pnpm setup
+pnpm dev
+```
+
+`pnpm setup` 可重复执行：仅在 `.env` 不存在时创建它，启动 PostgreSQL 与 Redis，创建相互隔离的开发/测试数据库，并执行已提交的迁移；它不会覆盖现有 `.env`。
+
+访问 `http://localhost:3000`。另运行 `pnpm dev:admin`，可在 `http://localhost:3001` 打开独立部署的管理端。
+
+## 验证
+
+```bash
+curl http://localhost:3000/api/health
+curl http://localhost:3000/api/ready
+pnpm lint
+pnpm test:run
+pnpm build
+```
+
+`/api/health` 只检查进程存活；`/api/ready` 会检查配置、数据库连接与迁移、Redis 和任务队列。
+
+## 改造成你的产品
+
+生成的 `.env` 含安全的本地默认值。通过[定制你的产品](/zh/docs/customize-your-product)设置名称、URL、语言、视觉预设与法律主体，并明确要保留哪些可选系统。
+
+当前生产校验器要求完整配置启动模板：PostgreSQL、Redis 与可信客户端 IP 来源、强 `BETTER_AUTH_SECRET`、`CRON_SECRET`、Stripe 密钥及四个默认周期 Price ID、安全的 Billing Portal 配置、Resend 和 S3 兼容存储。Turnstile 默认启用；请配置真实密钥，或用 `NEXT_PUBLIC_CAPTCHA_ENABLED=false` 明确关闭。Slack 仍为可选。如果你的产品移除某项集成，应在同一次修改中移除其生产校验与相关 UI，而不是留下看似可选的空值。
+
+当两个健康检查都成功、用户应用能注册本地账号，并且 `pnpm test:run` 与 `pnpm build` 通过时，就可以继续下一步。
+
+接下来完成[产品定制](/zh/docs/customize-your-product)，阅读[架构与错误契约](/zh/docs/architecture-and-errors)，再配置[数据库](/zh/docs/database-setup)与[用户身份验证](/zh/docs/authentication-and-admin)。

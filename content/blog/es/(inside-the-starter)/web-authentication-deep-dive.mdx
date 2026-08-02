@@ -1,31 +1,61 @@
 ---
-title: "Cómo funciona la autenticación en Sushi SaaS"
+title: "Cómo funciona la autenticación de Sushi SaaS"
 icon: "ShieldCheck"
-description: "Un mapa específico de Better Auth, email verificado, Google opcional, MFA, organizaciones y controles contra abuso."
+description: "Recorre el inicio de sesión incluido y decide qué proveedores, verificación, MFA, tenancy y controles de abuso debe conservar tu producto."
 tags: [autenticación, better-auth, seguridad]
 author: "Sushi SaaS"
 publishedAt: "2025-10-13T00:00:00.000Z"
 updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-Sushi SaaS construye la autenticación con Better Auth, su adaptador Drizzle y un esquema PostgreSQL. El starter añade las reglas de producto que una biblioteca no puede decidir.
+Esta guía ayuda a tratar la autenticación como una decisión de producto, no como una pantalla de login. Sushi SaaS usa Better Auth para la identidad y añade las reglas de tenant, recuperación, moderación y auditoría que necesita el resto del starter.
 
-## Formas de iniciar sesión
+## Recorrido predeterminado
 
-Email y contraseña están activos, se exige verificar el correo y el registro envía el mensaje de verificación. Recuperar la contraseña revoca las sesiones existentes. Google OAuth solo se registra cuando están presentes ambas credenciales, por lo que un proveedor opcional sin configurar no deja un botón roto.
+1. El usuario se registra con email y contraseña, o con Google cuando están configuradas ambas credenciales OAuth.
+2. El registro con contraseña exige verificar el email. La verificación correcta puede encolar la concesión única de créditos iniciales.
+3. El registro crea una organización personal; una ruta de reparación la crea después si el hook se interrumpió.
+4. El inicio de sesión solo crea una sesión tras comprobar el ciclo de vida y una posible suspensión.
+5. Restablecer la contraseña revoca las sesiones existentes.
 
-Better Auth aporta autenticación de dos factores. La consola admin exige además un rol administrativo **y** MFA. Los operadores creados solo con Google pueden establecer una contraseña inicial antes de activar MFA.
+La autenticación de dos factores está disponible, pero no es obligatoria en la aplicación de cliente. En la consola de administración **sí es obligatoria**, además de un rol `admin_ro` o `admin_rw`.
 
-La configuración exacta está en [`src/lib/auth.ts` en `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/lib/auth.ts). Sigue [Autenticación y administración](/docs/authentication-and-admin) para variables y callbacks.
+La configuración está en [`src/lib/auth.ts` del commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/lib/auth.ts). Variables y callbacks se explican en [Autenticación y administración](/es/docs/authentication-and-admin).
 
-## La autenticación crea estado de producto
+## Decisiones antes de lanzar
 
-El plugin de organizaciones ofrece roles owner, admin y member para gestionar membresías. Sushi SaaS mapea explícitamente su esquema snake_case, limita asientos mediante entitlements, encola los emails de invitación y desactiva el borrado genérico de organizaciones: borrar solo las tablas de autenticación dejaría datos de producto y facturación huérfanos.
+| Decisión | Elección incluida | Cuándo cambiarla |
+| --- | --- | --- |
+| Métodos de acceso | Email/contraseña; Google si está configurado | Los usuarios necesitan passwordless, SSO empresarial u otro proveedor |
+| Verificación de email | Obligatoria con contraseña | Tu riesgo permite cuentas sin verificar; decide también cuándo entregar beneficios iniciales |
+| MFA de cliente | Disponible y elegido por el usuario | Los datos exigen step-up o MFA obligatorio |
+| MFA de admin | Obligatorio | Consérvalo salvo que lo sustituyas por una política operativa igual de fuerte |
+| Protección antibot | Turnstile protege credenciales y correo cuando se habilita; la configuración de producción falla de forma cerrada según la elección | Usas otro control de edge o identidad y actualizas validación y tests |
+| Creación de tenant | Cada cuenta obtiene una organización personal | El producto es realmente individual y retiras el alcance de organización de extremo a extremo |
 
-Los hooks también crean o recuperan la organización personal y registran eventos de acceso. La autorización de producto permanece separada: una sesión válida no concede acceso a archivos, créditos o tareas de otra organización. Lee [Organizaciones y equipos](/docs/organizations-and-teams).
+No desactives sin más la verificación dejando los créditos iniciales ligados a su hook. Decide si mover la concesión, eliminarla o exigir otra prueba de calidad de cuenta.
 
-## Controles contra abuso y recuperación
+## Identidad no es autorización
 
-Cuando se configura, Cloudflare Turnstile protege endpoints de credenciales y envío de correo. Los controles de moderación pueden bloquear cuentas suspendidas, y la creación de sesión es la puerta final común a contraseña y OAuth. Los errores devuelven códigos catalogados, no mensajes internos.
+Una sesión válida responde “quién es”, pero no da acceso a todos los datos. Los roles determinan acciones; los entitlements del plan determinan las capacidades compradas por la organización. Sushi mantiene separadas esas preguntas.
 
-Antes de producción, prueba verificación, recuperación, callback de Google, revocación de sesiones, alta de MFA y ambos roles admin. [Configuración de la consola admin](/docs/admin-console-setup) cubre el origen separado y el primer operador.
+El plugin de organizaciones de Better Auth gestiona owner, admin y member. Los servicios añaden límites de plazas, protección del último owner y garantía de que todo usuario conserve un workspace. La eliminación genérica se desactiva porque borrar solo tablas de auth dejaría datos de cobro y producto huérfanos.
+
+Lee [Organizaciones y equipos](/es/docs/organizations-and-teams) antes de cambiar roles o selección de tenant.
+
+## Recuperación y controles de abuso
+
+Turnstile puede proteger endpoints de credenciales y correo. Los controles de alta abarcan contraseña y OAuth; la creación de sesión bloquea cuentas suspendidas o en borrado, sea cual sea el acceso. Los errores visibles usan códigos localizados, no mensajes internos.
+
+La política sigue siendo tuya: quién suspende, cómo se apela, cuánto dura una sesión, qué eventos se guardan y qué puede modificar soporte.
+
+## Plan de pruebas de producción
+
+- Prueba alta, reenvío, caducidad y acceso tras verificar.
+- Restablece la contraseña y confirma que las sesiones antiguas dejan de funcionar.
+- Prueba cada callback OAuth configurado en su origen de producción.
+- Prueba alta, verificación, recuperación y desactivación de MFA; protege los códigos de respaldo.
+- Prueba en concurrencia los límites de invitaciones y la protección del último owner.
+- Inicializa ambos roles de admin y confirma MFA en el origen administrativo.
+
+Continúa con [Configuración de la consola de administración](/es/docs/admin-console-setup). Esta guía refleja el commit `7580470`.

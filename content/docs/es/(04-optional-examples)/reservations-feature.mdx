@@ -1,0 +1,33 @@
+---
+title: Función de reservas
+icon: "CalendarCheck"
+description: Activa reservas opt-in con bloqueos seguros, checkout Stripe, email y calendarios.
+keywords: [reservas, agenda, Stripe, calendario]
+tags: [reservas, pagos]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Sincronizado con el commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) del starter.
+
+Usa Reservas si tu SaaS vende tiempo reservable con Stripe: consultoría, clases, alquileres o citas. El starter incluye página pública, historial de miembros, holds seguros ante concurrencia, checkout, correo de confirmación y calendarios. Está desactivado hasta que definas qué vendes.
+
+## Elige las reglas de reserva de tu negocio
+
+- Sustituye en `src/config/reservations.ts` la zona horaria, el horario 9–17, los bloques de 30 minutos y el horizonte de 14 días.
+- Crea filas activas en `reservation_services` mediante una migración o seed explícito, o construye un CRUD para operadores. Cada fila define duración, precio, moneda, depósito, ventana de cancelación y márgenes; no se incluye un gestor de catálogo para producción.
+- Elige pago completo o depósito y comunica cancelación, reembolso, cambio de fecha y no presentación. El starter protege la reserva; no inventa esas políticas.
+- Mantén el hold de 35 minutos salvo que la caducidad de Stripe Checkout y tu recorrido requieran otro valor. Solo un webhook verificado confirma el pago.
+
+**Está listo para producción cuando:** los horarios usan la zona prevista, dos personas no reservan el mismo bloque, checkout abandonado libera el hold, webhooks tardíos/duplicados son seguros, correo/calendario son correctos y soporte conoce la política de cancelación.
+
+Reservas está desactivado por defecto. Activa `NEXT_PUBLIC_FEATURE_RESERVATIONS_ENABLED=true` solo tras configurar zona IANA y horario en `src/config/reservations.ts`, crear las filas de servicio de producción y definir políticas de Stripe, email, cancelación y soporte. El seed demo está apagado y solo crea una consulta de ejemplo; no dependas de él en producción.
+
+Flujo: `GET /api/reservations/services`, `POST /api/reservations/availability`, `POST /api/reservations` idempotente y `GET /api/reservations/mine`. UI: `/:locale/reserve` y `/:locale/account/reservations`.
+
+Checkout crea bajo lock un hold de 35 minutos y una sesión Stripe; la misma `Idempotency-Key` se reproduce con seguridad. Advisory lock y restricción de exclusión impiden solapes. Solo el webhook verificado confirma pago; la página de retorno no. La expiración libera únicamente el hold de esa sesión.
+
+La confirmación encola email con ICS y enlace Google Calendar. Prueba concurrencia, duplicados, abandono, pago tardío, zona/DST, depósito/pago total, reintentos y aislamiento.
+
+**Antes de habilitar reservas:** coordina [Facturación con Stripe](/es/docs/stripe-setup), [Correo transaccional](/es/docs/email-service) y [Trabajos duraderos y readiness](/es/docs/jobs-and-readiness).

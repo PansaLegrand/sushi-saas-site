@@ -1,0 +1,64 @@
+---
+title: Admin Console Pages and Operations
+icon: "LayoutDashboard"
+description: Understand every shipped admin page, its operational purpose, and the safety rules around billing, moderation, and writes.
+keywords: [admin pages, billing operations, moderation, audit log]
+tags: [admin, billing, moderation]
+author: "Sushi SaaS"
+publishedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Synced with starter commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb).
+
+Use this page by starting from the operator’s question, not from the menu: “Which workspace owns this charge?”, “Why were credits not granted?”, “Should this account be suspended?”, or “Who changed this limit?” The console brings the application-side evidence together, but it does not replace Stripe, your analytics platform, or a support ticketing system.
+
+## Choose the safest tool for the task
+
+- Prefer inspection first. Use `/users` to identify the exact provider-backed account, then `/organizations` for tenancy, plan, credits, and billing.
+- Use `admin_ro` for support and investigation. Escalate to an `admin_rw` operator only when a documented write is necessary.
+- Use Stripe **Resend** after fixing a webhook cause; use console **Resolve** only when a human completed the work elsewhere and wants to close the application event permanently.
+- Suspend to stop access during abuse response; use the account lifecycle workflow for customer-requested deletion. They preserve different records for different reasons.
+
+**An operation is complete when:** the target account/organization was verified, the least-powerful action was chosen, the result was checked in the source of truth, and every write has an understandable `/audit` entry.
+
+The admin console is an operations workspace, not a replacement for product analytics. Its overview highlights conditions that change what an operator does next: recent signups, live and past-due subscriptions, suspended accounts, and Stripe events waiting for a decision. Revenue, conversion, and churn remain in Stripe or your analytics tool.
+
+## Workspace
+
+- `/` shows operational metrics, recent accounts and orders, attention queues, and the tools for manual plan and credit grants. User-targeted grants apply to that user's personal organization.
+- `/users` searches email, UUID, or nickname and identifies the exact provider-backed account. One email can have multiple account rows, so email is not an authorization key.
+- `/organizations` searches name, slug, UUID, or Stripe customer ID. An organization is the tenant that owns pooled credits, plans, subscriptions, and the Stripe customer. Its detail page exposes identity, members, resolved plan, subscription history, credit ledger, orders, and seat-limit overrides.
+
+This account-versus-organization distinction matters during support work: use `/users` to identify a person, then use `/organizations` to investigate the workspace where billing and entitlements live.
+
+## Revenue
+
+- `/orders` filters and searches orders by order number, subscription, organization, user UUID, or email. Its fulfillment column compares credits promised by a paid order with matching ledger entries, making a missing or duplicate grant visible.
+- `/stripe-events` shows recorded webhook deliveries and their processing state without exposing the raw Stripe payload. For a parked event, fix the cause and use **Resend** in Stripe to run it again against current provider state. **Resolve** instead records that an operator handled it outside the system and requires a note; resolution is terminal and is not replay.
+- `/reconciliation` runs the local half of billing reconciliation for a 7-, 30-, or 90-day window. It detects paid orders without credits, ledger balance drift, and stuck webhook events. It cannot discover a Stripe charge that never reached the application; use `pnpm reconcile:stripe` for the provider-side comparison.
+
+## Product Operations
+
+- `/reservations` lists appointment number, service, user, time, timezone, and status. When reservations are disabled in product configuration, the page says so instead of querying an inactive feature.
+- `/feedbacks` lists customer rating, content, status, identity, and submission time.
+- `/affiliates` shows the referred user, inviter, state, qualifying order, paid amount, and reward.
+
+These are inspection surfaces in the released console. They do not add workflow states or editing controls that the underlying product services do not already implement.
+
+## Trust and Safety
+
+- `/moderation` suspends or restores accounts and manages exact-email or domain signup blocklist entries. Suspension revokes active sessions and blocks sign-in, but deliberately keeps the user, ledger, uploads, and organization records. It is not account erasure.
+- `/audit` is the paginated trail for admin writes, including actor, role, action, target, status, note, network context, and metadata.
+
+By default a suspension covers every account row sharing the address and adds a blocklist entry, preventing a fresh OAuth row from bypassing the restriction. Email matching normalizes plus suffixes and Gmail dots; domain entries are intended for disposable-email floods.
+
+## Write Guardrails
+
+The shipped write tools are limited to manual credit grants, complimentary plan grants and revocation, organization seat-limit override and reset, account suspension and restoration, blocklist changes, and terminal Stripe-event resolution.
+
+All included write routes require `admin_rw`, validate same-origin requests, and call the admin audit logger. Credit grants require an idempotency key and derive a deterministic unique ledger transaction number, so retrying the same attempt cannot grant twice. Manual plans and credit grants default to no expiration; optional 7-, 30-, 90-day, or custom expiration values must be in the future.
+
+The console intentionally has no button that replays a stored Stripe webhook payload. Use Stripe's Resend action after correcting the cause. It also does not turn suspension into deletion: user-requested export and erasure follow the separate account-data lifecycle.
+
+See [Admin Console Setup and Access](/docs/admin-console-setup) before exposing this application outside local development, and include its operator workflows in the [Deployment and Security](/docs/deployment-and-security) launch test.

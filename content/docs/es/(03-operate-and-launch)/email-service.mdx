@@ -1,0 +1,32 @@
+---
+title: Email transaccional
+icon: "Mail"
+description: Configura Resend, plantillas React Email, enlaces locales seguros y entrega mediante jobs duraderos.
+keywords: [Resend, React Email, email, jobs]
+tags: [email, operaciones]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Sincronizado con el commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) del starter.
+
+Lee esta página antes de activar verificación, recuperación de contraseña, facturación, invitaciones o confirmaciones de reserva. Sushi SaaS incluye una elección concreta—Resend con React Email—no una abstracción multiproveedor. Puedes usarla o sustituir `src/services/email/send.ts` conservando las plantillas y sus contratos.
+
+## Decide qué mensajes deben recibir tus usuarios
+
+- Verifica un dominio y elige un `EMAIL_FROM` reconocible; SPF, DKIM y DMARC forman parte de la función.
+- Verificación y restablecimiento se envían dentro de la petición de autenticación porque la persona espera el enlace. Bienvenida, cobros, invitaciones y reservas usan trabajos durables y pueden llegar un poco después.
+- En local se pueden imprimir enlaces de autenticación. Producción rechaza expresamente ese modo.
+
+**Está listo para producción cuando:** un buzón real recibe cada plantilla activa, los enlaces vuelven al dominio e idioma correctos, los reintentos generan una sola entrega y un rechazo del proveedor aparece en la supervisión de cola/readiness.
+
+Resend y React Email ya están integrados. Define `RESEND_API_KEY` y un `EMAIL_FROM` verificado; configura SPF, DKIM y DMARC en producción.
+
+Hay plantillas para verificación, recuperación, bienvenida, pago correcto/fallido, reserva e invitación. Personalízalas en `src/services/email/` y mantén la orquestación en servicios.
+
+En local se registran enlaces sin proveedor o con `AUTH_DEV_EMAIL_LINKS=true`; producción rechaza esa salida. El email de producto usa jobs duraderos y el UUID del job como clave idempotente del proveedor. Mantén `/api/cron/jobs` activo y alerta por readiness degradado o jobs agotados.
+
+No hagas fire-and-forget desde rutas ni expongas un endpoint de prueba. Encola tras la escritura de dominio, minimiza datos personales y prueba fallo, reintento, duplicado, blocklist y enlaces traducidos.
+
+**Siguiente paso:** configura la entrega y los reintentos con [Trabajos duraderos y readiness](/es/docs/jobs-and-readiness).

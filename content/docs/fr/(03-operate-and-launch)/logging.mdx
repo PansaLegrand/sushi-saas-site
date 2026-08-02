@@ -1,0 +1,32 @@
+---
+title: Journalisation structurée
+icon: "ScrollText"
+description: Opérez Sushi SaaS avec des logs structurés, corrélés et masqués sous Node et edge.
+keywords: [logging, Pino, observabilité, request ID]
+tags: [logging, opérations]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Synchronisé avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) du starter.
+
+Utilisez cette page pour rendre support et gestion d’incident possibles avant le premier incident. Sushi SaaS émet du JSON vers stdout ; il ne choisit volontairement ni fournisseur de stockage, ni rétention, ni tableau de bord, ni produit d’alerte à votre place.
+
+## Prendre trois décisions d’exploitation
+
+- Confiez stdout au collecteur de votre hébergeur ou envoyez-le vers Datadog, Better Stack, Grafana ou un autre service. Le contrat de l’application reste identique.
+- Utilisez `info` en production sauf enquête ciblée. `debug` augmente le volume et peut réduire la rétention utile.
+- Décidez quels identifiants le support peut rechercher. Les ID de requête, organisation, job, commande et événement Stripe sont utiles ; les e-mails et payloads bruts le sont rarement.
+
+**Prêt pour la production signifie :** une requête se suit jusqu’au fournisseur grâce à un ID, un secret de test est masqué, l’utilisateur reçoit une erreur sûre et traduite, et une alerte ouvre la requête de logs nécessaire.
+
+Node utilise Pino et edge émet le même contrat JSON. Les logs vont sur stdout pour la plateforme ; l’application ne gère pas de fichiers. `LOG_LEVEL` : `debug`, `info`, `warn` ou `error`.
+
+Propagez le request ID dans routes, services, jobs, commandes/événements Stripe et fournisseurs. Loguez événement, `org_uuid`, UUID sûr, numéro job/order, durée et résultat, pas seulement du texte.
+
+Authorization, cookies, mots de passe, tokens et clés sont masqués. Ne loguez pas corps brut, URL signée ni export. `respError` conserve le contexte interne et renvoie un `error_code` traduit ; jamais `error.message`.
+
+Surveillez readiness, cron, reprises épuisées, webhooks action-required, latence et 5xx. Corrélez Slack par IDs ; Slack n’est pas le stockage des logs.
+
+**Étape suivante :** transformez les signaux importants en alertes actionnables avec [Notifications opérationnelles Slack](/fr/docs/notifications-slack).

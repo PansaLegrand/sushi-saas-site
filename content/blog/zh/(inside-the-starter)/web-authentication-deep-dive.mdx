@@ -1,31 +1,61 @@
 ---
 title: "Sushi SaaS 的认证机制"
 icon: "ShieldCheck"
-description: "了解 Better Auth、邮箱验证、可选 Google 登录、MFA、组织与滥用防护如何协作。"
+description: "了解默认登录旅程，再决定产品应保留哪些 provider、邮箱验证、MFA、租户和防滥用控制。"
 tags: [认证, better-auth, 安全]
 author: "Sushi SaaS"
 publishedAt: "2025-10-13T00:00:00.000Z"
 updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-Sushi SaaS 使用 Better Auth、Drizzle adapter 与 PostgreSQL schema 构建认证，并在其外补充认证库无法替产品决定的业务规则。
+本指南帮助采用者把认证当作产品决策，而不只是一个登录页面。Sushi SaaS 使用 Better Auth 处理身份机制，并在外围补充 starter 其他功能所需的租户、恢复、风控与审计规则。
 
-## 支持的登录路径
+## 默认用户旅程
 
-邮箱密码登录默认启用，注册时必须验证邮箱并发送验证邮件。密码找回完成后会撤销已有 session。只有 Google Client ID 与 Secret 同时存在时才注册 Google OAuth，因此未配置的可选 provider 不会留下失效按钮。
+1. 用户通过邮箱密码注册；如果已同时配置两项 OAuth 凭据，也可用 Google。
+2. 邮箱密码注册必须验证邮箱。验证成功后可将一次性注册积分加入任务队列。
+3. 注册会创建个人组织；若 hook 中断，后续修复路径会补建。
+4. 只有账户生命周期与暂停检查通过后，登录才会创建 session。
+5. 密码重置会撤销已有 session。
 
-Better Auth 提供双因素认证。独立管理后台要求更严格：账户必须同时拥有管理角色并启用 MFA 才能进入。仅用 Google 注册的运营人员可以先设置初始密码，再启用 MFA。
+客户账户可使用双因素认证，但客户应用默认不强制。独立管理后台则在 `admin_ro` 或 `admin_rw` 运营角色之外，**必须启用 MFA**。
 
-完整配置见 [`7580470` 的 `src/lib/auth.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/lib/auth.ts)。环境变量与 callback 设置请按[认证与管理](/docs/authentication-and-admin)操作。
+配置位于 [`7580470` 的 `src/lib/auth.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/lib/auth.ts)。环境变量和 callback URL 见[认证与管理](/zh/docs/authentication-and-admin)。
 
-## 认证会创建产品状态
+## 上线前必须做出的选择
 
-组织插件为成员管理提供 owner、admin 与 member 角色。Sushi SaaS 显式映射 snake_case schema，通过 entitlement 服务限制席位，把邀请邮件加入队列，并关闭通用组织删除：只删除认证表会留下计费和产品数据孤儿。
+| 决策 | 默认选择 | 何时修改 |
+| --- | --- | --- |
+| 登录方式 | 邮箱密码；配置完成后启用 Google | 用户需要无密码、企业 SSO 或其他 provider |
+| 邮箱验证 | 密码注册必须验证 | 风险模型允许未验证账户；同时要决定何时发放注册权益 |
+| 客户 MFA | 可用，由用户选择 | 数据敏感度要求 step-up 或强制 MFA |
+| 管理 MFA | 强制 | 除非用同等强度的运营访问政策替代，否则应保留 |
+| 机器人防护 | 启用时由 Turnstile 保护凭据与发信接口；生产配置会围绕所选设置 fail closed | 改用其他边缘或身份控制，并同步更新校验与测试 |
+| 租户创建 | 每个账户获得个人组织 | 产品确定只会单用户，并完整移除组织作用域 |
 
-认证 hook 也会创建或恢复用户的个人组织，并记录登录事件。产品授权仍是另一层：有效 session 不等于可以访问其他组织的文件、积分或任务。[组织与团队](/docs/organizations-and-teams)解释了这些检查。
+不要只关闭邮箱验证，却让注册积分仍依赖验证 hook。你需要决定移动奖励、删除奖励，或用另一种账户质量证明替代。
 
-## 防滥用与恢复
+## 身份不等于授权
 
-配置后，Cloudflare Turnstile 会保护凭据和发信接口。注册与登录审核能阻止被封禁或暂停的账户，而 session 创建是密码与 OAuth 流程共用的最后门禁。错误只返回目录化代码，不暴露服务端原始信息。
+有效 session 只回答“这是谁”，并不授权访问所有组织数据。成员角色决定用户可执行的产品操作，套餐 entitlement 决定组织购买了哪些能力；Sushi 将三者分开。
 
-上线前应测试邮箱验证、密码重置、Google callback、session 撤销、MFA 注册以及两种管理角色。[管理后台设置](/docs/admin-console-setup)说明了独立域名与首位运营人员的配置。
+Better Auth 的 organization plugin 管理 owner、admin、member 的成员操作。应用 service 再增加席位限制、禁止移除最后一位 owner、保证每位用户至少保留一个 workspace 等规则。通用组织删除被关闭，因为只删除认证表会留下孤立的计费和产品数据。
+
+修改角色或租户选择前，请阅读[组织与团队](/zh/docs/organizations-and-teams)。
+
+## 恢复与防滥用
+
+Turnstile 可保护凭据和发信接口。注册检查同时覆盖密码与 OAuth 建号；session 创建会拒绝已暂停或正在擦除的账户，不受登录方式影响。用户看到的是本地化错误代码对应的文案，而非服务端原始信息。
+
+这些技术控制仍需要你的政策：谁能暂停账户、如何申诉、session 保留多久、保存哪些事件，以及客服可修改什么。
+
+## 生产测试清单
+
+- 测试注册、重发、过期，以及验证后的登录。
+- 重置密码并确认旧 session 失效。
+- 在生产 origin 测试所有已配置 OAuth callback。
+- 测试 MFA 注册、验证、恢复和关闭，并妥善保护备用码。
+- 并发测试邀请席位和最后 owner 保护。
+- 初始化两种管理角色，并确认管理 origin 强制 MFA。
+
+运营路径见[管理后台设置](/zh/docs/admin-console-setup)。本文基于 starter commit `7580470`。

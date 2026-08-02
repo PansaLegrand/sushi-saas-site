@@ -1,51 +1,69 @@
 ---
 title: "Cómo está estructurado Sushi SaaS"
 icon: "Blocks"
-description: "Un recorrido por las capas obligatorias de rutas, servicios, modelos y base de datos, además de la aplicación admin separada."
+description: "Entiende las capas obligatorias del starter, sus motivos y cómo añadir una función sin crear una segunda arquitectura."
 tags: [arquitectura, nextjs, starter]
 author: "Sushi SaaS"
 publishedAt: "2025-10-07T00:00:00.000Z"
 updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-Sushi SaaS se organiza alrededor de una regla: los datos avanzan hacia abajo por capas explícitas. No es solo una sugerencia de carpetas; las pruebas de arquitectura rechazan imports que crucen el límite.
+Esta guía es para quien debe decidir dónde colocar su primera función de producto. Sushi SaaS utiliza una arquitectura horizontal para todos los dominios y la hace cumplir con tests.
 
-## El recorrido de la aplicación
+## El recorrido de una petición
 
 ```text
-src/app/**       rutas y páginas
+src/app/**       rutas y páginas — entra y sale HTTP
   ↓
-src/services/**  reglas de negocio y orquestación
+src/services/**  reglas de negocio, coordinación e invariantes
   ↓
-src/models/**    persistencia tipada
+src/models/**    persistencia tipada; única capa que llama a db()
   ↓
 src/db/**        esquema, migraciones y conexión
 ```
 
-Las rutas traducen HTTP. Los servicios son responsables de invariantes como idempotencia, autorización, reglas del libro contable y efectos externos. Los modelos son la única capa de aplicación que puede llamar a `db()`. Las restricciones de la base de datos forman el último límite ante la concurrencia.
+Una ruta interpreta y responde. Un servicio decide si se permite el trabajo y coordina efectos secundarios. Un modelo se ocupa de lecturas y escrituras. Las restricciones de la base son la última protección ante peticiones concurrentes.
 
-El navegador sigue otra separación deliberada: los Server Components llaman directamente a servicios; los Client Components usan módulos de `src/api/**` y el cliente API común. Así se evitan llamadas HTTP internas en el servidor y respuestas gestionadas de forma distinta en cada componente.
+El navegador sigue otra frontera:
 
-[Arquitectura y contratos de error](/docs/architecture-and-errors) explica las reglas ejecutables y el formato de errores.
+```text
+Server Component  → servicio directamente
+Client Component  → src/api/** → cliente API común → /api/**
+```
 
-## Todos los dominios comparten las capas
+Así se evita una llamada HTTP del servidor a sí mismo y los errores de cliente comparten un único contrato. Consulta [Arquitectura y contratos de error](/es/docs/architecture-and-errors) para las reglas exactas.
 
-Organizaciones, cobros, créditos, almacenamiento, reservas y tareas no son miniaplicaciones aisladas. Cada dominio atraviesa las mismas capas. Un gasto de créditos, por ejemplo, entra por una ruta, se autoriza y hace idempotente en servicios, se persiste mediante modelos y queda protegido por restricciones del libro.
+## Por qué Sushi eligió capas horizontales
 
-Esta consistencia da a cada responsabilidad un único lugar. [Organizaciones y equipos](/docs/organizations-and-teams) muestra cómo el tenancy usa la misma estructura.
+Cobros, créditos, almacenamiento, reservas y tareas necesitan autenticación, alcance por tenant, errores y persistencia. Un conjunto de capas hace previsible cada responsabilidad y permite que los tests detecten atajos accidentales.
 
-## La consola admin es otra aplicación
+La contrapartida es que una función ocupa varios directorios. Las carpetas verticales por función pueden ser más cómodas en productos grandes, pero mezclar ambas estructuras es peor: la siguiente consulta o regla tendría dos ubicaciones posibles.
 
-`apps/admin` es una aplicación Next.js independiente, con páginas, APIs, acceso a datos, control MFA y roles de lectura/escritura propios. Comparte esquema y autenticación central, pero puede desplegarse en otro origen para aislar las rutas operativas de la aplicación de clientes.
+### Tus opciones
 
-Lee [Configuración y acceso de la consola admin](/docs/admin-console-setup) antes de desplegarla.
+- **Conservar la estructura** cuando un equipo pequeño quiera convenciones fuertes e infraestructura compartida.
+- **Migrar por completo a cortes verticales** si ya es el estándar del equipo. Mueve dominios completos y actualiza `tests/unit/architecture.test.ts`; no añadas una isla `src/features` junto a las reglas actuales.
+- **Simplificar para un prototipo temporal** si aceptas una migración posterior. Si las rutas escriben en la base, cambia el test de forma explícita en vez de acumular excepciones.
 
-## Límites que conviene conservar
+## El tenancy también es una elección arquitectónica
 
-- Añade invariantes de negocio a servicios, no a rutas.
-- Añade consultas a modelos, no a componentes ni servicios.
-- Comprueba capacidades en vez de comparar nombres de plan.
-- Mantén consultas y endpoints administrativos en `apps/admin`.
-- Actualiza los runbooks versionados cuando cambie un contrato.
+Cada usuario recibe una organización personal, por lo que clientes individuales y equipos usan los mismos cobros, créditos, archivos y límites con alcance de organización. Así no existen caminos paralelos de datos “del usuario” y “del equipo”.
 
-Esta guía fue revisada contra el [commit `7580470` del starter](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470).
+Conserva el modelo si podría haber equipos. Si el producto siempre será individual, quitar organizaciones es válido, pero exige cambiar coordinadamente autorización, esquema, modelos, cobros, almacenamiento y tests; no es un interruptor de UI. Lee [Organizaciones y equipos](/es/docs/organizations-and-teams) antes de decidir.
+
+## Por qué el admin está separado
+
+`apps/admin` tiene páginas, APIs, acceso a datos, puerta MFA y roles de operador propios. Comparte esquema y autenticación, pero puede ejecutarse en otro origen. El coste es otra compilación y despliegue; el beneficio es una frontera operativa clara.
+
+Puedes integrarlo en la aplicación de cliente si prefieres un único despliegue. Conserva autorización de admin en servidor y auditoría: ocultar navegación no es seguridad. Empieza por [Configuración de la consola de administración](/es/docs/admin-console-setup).
+
+## Añade tu primer dominio
+
+1. Define vocabulario y límites en `src/types` y `src/config`.
+2. Añade esquema y una migración expand-safe en `src/db`.
+3. Coloca el CRUD tipado en `src/models`.
+4. Coloca autorización, idempotencia y efectos en `src/services`.
+5. Añade la ruta o Server Component en `src/app`; usa `src/api` para llamadas de cliente.
+6. Prueba la regla de servicio, la puerta de autenticación de la ruta y los reintentos para dinero o créditos.
+
+Consulta capacidades en vez de comparar nombres de planes y actualiza el runbook cuando cambie el contrato. Esta guía refleja el [commit `7580470` del starter](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470).

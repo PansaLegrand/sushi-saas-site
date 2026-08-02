@@ -1,37 +1,64 @@
 ---
 title: "Cuándo encaja Sushi SaaS"
 icon: "Scale"
-description: "Una lista basada en funciones reales para decidir si el starter Sushi SaaS encaja con tu producto y equipo."
-tags: [evaluación, arquitectura, open-source]
+description: "Evalúa el starter por las decisiones que conservarás, los sistemas que operarás y el trabajo que seguirá siendo de tu producto."
+tags: [evaluación, arquitectura, código-abierto]
 author: "Sushi SaaS"
 publishedAt: "2025-10-07T00:00:00.000Z"
 updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-Sushi SaaS es útil cuando sus decisiones difíciles coinciden con las que tu producto ya necesita. Aporta poco si vas a retirar casi toda la base.
+Un starter ahorra tiempo solo si quieres sus decisiones. Sushi SaaS es una base de código para equipos que conectan identidad, tenancy, cobros, uso y operaciones; no evita comprender esos sistemas.
 
-## Encaja bien cuando
+## Elige Sushi SaaS cuando
 
-- El equipo quiere Next.js, TypeScript, PostgreSQL, Drizzle, Better Auth y Stripe.
-- Los clientes pertenecen a organizaciones personales o compartidas, y cobros, créditos, archivos o límites siguen ese tenant.
-- Las mutaciones de dinero y uso necesitan idempotencia, libro de créditos auditable y conciliación.
-- Necesitas subidas privadas S3, trabajos durables en base de datos, email transaccional y errores localizados.
-- Los operadores necesitan una consola separada con MFA, roles de lectura/escritura, moderación, inspección de cobros y auditoría.
-- Valoras tests que hacen cumplir arquitectura, puertas de autenticación y replay, no solo la UI feliz.
+- Next.js, TypeScript, PostgreSQL, Drizzle, Better Auth y Stripe coinciden con tu pila.
+- Los clientes trabajan solos o en equipo y cobros, créditos, archivos, tareas y límites pertenecen a una organización.
+- Dinero y uso requieren idempotencia, libreta inmutable, replay de webhooks y conciliación.
+- Vas a operar almacenamiento privado, email transaccional, rate limits, trabajos durables y errores localizados.
+- Soporte necesita una consola separada con MFA, roles de lectura/escritura, moderación, inspección de cobros y auditoría.
+- El equipo valora y mantendrá fronteras obligatorias y tests de fallos.
 
-[Cómo está estructurado Sushi SaaS](/blogs/anatomy-of-modern-saas) resume la superficie; [Inicio rápido](/docs/quick-start) explica la instalación.
+El beneficio no es el número de páginas, sino que estos sistemas comparten un modelo de tenant e invariantes.
 
-## Probablemente no encaja cuando
+## Elige algo menor cuando
 
-- Construyes un sitio estático, herramienta individual o prototipo sin cuentas ni pagos.
-- Tu stack o despliegue obligatorio choca con Next.js y PostgreSQL.
-- Buscas un producto no-code alojado, no código fuente propio.
-- Tu tenancy, cobro o cumplimiento es tan específico que sustituir los contratos costaría más que empezar con una base pequeña.
+- Validarás demanda con una landing o prototipo desechable.
+- El producto es individual, no cobra, o una plataforma alojada de identidad y datos reduce operaciones.
+- Base de datos, framework, identidad o cobros requeridos chocan con la pila incluida.
+- Necesitas no-code alojado en vez de código propio.
+- Sustituir tenancy o cumplimiento costaría más que empezar desde una base estrecha.
 
-## Lo que no significa “pensado para producción”
+## Estrategias de adopción
 
-El starter aporta controles, no tu política de producción. Aún debes elegir planes y precios, configurar proveedores, escribir textos legales, establecer backups y restauración, monitorizar entregas y revisar amenazas. Los referidos siguen apagados hasta definir negocio y pagos. Los proveedores de tareas y pantallas de ejemplo también necesitan trabajo de producto.
+### Conservar la base
 
-Ejecuta primero el entorno local y lee el código. Después revisa [Despliegue y seguridad](/docs/deployment-and-security) y elimina los dominios que no vas a operar.
+Cuando encajan casi todas las fronteras. Sustituye marca y dominios de ejemplo, configura proveedores y crea el flujo diferenciador. Es la vía rápida y mantiene comprensibles las actualizaciones.
 
-Esta evaluación refleja el [commit `7580470` del starter](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470), con la aplicación de cliente y la aplicación admin separada.
+### Retirar capacidades completas
+
+Cuando encaja la arquitectura pero no un dominio. Retira verticalmente UI, rutas, servicios, modelos, esquema, config, trabajos, tests y docs; no ocultes solo la navegación dejando una ruta de datos sin dueño.
+
+### Copiar un patrón
+
+Para una app existente. Lleva migraciones, restricciones, tests y operación junto con el código. Una función de créditos sin clave idempotente ni regla de base no es el mismo patrón.
+
+### Empezar en otra base
+
+Correcto si cambia la pila o el modelo de propiedad. Un starter debe reducir decisiones futuras, no crear una larga reescritura antes del producto.
+
+## Coste tras clonar
+
+Sigues siendo responsable de cuentas de proveedor, secretos, precios, impuestos, reembolsos, textos legales, retención, backups, simulacros de restauración, monitorización, accesibilidad, amenazas e incidentes. También debes sustituir el adaptador de texto a vídeo y decidir si reservas y referidos pertenecen al producto.
+
+“Orientado a producción” significa que el repositorio expone responsabilidades y controles; no certifica tu despliegue.
+
+## Comprobación de una hora
+
+1. Ejecuta [Inicio rápido](/es/docs/quick-start) y abre ambas aplicaciones.
+2. Mapea capacidades obligatorias a páginas y servicios reales.
+3. Marca **conservar**, **cambiar** o **retirar** para pila, organizaciones, cobros, créditos, storage, jobs, locales, admin y referidos.
+4. Traza un flujo de dinero o autorización y lee sus tests.
+5. Estima la columna “cambiar”; si domina, elige una base menor.
+
+Continúa con [Cómo está estructurado Sushi SaaS](/es/blogs/anatomy-of-modern-saas) y [Despliegue y seguridad](/es/docs/deployment-and-security). Evaluación basada en el [commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470).

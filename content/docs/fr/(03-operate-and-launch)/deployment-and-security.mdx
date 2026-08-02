@@ -1,0 +1,39 @@
+---
+title: Checklist de déploiement et sécurité
+icon: "Rocket"
+description: Déployez web et admin avec migrations explicites, cron, readiness, réseau fiable et contrôles de production.
+keywords: [déploiement, sécurité, Vercel, production]
+tags: [déploiement, sécurité]
+author: "Sushi SaaS"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Synchronisé avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) du starter.
+
+Utilisez cette liste finale une fois l’application fonctionnelle en local. Le but n’est pas seulement un déploiement vert, mais une version que vous pouvez authentifier, facturer, exploiter, restaurer et administrer sans raccourci de développement.
+
+## Choisir la forme du déploiement
+
+- Web et console admin sont deux builds et doivent avoir deux origines ; ils peuvent partager dépôt, base, secret d’authentification et tag de version.
+- Vercel est documenté car `vercel.json` fournit cron, mais tout hébergeur Node convient avec PostgreSQL, Redis, HTTPS, secrets et planificateur authentifié.
+- Utilisez une URL PostgreSQL poolée pour le serverless et, si nécessaire, une URL directe pour les migrations. Migrez avant de promouvoir le code ; le build ne migre jamais.
+- Commencez CSP en report-only, observez les hosts analytics, Turnstile, Stripe et storage, puis choisissez quand l’appliquer.
+
+**Prêt pour la production signifie :** les deux builds viennent de la même version, les migrations sont vérifiées, `/api/ready` est sain, la sauvegarde est restaurable, cron et webhook Stripe sont testés, aucun flag demo n’existe et les rôles admin lecture/écriture fonctionnent.
+
+Déployez web et `apps/admin` comme services et origines séparés. Utilisez Node `>=20.19.0 <23` et pnpm `10.22.0`, lancez `pnpm lint`, `pnpm test:cov`, `pnpm build`, puis `pnpm db:check:prod` et `pnpm db:migrate:prod`. Les migrations ne sont jamais automatiques.
+
+## Contrôles obligatoires
+
+- `BETTER_AUTH_SECRET` fort, URL correctes, PostgreSQL de production et sauvegardes restaurées en exercice.
+- Rate limit distribué Redis et source/header IP explicitement fiable.
+- Turnstile ; flags démo et logs de liens auth désactivés.
+- `CRON_SECRET` et `/api/cron/jobs` toutes les cinq minutes (`vercel.json` l’inclut).
+- Stripe live, webhook, Portal sûr et Price IDs si facturation.
+- Objets privés, moindre privilège, CORS correct et URL courtes si stockage.
+- Domaine e-mail vérifié et politiques légales/rétention revues.
+
+`/api/health` teste la vie ; `/api/ready` contrôle environnement, base, migrations, Redis et file. Une file dégradée doit alerter même si le trafic passe.
+
+HSTS est actif en production et CSP dispose d’un mode report-only. Observez avant d’imposer une politique compatible. Après déploiement, testez auth, isolation, checkout/webhooks, cron, export/suppression et MFA admin. Lisez `DEPLOYMENT.md`, `docs/security-headers.md` et `.env.example`.

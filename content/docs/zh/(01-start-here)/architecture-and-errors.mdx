@@ -1,0 +1,85 @@
+---
+title: 架构与错误契约
+icon: "Workflow"
+description: 在不绕过数据、授权和用户安全错误边界的前提下扩展 Sushi SaaS。
+keywords: [架构, 服务, 模型, 错误, Next.js, TypeScript]
+tags: [架构, 错误, 测试]
+author: "Sushi SaaS"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> 已根据 starter 提交 [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) 验证。
+
+请在添加第一个产品特有功能前阅读本页。目标很实际：知道每个文件应放在哪里、哪条边界保护客户数据，以及哪些测试能证明扩展是安全的。
+
+## 已替你做出的架构选择
+
+Sushi SaaS 采用单一横向分层、Server Component 直接调用 service、Client Component 使用类型化 API wrapper、按能力检查套餐，以及只向用户返回已翻译的安全错误。保留这些默认值能让新业务域保持可预测。你可以更换其中一种约定，但应把它视为架构迁移：同时更新强制测试和工程文档，避免代码库长期存在两套模式。
+
+## 服务端只沿一个方向流动
+
+```text
+src/app/**       路由与页面：HTTP 输入/输出
+  ↓
+src/services/**  业务规则、编排与不变量
+  ↓
+src/models/**    类型化持久化；唯一允许调用 db() 的层
+  ↓
+src/db/**        Schema、迁移与连接
+```
+
+路由只负责认证、校验和 HTTP 转换；所有写操作都经过 service。Model 负责查询、租户条件和事务。`tests/unit/architecture.test.ts` 会拒绝跨层导入。
+
+不要创建 `src/features/`。一个业务域应横向分布在各层，例如预约功能位于 `models/reservation.ts`、`services/reservations/`、`config/reservations.ts` 和 `components/reservations/`。
+
+## 浏览器数据流
+
+```text
+Server Component → 直接调用 service
+Client Component → src/api/** → 共享 API client → /api/**
+```
+
+Server Component 不请求本应用自己的 API。Client Component 不直接使用 `fetch`，而是通过 `src/api/` 中的领域封装统一解析响应和错误。
+
+## 授权包含两个问题
+
+组织角色与订阅方案彼此独立：
+
+```ts
+const ctx = await getOrgContext(request);
+if (!ctx || !can(ctx, "file:delete", file)) return respForbidden();
+await requireEntitlement(ctx.orgUuid, "storage.upload");
+```
+
+`can()` 判断成员角色是否允许操作；entitlement 函数判断组织当前方案是否包含该能力或容量。
+
+## 无泄漏错误契约
+
+服务端抛出带稳定目录代码的 `AppError`。每个路由边界使用 `respError`：内部细节进入日志，用户只收到安全的本地化文案。
+
+```ts
+throw new AppError("CREDITS_INSUFFICIENT", {
+  message: `org ${orgUuid} could not spend ${cost}`,
+  details: { required: cost, available: balance }
+});
+```
+
+UI 根据 `error_code` 分支，并通过 `resolveErrorMessage` 或 `resolveAuthError` 获取文案，绝不渲染 `error.message`。错误翻译位于 `src/lib/errors/i18n/locales/`；新增代码必须同时补齐五种语言。
+
+## 安全新增业务域
+
+1. 在 `src/config/` 定义常量和环境配置。
+2. 在 `src/models/` 添加类型化 CRUD。
+3. 在 `src/services/` 放置不变量、授权、幂等和副作用。
+4. 保持路由精简，并使用错误目录转换失败。
+5. 添加对应层级的测试。
+6. 运行 `pnpm lint`、`pnpm test:run` 和 `pnpm build`。
+
+对于浏览器功能，还要决定在哪里渲染。能直接调用 service 时优先使用 Server Component；只有需要浏览器交互时才使用 Client Component，并在 `src/api/` 添加 wrapper，而不是直接 `fetch`。
+
+当路由不含业务规则、service 持有所有写入不变量、model 持有所有查询、失败请求只暴露错误目录代码，且对应测试层通过时，这个业务域才算完成。
+
+更详细的工程契约位于 starter 仓库的 `docs/errors.md`、`docs/frontend.md` 和 `AGENTS.md`。
+
+**相关内容：** 阅读 [Sushi SaaS 的代码结构](/zh/blogs/anatomy-of-modern-saas)，了解这些边界背后的产品理由，以及修改它们时的取舍。

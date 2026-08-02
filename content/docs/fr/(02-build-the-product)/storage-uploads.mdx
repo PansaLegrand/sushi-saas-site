@@ -1,0 +1,38 @@
+---
+title: Téléversements privés
+icon: "UploadCloud"
+description: Configurez des uploads S3 privés avec politique, entitlement, quota, checksum et suppression durable.
+keywords: [S3, R2, MinIO, upload, stockage]
+tags: [stockage, sécurité]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Synchronisé avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) du starter.
+
+Utilisez cette fonction lorsque votre produit doit conserver des avatars, documents, imports ou fichiers générés sans les rendre publics ni faire transiter chaque octet par le serveur Next.js. À la fin, une personne connectée doit pouvoir charger, télécharger et supprimer un fichier depuis **Compte → Fichiers**, sans qu’une autre organisation puisse y accéder.
+
+## Choisir la politique de stockage adaptée
+
+- **Cloudflare R2** est souvent le chemin le plus court vers une API compatible S3 sans compte AWS. **AWS S3** convient à une infrastructure AWS et **MinIO** aux environnements locaux ou auto-hébergés. Les trois utilisent le même adaptateur, configuré par l’environnement.
+- Choisissez `general` pour des fichiers mixtes, `images` pour les images avec une limite de politique de 10 Mo, `documents` pour les fichiers bureautiques et texte, ou `verified` lorsque le navigateur doit fournir un SHA-256.
+- La limite réelle est la plus petite entre le plan, `STORAGE_MAX_UPLOAD_MB` et la politique. Gardez le bucket privé ; le modèle livré utilise des URL signées de courte durée.
+
+**Prêt pour la production signifie :** le parcours UI fonctionne, CORS n’accepte que vos origines, une URL publique directe échoue, l’accès inter-organisation est refusé et cron supprime finalement l’objet d’un fichier effacé.
+
+Définissez `STORAGE_PROVIDER` à `s3`, `r2` ou `minio`, puis bucket, région, endpoint et identifiants. Les objets restent privés ; le navigateur reçoit des URL signées courtes, jamais les secrets. Configurez CORS pour l’origine web et les headers PUT ; évitez les ACL sauf nécessité fournisseur.
+
+## Contrat
+
+1. `POST /api/storage/uploads` valide organisation, `storage.upload`, politique (`general`, `images`, `documents`, `verified`), type et le minimum des limites plan/environnement/politique ; le quota est réservé atomiquement.
+2. Le navigateur PUT directement ; XHR ne sert qu’à la progression.
+3. `POST /api/storage/uploads/complete` vérifie métadonnées et SHA-256 optionnel puis active la ligne.
+4. `GET /api/storage/files/[uuid]?download=1` fournit une URL limitée à l’organisation.
+5. `DELETE /api/storage/files/[uuid]` fait un soft-delete et planifie `storage_object_delete` durable.
+
+Un upload abandonné libère sa réservation après une heure. La suppression réessaie par la file : cron doit tourner. Le service génère les clés ; le client ne choisit pas la clé bucket.
+
+Testez flux complet, MIME/checksum invalide, concurrence quota, URL expirée, accès inter-organisation, reprise et nettoyage. Voir `docs/storage-providers.md` du starter pour CORS.
+
+**Étape suivante :** fiabilisez suppression et nettoyage avec [Tâches durables et readiness](/fr/docs/jobs-and-readiness).

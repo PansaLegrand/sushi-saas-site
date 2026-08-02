@@ -512,6 +512,22 @@ a {
   margin-top: 2rem;
 }
 
+.content-sections {
+  display: grid;
+  gap: 3rem;
+  margin-top: 2.5rem;
+}
+
+.content-section > h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  letter-spacing: -0.015em;
+}
+
+.content-grid--documentation {
+  margin-top: 1rem;
+}
+
 .content-card {
   position: relative;
   min-height: 15rem;
@@ -536,10 +552,19 @@ a {
   text-transform: uppercase;
 }
 
-.content-card h2 {
+.content-card h2,
+.content-card h3 {
   margin: 2.4rem 0 0.7rem;
   font-size: 1.25rem;
   letter-spacing: -0.025em;
+}
+
+.content-card--documentation {
+  min-height: 11rem;
+}
+
+.content-card--documentation h3 {
+  margin-top: 0;
 }
 
 .content-card p {

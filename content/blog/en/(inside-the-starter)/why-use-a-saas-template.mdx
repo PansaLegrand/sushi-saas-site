@@ -1,37 +1,64 @@
 ---
 title: "When Sushi SaaS Is a Good Fit"
 icon: "Scale"
-description: "An evidence-based checklist for deciding whether the Sushi SaaS starter matches your product and team."
+description: "Evaluate the starter by the decisions you can keep, the systems you are willing to operate, and the work your product still requires."
 tags: [evaluation, architecture, open-source]
 author: "Sushi SaaS"
 publishedAt: "2025-10-07T00:00:00.000Z"
 updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
-Sushi SaaS is useful when its hard decisions overlap with decisions your product already needs. It saves little if you plan to remove most of the foundation.
+A starter saves time only when you want its decisions. Sushi SaaS is a source-code backbone for teams that need connected identity, tenancy, billing, usage, and operations—not a shortcut around understanding those systems.
 
-## It is a strong fit when
+## Choose Sushi SaaS when
 
-- Your team wants Next.js, TypeScript, PostgreSQL, Drizzle, Better Auth, and Stripe.
-- Customers belong to personal or shared organizations, and billing, credits, storage, or limits must follow that tenant boundary.
-- Money and usage mutations need idempotency, an auditable credit ledger, and reconciliation paths.
-- You need private S3-compatible uploads, durable database jobs, transactional email, and localized user-facing errors.
-- Operators need a separately deployed admin console with MFA, read/write roles, moderation, billing inspection, and an audit trail.
-- You value tests that enforce architecture, authentication gates, and replay behavior—not only happy-path UI tests.
+- Next.js, TypeScript, PostgreSQL, Drizzle, Better Auth, and Stripe match your intended stack.
+- Customers may work alone or in teams, while billing, credits, files, tasks, and limits belong to an organization.
+- Money and usage changes need idempotency, immutable ledger entries, webhook replay handling, and reconciliation.
+- You expect to operate private object storage, transactional email, rate limits, durable jobs, and localized user errors.
+- Support staff need a separately deployed console with MFA, read/write roles, moderation, billing inspection, and audit records.
+- Your team values enforced boundaries and failure-path tests enough to maintain them.
 
-The full shipped surface is summarized in [How Sushi SaaS Is Structured](/blogs/anatomy-of-modern-saas) and documented at [Quick Start](/docs/quick-start).
+The benefit is not the number of pages. It is that these systems share one tenant model and one set of invariants.
 
-## It is probably the wrong fit when
+## Choose something smaller when
 
-- You are building a static site, a single-user tool, or a prototype that does not need accounts or billing.
-- Your required stack or deployment model conflicts with Next.js and PostgreSQL.
-- You want a hosted no-code product rather than source code your team owns.
-- Your tenancy, billing, or compliance model is so specialized that replacing the supplied contracts would cost more than starting smaller.
+- You are testing demand with a landing page or throwaway prototype.
+- The product is single-user, has no billing, or can use a hosted identity-and-database platform with less custom operation.
+- Your required database, framework, identity provider, or billing model conflicts with the shipped stack.
+- You need a hosted no-code product rather than code your team owns.
+- Replacing the tenancy or compliance model would cost more than building on a narrower base.
 
-## What “production-minded” does not mean
+## Pick an adoption strategy
 
-The starter provides controls, not your production policy. You still choose plans and prices, configure provider credentials, write product-specific legal terms, establish backup and restore procedures, monitor delivery, and perform a threat review. Referral rewards are disabled until you define their business and payout rules. Example task providers and demo screens also need product work.
+### Keep the backbone
 
-Start by running the local setup and reading the source rather than judging the feature list. Then review [Deployment and Security](/docs/deployment-and-security) and remove domains you do not intend to operate.
+Best when most boundaries fit. Replace branding and example domains, configure providers, and build your differentiated workflow on top. This gives the fastest path while keeping upgrades understandable.
 
-This assessment reflects [starter commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470), which includes both the customer application and the separate admin application.
+### Remove complete capabilities
+
+Valid when the core architecture fits but a domain does not. Remove a feature vertically—UI, routes, services, models, schema, config, jobs, tests, and docs—rather than hiding its navigation and leaving an unowned data path.
+
+### Copy one pattern
+
+Useful for an existing application. Bring the migrations, constraints, tests, and operational behavior with the code. A credit function without its idempotency key and database rule is not the same pattern.
+
+### Start elsewhere
+
+The right answer when the core stack or ownership model differs. Using a starter should reduce future decisions, not create a long rewrite before product work starts.
+
+## Cost that remains after cloning
+
+You still own provider accounts, secrets, prices, tax and refund policy, legal copy, data retention, backups, restore drills, monitoring, accessibility, threat review, and incident response. You must also replace the example text-to-video adapter and decide whether reservations and referrals belong in your product.
+
+“Production-minded” means the repository exposes these responsibilities and supplies technical controls; it does not certify your deployment.
+
+## A one-hour fit check
+
+1. Run [Quick Start](/docs/quick-start) and open both applications.
+2. Map your must-have capabilities to the repository's actual pages and services.
+3. Mark each major decision **keep**, **change**, or **remove**: stack, organizations, billing, credits, storage, jobs, locales, admin, and referrals.
+4. Trace one money or authorization flow and read its tests.
+5. Estimate the “change” column. If it dominates, choose a smaller starting point.
+
+Then read [How Sushi SaaS Is Structured](/blogs/anatomy-of-modern-saas) and [Deployment and Security](/docs/deployment-and-security). This assessment reflects [starter commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470).

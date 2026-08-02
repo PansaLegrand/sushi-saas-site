@@ -1,0 +1,31 @@
+---
+title: 予約機能
+icon: "CalendarCheck"
+description: 同時実行に安全な仮押さえ、Stripe Checkout、メール、カレンダーを備えた任意の予約機能を有効にします。
+keywords: [予約, scheduling, Stripe, calendar]
+tags: [予約, 支払い]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> スターターのコミット [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) と同期済みです。
+
+相談、教室、レンタル、診療など、Stripe を使って予約可能な時間を販売する SaaS に向いています。公開予約ページ、メンバーの予約履歴、競合に安全な仮押さえ、Checkout、確認メール、カレンダーリンクが含まれています。何を販売するかを決めるまでは無効のままにしてください。
+
+## 事業の予約ルールを選ぶ
+
+- `src/config/reservations.ts` で、基準タイムゾーン、9〜17 時の営業時間、30 分単位の枠、14 日先までの受付期間を変更します。
+- 明示的なマイグレーションまたはシードで有効な `reservation_services` レコードを作るか、運用担当者向けの CRUD 画面を実装します。各レコードには所要時間、価格、通貨、前金、取消期限、前後の余白が入ります。本番用のサービス管理画面は同梱されていません。
+- 全額払いか前金かを選び、取消、返金、日程変更、無断欠席のルールを利用者に示します。スターターは予約処理を安全にしますが、事業ルールまでは決めません。
+- Stripe Checkout の有効期限と利用者の操作手順に別の値が必要でない限り、35分間の仮押さえを維持します。支払いの確定は、検証済みの Webhook だけで行います。
+
+**本番準備完了の条件：** 正しいタイムゾーンの時刻を表示し、同じ時間枠を同時に予約できず、途中で放棄した Checkout の仮押さえが解放され、遅延・重複した Webhook を安全に処理でき、メールとカレンダーが正しく、サポート担当者が取り消し・返金方針を把握していることです。
+
+予約は既定で無効です。`src/config/reservations.ts` で IANA タイムゾーンと営業時間を設定し、本番用のサービスレコードを作成します。Stripe、メール、取り消し、サポートの方針を決めてから、`NEXT_PUBLIC_FEATURE_RESERVATIONS_ENABLED=true` にしてください。デモ用シードは既定で無効で、作成するのも相談サービス一件だけです。本番では利用しないでください。
+
+API は `GET /api/reservations/services`、`POST /api/reservations/availability`、冪等 `POST /api/reservations`、`GET /api/reservations/mine`。UI は `/:locale/reserve` と `/:locale/account/reservations` です。
+
+Checkout は DB ロック内で35分間の仮押さえと Stripe Session を一度だけ作り、同じ `Idempotency-Key` による再実行を安全に処理します。アドバイザリーロックと排他制約が、`hold` と `confirmed` の時間枠が同時に重複するのを防ぎます。支払いの確定は検証済みの Webhook だけで行い、戻り先ページでは行いません。期限切れ処理は、該当するセッションの仮押さえだけを解放します。
+
+確定時は ICS 添付メールをキューへ登録し、Google カレンダーへのリンクを提供します。同時予約、重複処理、途中放棄、遅延した支払い、タイムゾーンと夏時間、前金と全額払い、メール再試行、組織の範囲をテストします。[Stripe 課金](/ja/docs/stripe-setup)、[トランザクションメール](/ja/docs/email-service)、[永続ジョブと稼働準備](/ja/docs/jobs-and-readiness)の設定も完了させてください。

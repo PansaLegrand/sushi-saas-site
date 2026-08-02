@@ -1,0 +1,30 @@
+---
+title: Slack 运维通知
+icon: "Bell"
+description: 通过持久任务队列将运维事件发送到 Slack，并避免泄露敏感数据。
+keywords: [Slack, 通知, 任务, 运维]
+tags: [Slack, 运维]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> 已与启动模板提交 [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) 同步。
+
+当人工需要快速注意到运维异常（例如等待处理的 Stripe 事件）时使用 Slack；不要把它当作永久记录。该集成是可选的：不设置 `SLACK_WEBHOOK_URL` 即关闭投递。
+
+## 选择哪些告警必须可靠送达
+
+- Stripe webhook 与 sweep 告警已经使用 `slack_event` 或 `slack_error` 持久任务，并通过 runner 重试。
+- 部分存储与订阅保护告警仍使用尽力而为的 `notifySlack*` helper；Serverless 实例冻结时可能丢失。对运维必须送达的告警，请改为入队 Slack 任务。
+- 消息应能指导行动：包含安全的 request/order/event/job 标识，并说明去哪里调查；不要包含 token、原始 payload、签名 URL 或不必要的个人数据。
+
+**可以上线的标准：** 无害测试事件到达正确频道；模拟 429/5xx 能看到重试或失败；重复入队被抑制；Slack 中的标识可追溯到数据库或结构化日志。
+
+创建 Slack Incoming Webhook 并设置 `SLACK_WEBHOOK_URL`。SDK 仅在 `src/integrations/slack.ts` 构造。账单与 sweep 流程会入队 `slack_event` 或 `slack_error`；较早的保护调用点使用尽力而为 helper，因此新增加的必达告警必须使用任务。
+
+高频事件使用确定性去重 key，携带 request/order/job 标识便于关联，但不包含凭据、token、原始请求体、下载 URL 或不必要个人数据。缺少 webhook 应是明确的环境选择，不能成为隐藏的生产故障。
+
+发送由与邮件、清理相同的持久 runner 重试。保持 `/api/cron/jobs` 受认证并定时执行，监控失败任务，测试重复入队、Slack timeout/429/5xx、脱敏与恢复。Slack 只是告警渠道，数据库与结构化日志才是事实来源。
+
+**下一步：** 将 Slack 投递与队列失败检查纳入[部署与安全](/zh/docs/deployment-and-security)上线流程。

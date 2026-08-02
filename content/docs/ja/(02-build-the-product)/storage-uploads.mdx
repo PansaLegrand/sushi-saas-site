@@ -1,0 +1,36 @@
+---
+title: 非公開ファイルのアップロード
+icon: "UploadCloud"
+description: ポリシー、エンタイトルメント、容量上限、チェックサム、永続削除を備えた S3 互換の非公開アップロードを設定します。
+keywords: [S3, R2, MinIO, upload, storage]
+tags: [storage, セキュリティ]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> スターターのコミット [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) と同期済みです。
+
+アバター、文書、インポート、生成物を公開せず、すべてのバイトを Next.js サーバー経由にもしたくない場合に使います。完了後は、ログインしたユーザーが **アカウント → ファイル** でアップロード、ダウンロード、削除でき、別の組織からはアクセスできない状態になります。
+
+## 製品に合うストレージ方針を選ぶ
+
+- AWS アカウントなしで S3 互換 API を早く使うなら **Cloudflare R2**、AWS 中心なら **AWS S3**、ローカルまたは自社運用なら **MinIO** が候補です。すべて同じアダプターを使い、環境変数だけで切り替えます。
+- 混在ファイルは `general`、画像のみ（方針上限 10 MB）は `images`、文書は `documents`、ブラウザに SHA-256 を必須にするなら `verified` を選びます。
+- 実際の上限は、プラン、`STORAGE_MAX_UPLOAD_MB`、ポリシーのうち最も小さい値です。バケットは非公開のままにし、短時間だけ有効な署名付き URL で配信します。
+
+**本番準備完了の条件：** UI の一連の操作が成功し、CORS は運用するオリジンだけを許可し、直接の公開 URL では取得できず、組織をまたぐアクセスが拒否され、削除対象のオブジェクトを cron が最終的に消去します。
+
+`STORAGE_PROVIDER` を `s3`、`r2`、`minio` のいずれかにし、バケット、リージョン、エンドポイント、認証情報を設定します。オブジェクトは非公開で、ブラウザーは短時間だけ有効な署名付き URL のみを受け取ります。Web オリジンと PUT ヘッダーの CORS を設定し、外部サービスが要求しない ACL は使いません。
+
+## アップロードの契約
+
+1. `POST /api/storage/uploads` は、組織、`storage.upload`、ポリシー（`general`、`images`、`documents`、`verified`）、種類、プラン・環境・ポリシーのうち最小のサイズ上限を検証し、容量を原子的に予約します。
+2. ブラウザーはオブジェクトストレージへ直接 PUT し、XHR は進捗表示のためだけに使います。
+3. `POST /api/storage/uploads/complete` がメタデータと任意の SHA-256 を確認して、状態を `active` にします。
+4. `GET /api/storage/files/[uuid]?download=1` が組織限定の署名 URL を返します。
+5. `DELETE /api/storage/files/[uuid]` が論理削除し、永続的な `storage_object_delete` ジョブを登録します。
+
+未完了のアップロードは一時間後に容量予約を解放します。削除はキューで再試行するため、cron が必要です。オブジェクトキーはサービスが生成し、クライアントには選ばせません。
+
+一連の処理、不正な MIME タイプとチェックサム、容量予約の競合、期限切れ URL、組織をまたぐアクセス、削除の再試行、後片付けをテストします。削除などの非同期処理を動かす方法は[永続ジョブと稼働準備](/ja/docs/jobs-and-readiness)、CORS の詳細はスターターの `docs/storage-providers.md` を参照してください。

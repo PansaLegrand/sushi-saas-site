@@ -1,8 +1,0 @@
-{
-  "title": "Console d’administration",
-  "defaultOpen": true,
-  "pages": [
-    "admin-console-setup",
-    "admin-console-operations"
-  ]
-}

@@ -1,0 +1,9 @@
+{
+  "title": "はじめに",
+  "defaultOpen": true,
+  "pages": [
+    "quick-start",
+    "customize-your-product",
+    "architecture-and-errors"
+  ]
+}

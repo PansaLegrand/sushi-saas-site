@@ -1,0 +1,42 @@
+---
+title: Facturación con Stripe
+icon: "CreditCard"
+description: Conecta tu catálogo Stripe, elige una política segura de cambios y verifica que cada pago tenga un único efecto local.
+keywords: [Stripe, suscripciones, checkout, webhooks]
+tags: [facturación, Stripe]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Verificado con el commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) del starter.
+
+Al terminar, un cliente podrá comprar un plan configurado, Stripe notificará a la aplicación, la organización recibirá entitlements y créditos una sola vez y un operador podrá reconciliar cualquier incertidumbre.
+
+## Decide primero el modelo comercial
+
+El starter incluye suscripciones planas por organización para Plus y Max, mensuales y anuales. Permite varias suscripciones independientes, aplica el nivel activo más alto y suma sus créditos. Billing Portal permite facturas, método de pago y cancelación, pero bloquea los cambios de plan o cantidad en la suscripción.
+
+Mantén este modelo para un lanzamiento corto y seguro. Si quieres cobro por asiento, upgrades prorrateados o ajustes automáticos de créditos, define y prueba esas reglas antes de activar los controles de actualización de Stripe.
+
+Crea Prices estables mensuales y anuales para Plus y Max; define `STRIPE_PRICE_*`, `STRIPE_PRIVATE_KEY` y `STRIPE_WEBHOOK_SECRET`. Los Prices CNY son opcionales. Importes y catálogo viven en `src/config/billing.ts`; los IDs quedan solo en servidor.
+
+Checkout es solo para el owner y exige `Idempotency-Key`. Se crea intención/orden antes de Stripe: repetir la misma petición tiene un solo efecto y una segunda compra deliberada usa otra clave. Varias suscripciones pueden coexistir y el resolver combina sus entitlements.
+
+## Webhooks
+
+Publica `/api/pay/webhook/stripe` y suscribe checkout completado/expirado, alta/cambio/baja de suscripción, invoice pagada/fallida y reembolso/disputa. Se verifica firma, se deduplican eventos, se respeta su tiempo ante desorden y cada beneficio se concede una vez. Las renovaciones crean una orden y la concesión configurada para ese periodo de cobro; los precios anuales conceden doce meses de créditos una vez por periodo anual.
+
+Reembolsos y disputas se señalan para revisión; no se retiran silenciosamente créditos gastados. Usa el comando de reconciliación y la vista admin para estados inciertos.
+
+## Portal y pruebas
+
+Configura Stripe Billing Portal y su ID en producción. Desactiva cambios de suscripción en el portal; una configuración insegura falla cerrada.
+
+```bash
+stripe listen --forward-to localhost:3000/api/pay/webhook/stripe
+```
+
+Prueba duplicados, webhooks tardíos, renovación, fallo, cancelación, reembolso y portal. En producción usa claves live y solo eventos live. Estás listo cuando un reintento crea una orden, un webhook repetido concede una vez, un evento antiguo no sobrescribe el nuevo estado, un portal inseguro falla cerrado y la reconciliación local no deja hallazgos sin explicar.
+
+**Mantén la oferta alineada:** relaciona cada Price con [Planes y derechos](/es/docs/plans-and-entitlements) y confirma sus concesiones en el [Libro mayor de créditos](/es/docs/account-ledger).

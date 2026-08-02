@@ -1,0 +1,64 @@
+---
+title: Pages et opérations de la console d’administration
+icon: "LayoutDashboard"
+description: Découvrez chaque page d’administration livrée et les protections entourant la facturation, la modération et les écritures.
+keywords: [pages d’administration, opérations de facturation, modération, journal d’audit]
+tags: [administration, facturation, modération]
+author: "Sushi SaaS"
+publishedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Synchronisé avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) du starter.
+
+Partez de la question de l’opérateur, pas du menu : « Quel workspace possède ce débit ? », « Pourquoi les crédits manquent-ils ? », « Faut-il suspendre ce compte ? » ou « Qui a changé cette limite ? ». La console rassemble les preuves côté application, mais ne remplace ni Stripe, ni analytics, ni un outil de support.
+
+## Choisir l’outil le plus sûr
+
+- Inspectez d’abord. Utilisez `/users` pour identifier le compte fournisseur exact, puis `/organizations` pour tenancy, plan, crédits et facturation.
+- Utilisez `admin_ro` pour support et enquête. Escaladez vers `admin_rw` seulement lorsqu’une écriture documentée est nécessaire.
+- Après correction de la cause, utilisez **Resend** dans Stripe ; n’utilisez **Resolve** que si un humain a traité le cas ailleurs et ferme définitivement l’événement applicatif.
+- Suspendez pour couper l’accès pendant un abus ; utilisez le cycle de vie du compte pour un effacement demandé. Les deux conservent des données différentes pour des raisons différentes.
+
+**L’opération est terminée lorsque :** compte/organisation vérifiés, action la moins puissante choisie, résultat contrôlé dans la source de vérité et chaque écriture expliquée dans `/audit`.
+
+La console est un espace d’opérations, pas un substitut aux analyses produit. Son aperçu met en avant les situations qui déterminent la prochaine action : inscriptions récentes, abonnements actifs ou en retard, comptes suspendus et événements Stripe en attente d’une décision. Le chiffre d’affaires, la conversion et l’attrition restent dans Stripe ou dans votre outil d’analyse.
+
+## Espace de travail
+
+- `/` affiche les métriques opérationnelles, les comptes et commandes récents, les files à traiter et les outils d’attribution manuelle de forfaits et de crédits. Une attribution ciblant un utilisateur s’applique à son organisation personnelle.
+- `/users` recherche une adresse e-mail, un UUID ou un pseudonyme et identifie le compte exact associé à son fournisseur. Une même adresse peut correspondre à plusieurs comptes ; elle ne constitue donc pas une clé d’autorisation.
+- `/organizations` recherche un nom, un slug, un UUID ou un identifiant client Stripe. L’organisation est le tenant qui possède les crédits mutualisés, les forfaits, les abonnements et le client Stripe. Sa fiche présente l’identité, les membres, le forfait résolu, l’historique des abonnements, le registre de crédits, les commandes et les limites de sièges personnalisées.
+
+Cette distinction compte pour le support : utilisez `/users` pour identifier une personne, puis `/organizations` pour examiner l’espace où résident la facturation et les droits.
+
+## Revenus
+
+- `/orders` filtre et recherche les commandes par numéro, abonnement, organisation, UUID utilisateur ou e-mail. La colonne d’exécution compare les crédits promis par une commande payée aux écritures du registre, ce qui rend visible une attribution absente ou dupliquée.
+- `/stripe-events` affiche les livraisons webhook enregistrées et leur état, sans exposer la charge utile Stripe brute. Pour un événement mis en attente, corrigez la cause puis utilisez **Resend** dans Stripe afin de le relancer avec l’état actuel du fournisseur. **Resolve** indique au contraire qu’un opérateur l’a traité hors du système et exige une note ; cette résolution est définitive et ne relance rien.
+- `/reconciliation` exécute la moitié locale du rapprochement sur une fenêtre de 7, 30 ou 90 jours. Elle détecte les commandes payées sans crédits, les dérives de solde du registre et les webhooks bloqués. Elle ne peut pas découvrir un débit Stripe jamais reçu par l’application ; utilisez `pnpm reconcile:stripe` pour la comparaison côté fournisseur.
+
+## Opérations produit
+
+- `/reservations` liste le numéro de réservation, le service, l’utilisateur, l’heure, le fuseau et le statut. Lorsque les réservations sont désactivées dans la configuration, la page l’indique sans interroger une fonctionnalité inactive.
+- `/feedbacks` liste la note, le contenu, le statut, l’identité et la date des retours clients.
+- `/affiliates` affiche l’utilisateur parrainé, le parrain, l’état, la commande admissible, le montant payé et la récompense.
+
+Il s’agit de surfaces de consultation de la version livrée. Elles n’inventent ni états de workflow ni contrôles d’édition absents des services produit.
+
+## Confiance et sécurité
+
+- `/moderation` suspend ou rétablit des comptes et gère les règles de blocage d’inscription par adresse exacte ou domaine. La suspension révoque les sessions actives et bloque la connexion, mais conserve l’utilisateur, le registre, les fichiers et les organisations. Ce n’est pas un effacement de compte.
+- `/audit` est l’historique paginé des écritures administratives, avec l’acteur, le rôle, l’action, la cible, l’état, la note, le contexte réseau et les métadonnées.
+
+Par défaut, une suspension couvre tous les comptes partageant l’adresse et ajoute une règle de blocage, empêchant la création d’un nouveau compte OAuth pour contourner la restriction. La comparaison normalise les suffixes après `+` et les points Gmail ; les règles de domaine servent lors des vagues d’adresses jetables.
+
+## Protections des écritures
+
+Les outils d’écriture livrés se limitent à l’attribution manuelle de crédits, l’attribution et la révocation de forfaits offerts, la personnalisation et la réinitialisation des limites de sièges, la suspension et le rétablissement de comptes, la modification du blocage et la résolution définitive d’événements Stripe.
+
+Toutes les routes d’écriture livrées exigent `admin_rw`, valident les requêtes de même origine et appellent le journal d’audit. Une attribution de crédits exige une clé d’idempotence et produit un numéro de transaction unique et déterministe : la nouvelle tentative d’une même opération ne crédite pas deux fois. Les forfaits et crédits manuels n’expirent pas par défaut ; les échéances facultatives à 7, 30 ou 90 jours, ou personnalisées, doivent être futures.
+
+La console n’offre volontairement aucun bouton pour rejouer une charge webhook Stripe enregistrée. Corrigez la cause, puis utilisez Resend dans Stripe. Elle ne transforme pas non plus une suspension en suppression : l’export et l’effacement demandés par un utilisateur suivent le cycle de vie distinct des données du compte.
+
+Consultez [Configuration et accès à la console](/fr/docs/admin-console-setup) et terminez la [Checklist de déploiement et sécurité](/fr/docs/deployment-and-security) avant d’exposer cette application hors du développement local.

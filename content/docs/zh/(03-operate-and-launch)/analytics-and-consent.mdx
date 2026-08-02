@@ -1,0 +1,78 @@
+---
+title: 分析与用户同意
+icon: "ChartNoAxesCombined"
+description: 决定是否启用 Google Analytics 或 AdSense，安全配置用户同意，更新隐私披露并验证脚本不会提前加载。
+keywords: [Google Analytics, GA4, AdSense, Cookie 同意, 隐私, SaaS 分析]
+tags: [分析, 用户同意, 隐私]
+author: "Sushi SaaS"
+publishedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+完成本页后，你会明确选择**关闭、仅分析、仅广告或两者都启用**，并在生产构建中验证结果。建议默认关闭：只有当数据能回答一个由你负责的产品问题时，才应该采集它。
+
+## 已提供的能力
+
+- `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` 启用 Google Analytics 组件。
+- `NEXT_PUBLIC_GOOGLE_ADCODE` 启用 AdSense 加载器，但**不会**替你创建广告位。
+- 两个脚本组件在非生产环境都会返回空内容。
+- 分析与广告是两个独立的同意类别；接受统计不等于接受广告。
+- 缺失、格式错误或版本过旧的同意会安全地视为拒绝。只有相应类别被明确允许后，脚本才会渲染。
+- `cookie_consent` 保存带版本的选择 182 天，使用 `SameSite=Lax`，HTTPS 下添加 `Secure`。
+- 两个供应商变量都未配置时，不显示同意横幅，也不显示页脚 Cookie 设置入口。
+- 访客可以从页脚重新打开设置并修改或撤回选择。
+- 独立的管理端不会挂载这些脚本或同意界面。
+
+## 选择满足需要的最小方案
+
+| 选择 | 适用场景 | 成本 |
+| --- | --- | --- |
+| 关闭（初期推荐） | 尚无明确事件问题或经过审核的隐私立场 | 无法从这些供应商获得流量与产品数据 |
+| 仅分析 | 需要汇总的获客与使用情况 | 同意、数据治理、供应商配置和数据质量工作 |
+| 仅广告 | 广告确实属于商业模式 | 最高的同意、政策、广告位与用户信任成本 |
+| 两者都启用 | 统计和广告都确有必要 | 必须运营两套独立选择和两项供应商配置 |
+
+不要只为得到一个仪表盘而启用分析。先定义数据会改变什么决策、需要哪些事件、由谁检查，以及何时删除不再使用的采集。
+
+## 配置部署
+
+只在生产环境中添加实际使用的标识：
+
+```bash
+NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX
+NEXT_PUBLIC_GOOGLE_ADCODE=ca-pub-XXXXXXXXXXXXXXXX
+```
+
+它们是公开的构建时标识，不是密钥。修改后要重新构建。请在相应 GA4 属性或 AdSense 账号中配置生产域名、地区、数据保留、访问权限以及供应商要求的同意设置。
+
+更新 `src/config/legal.ts` 中的 `LegalData.subProcessors` 与隐私政策，使供应商和用途与实际启用内容一致。针对服务地区，请由合格的法律专业人士审核政策与横幅文案。增加供应商或改变现有同意类别的含义时，提高 `src/lib/consent.ts` 中的 `CONSENT_VERSION`；旧选择会失效，访客会被重新询问。
+
+## 验证生产行为
+
+开发环境不能作为最终验证：两个供应商组件在 `NODE_ENV` 不是 `production` 时都会返回 `null`。请清除浏览器存储与 Cookie，在生产构建或受控生产部署中测试。
+
+1. 做出选择前，确认没有 Analytics 或 AdSense 脚本请求。
+2. 全部拒绝并刷新，确认两个供应商都不加载。
+3. 只允许分析，确认 GA 加载而 AdSense 不加载。
+4. 只允许广告，确认 AdSense 加载而 GA 不加载。
+5. 从页脚重开设置，撤回同意后刷新，确认被拒类别继续关闭。
+6. 检查 `cookie_consent`：应包含版本 `1`、两个布尔值与 182 天有效期。
+7. 移除两个环境变量并重建；横幅、设置入口和供应商脚本都应消失。
+8. 单独检查管理端域名；不应出现这些用户端跟踪脚本与同意 UI。
+
+请使用浏览器网络面板，而不只看横幅是否存在。真正执行限制的是脚本组件，横幅只是选择界面。
+
+## 尚未替你完成的部分
+
+启动模板没有定义产品事件体系、自定义业务事件、仪表盘、数据保留目标、AdSense 广告位组件或经法律审核的同意方案，也无法替你配置 Google 账号。只添加产品真正需要的最小统计层，并让供应商设置、公开政策与代码行为保持一致。
+
+部署检查请继续阅读[部署与安全](/zh/docs/deployment-and-security)。用户可见的政策位于[隐私政策](/zh/privacy)。
+
+## 源码快照
+
+已根据启动模板提交 `7580470` 验证：
+
+- [`src/config/analytics.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/analytics.ts)
+- [`src/lib/consent.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/lib/consent.ts)
+- [`src/providers/google-analytics.tsx`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/providers/google-analytics.tsx)
+- [`src/providers/adsense.tsx`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/providers/adsense.tsx)

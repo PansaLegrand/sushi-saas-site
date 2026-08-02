@@ -10,7 +10,7 @@
     "heroLineOne": "基础设施已经就绪。",
     "heroLineTwo": "专注构建产品。",
     "subtitle": "认证、组织、Stripe 计费、积分账本、私有存储、后台任务和独立管理后台，通过一套可执行的架构连接在一起。",
-    "primaryAction": "从文档开始",
+    "primaryAction": "先判断是否适合",
     "secondaryAction": "查看源码",
     "signalsLabel": "项目特性",
     "signals": [
@@ -43,8 +43,8 @@
     },
     "closing": { "title": "从更接近“只有你的公司能构建”的地方开始。", "action": "打开快速开始" }
   },
-  "docs": { "title": "Next.js SaaS 启动模板文档", "intro": "用于安装、配置、扩展和运维 Sushi SaaS starter 的参考步骤；架构决策与实现模式请查看“指南”。", "empty": "文档正在准备中。" },
-  "blogs": { "title": "Sushi SaaS 指南", "intro": "来自 Sushi SaaS starter 的架构决策与实现模式。", "empty": "暂时没有已发布的指南。" },
+  "docs": { "title": "构建并运营 Sushi SaaS", "intro": "按任务查找准确的配置与验证步骤。需要理解某项选择，或决定该改什么时，请查看“指南”。", "empty": "文档正在准备中。", "topics": "主题" },
+  "blogs": { "title": "理解并调整 Sushi SaaS", "intro": "了解 starter 选择了什么、为什么这样选择、有哪些可选方案，以及你的产品应保留、修改或移除什么。", "empty": "暂时没有已发布的指南。", "topics": "主题" },
   "footer": { "label": "页脚导航", "description": "Sushi SaaS 开源 starter 的文档与实现指南。", "docs": "文档", "blog": "指南", "privacy": "隐私", "terms": "条款" },
   "privacy": {
     "title": "隐私说明",

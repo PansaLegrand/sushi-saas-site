@@ -1,0 +1,80 @@
+---
+title: Durable Jobs and Readiness
+icon: "ListChecks"
+description: Operate the PostgreSQL job queue, cron runner, retries, deduplication, liveness and dependency-readiness probes.
+keywords: [background jobs, cron, queue, readiness, health check, PostgreSQL]
+tags: [jobs, operations, reliability]
+author: "Sushi SaaS"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Synced with starter commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb).
+
+Use this page when an action must finish even after the browser request ends—for example sending mail, granting credits, deleting an object, or completing a privacy request. The starter ships a small PostgreSQL-backed queue, so most teams can launch without operating Redis queues or a separate worker service.
+
+## Decide how you will run and monitor background work
+
+- On Vercel, keep the included five-minute cron schedule. On another host, call the same authenticated endpoint from that platform’s scheduler.
+- Keep the PostgreSQL queue while the workload is modest and jobs fit the 20-second handler budget. Move a long-running or high-throughput workload to a dedicated queue only when its operating profile demands it; preserve deduplication and idempotent handlers.
+- Treat `/api/health` as “the process answers” and `/api/ready` as “this release can receive production traffic.” They answer different operational questions.
+
+**Ready to launch means:** a test job is claimed, a forced failure retries and eventually surfaces, overlapping cron calls do not duplicate the effect, and your monitor alerts on readiness failures and a growing failed queue.
+
+## Why Work Is Persisted
+
+Serverless instances may freeze as soon as a response is returned. Work that must happen—email delivery, credit grants, object deletion, account export, and erasure—is written to the `jobs` table instead of being left in `queueMicrotask` or an un-awaited promise.
+
+Current job types include welcome and payment emails, organization invitations, signup credits, Slack events, storage deletion, reservation confirmations, account exports, export expiry, and account erasure.
+
+## Enqueue Safely
+
+```ts
+await enqueueJob("welcome_email", { email, name, userUuid }, {
+  dedupeKey: `welcome:${userUuid}`,
+  subjectUserUuid: userUuid
+});
+```
+
+`dedupeKey` makes enqueueing idempotent. Subject UUIDs let privacy workflows cancel or scrub queued work. Handlers must also be idempotent because a provider may accept a request before the worker sees its response.
+
+## Runner Behavior
+
+`GET /api/cron/jobs` is protected by `Authorization: Bearer $CRON_SECRET`. `vercel.json` invokes it every five minutes. Outside Vercel, schedule the same authenticated request yourself.
+
+The runner:
+
+- claims one due job at a time with `FOR UPDATE SKIP LOCKED`;
+- allows overlapping cron calls without double execution;
+- uses a five-minute lease and reclaims stale workers;
+- limits each handler to 20 seconds and the drain to 40 seconds;
+- retries up to five times by default with exponential backoff from 30 seconds;
+- keeps succeeded/failed jobs for 14 days;
+- also cleans stale upload reservations and sweeps stuck Stripe events.
+
+Never expose the cron route publicly without `CRON_SECRET`, and generate a different secret from `BETTER_AUTH_SECRET`.
+
+## Liveness vs Readiness
+
+`GET` or `HEAD /api/health` is a cheap process liveness check. It does not touch dependencies.
+
+`GET /api/ready` verifies:
+
+- production environment configuration;
+- database access and compiled migration availability;
+- Redis-backed distributed rate limiting;
+- queue health, including stale running or failed jobs.
+
+Missing database, migrations, Redis, or required environment configuration returns 503. Queue failures mark the report degraded but do not remove the web application from service.
+
+Use `/api/health` for a platform's frequent liveness probe and `/api/ready` before routing production traffic or completing a deployment.
+
+## Operational Checks
+
+1. Set `CRON_SECRET` to at least 32 random bytes.
+2. Confirm the scheduler calls the route every five minutes.
+3. Watch structured `cron.jobs` logs for claimed, retrying, failed, and lease-lost counts.
+4. Alert on a non-200 readiness response and on a growing failed queue.
+5. Keep handlers additive and payload changes backward compatible; queued JSON may outlive the deploy that created it.
+
+**Next:** Carry these runner, scheduler, and readiness checks into [Deployment and Security](/docs/deployment-and-security) before sending production traffic.

@@ -1,0 +1,33 @@
+---
+title: 预约功能
+icon: "CalendarCheck"
+description: 启用带并发安全保留、Stripe 结账、邮件与日历的可选预约流程。
+keywords: [预约, 排期, Stripe, 日历]
+tags: [预约, 支付]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> 已与启动模板提交 [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) 同步。
+
+如果 SaaS 通过 Stripe 销售可预约时间，例如咨询、课程、租赁或服务，请使用预约功能。模板包含公开预约页、成员记录、并发安全 hold、结账、确认邮件和日历链接；在你明确“销售什么”之前，它默认关闭。
+
+## 选择业务需要的预约规则
+
+- 在 `src/config/reservations.ts` 中替换示例时区、9–17 营业时间、30 分钟时段和 14 天窗口。
+- 通过明确的迁移或种子数据创建有效的 `reservation_services` 记录，或自行构建运营 CRUD。每条记录包含时长、价格、币种、定金、取消窗口和前后缓冲；模板不提供生产服务目录管理器。
+- 选择全额或定金，并向用户明确取消、退款、改期和爽约规则。模板保证预约与确认安全，但不会替你定义这些业务政策。
+- 除非 Stripe Checkout 到期时间和用户流程确实需要不同设置，否则保留 35 分钟 hold。只有验证过的 webhook 能确认付款。
+
+**可以上线的标准：** 用户看到正确时区；两人同时操作也不能订到同一时段；放弃结账会释放 hold；延迟/重复 webhook 安全；确认邮件和日历信息正确；客服知道如何处理取消和退款。
+
+预约默认关闭。请先在 `src/config/reservations.ts` 配置 IANA 时区与营业时间，创建生产服务记录，并明确 Stripe、邮件、取消与客服政策，再设置 `NEXT_PUBLIC_FEATURE_RESERVATIONS_ENABLED=true`。Demo 自动种子默认关闭，而且只创建一条示例咨询；生产不得依赖。
+
+公开流程使用 `GET /api/reservations/services`、`POST /api/reservations/availability` 和幂等 `POST /api/reservations`；成员记录为 `GET /api/reservations/mine`。页面是 `/:locale/reserve` 与 `/:locale/account/reservations`。
+
+结账请求在数据库锁内创建一个 35 分钟 hold 与 Stripe Checkout Session，相同 `Idempotency-Key` 可安全重放。PostgreSQL advisory lock 与 exclusion constraint 防止并发时保留/确认时段重叠。只有验证过的 Stripe webhook 能确认付款，返回页不能；过期只释放该 Stripe session 关联的 hold。
+
+确认后会入队发送含 ICS 的邮件并提供 Google Calendar 链接。上线前测试并发抢订、重复请求/webhook、放弃结账、延迟付款、时区/DST、定金/全款、邮件重试与组织隔离。
+
+**相关内容：** 生产预约流程需要同时配置并测试 [Stripe 计费](/zh/docs/stripe-setup)、[事务邮件](/zh/docs/email-service)和[持久任务](/zh/docs/jobs-and-readiness)。

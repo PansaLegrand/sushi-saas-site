@@ -1,0 +1,46 @@
+---
+title: Export et effacement de compte
+icon: "ShieldCheck"
+description: Configurer inventaire de confidentialité, exports authentifiés, effacement différé, nettoyage fournisseur, pseudonymisation et annulation.
+keywords: [suppression de compte, export de données, confidentialité, effacement, RGPD, rétention]
+tags: [confidentialité, compte, cycle de vie]
+author: "Sushi SaaS"
+publishedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Synchronisé avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb). Faites valider ce flux et sa rétention par un conseil juridique avant production.
+
+Utilisez cette page si les clients doivent obtenir une copie de leurs données ou demander l’effacement du compte. Le starter livre des API authentifiées, des workers durables, une politique testée table par table et des exports privés. Il ne livre **pas d’écran de paramètres finalisé** pour ces actions ; ajoutez la confirmation et le texte de politique propres à votre produit.
+
+## Fixer la politique avant d’afficher les boutons
+
+- Décidez quelles données supprimer, pseudonymiser, conserver ou exclure de l’export. La carte fournie est un point de départ technique, pas une conclusion juridique.
+- Revoyez les sept jours par défaut de délai et de rétention, la session récente de 15 minutes, la suppression du client Stripe et la conservation de la blocklist.
+- Décidez comment transférer les organisations partagées et comment chaque fournisseur externe supprime les sorties. Le worker bloque l’effacement plutôt que de prétendre que ces obligations sont remplies.
+
+**Prêt pour la production signifie :** le conseil juridique a validé politique et texte public, un compte jetable ouvre son export, l’annulation fonctionne durant le délai, les blocages indiquent l’action suivante et l’exécution finale traite toutes les données sans journaliser d’URL signée.
+
+## Inventaire testé
+
+`src/config/account-data-policy.ts` attribue à chaque table : supprimer, pseudonymiser, conserver ou non personnel, et indique son inclusion dans l’export. Un test compare cet inventaire à `src/db/schema.ts` ; une nouvelle table sans décision bloque le build.
+
+Identifiants, hashes, sessions, tokens et secrets TOTP ne sont jamais exportés. Les traces financières, d’audit, de registre et d’espaces partagés peuvent rester après remplacement des identifiants.
+
+## Export
+
+`POST /api/account/data-export` exige authentification, même origine, rate limit et `Idempotency-Key`. Il renvoie 202 et met le travail en file. Suivez `GET /api/account/data-export/{requestUuid}`.
+
+Une fois terminé, le résultat contient un manifeste et des liens signés cinq minutes. Les artefacts restent privés et expirent après sept jours par défaut.
+
+## Effacement
+
+`POST /api/account/deletion` exige aussi une session de moins de 15 minutes. Le délai de grâce par défaut est de sept jours ; `DELETE` annule et `GET` donne l’état.
+
+La demande est bloquée pour le dernier owner d’une organisation partagée ou le dernier administrateur à plein accès. Après le délai, le worker révoque l’authentification, annule Stripe, supprime les objets personnels, nettoie les données supprimables et pseudonymise finances, réservations, crédits et audits conservés.
+
+`src/config/account-lifecycle.ts` contrôle délai, rétention, session fraîche, suppression Stripe, blocklist et durée des URLs. Ce sont des choix techniques, pas un avis juridique.
+
+Gardez stockage privé et cron actifs, ajoutez un hook pour chaque nouveau fournisseur, mettez la politique à jour avec chaque table et testez sur un compte jetable. Ne journalisez jamais les exports ou URLs signées.
+
+**Pour passer en production :** appuyez export et effacement sur [Tâches durables et readiness](/fr/docs/jobs-and-readiness), puis validez l’ensemble avec la [Checklist de déploiement et sécurité](/fr/docs/deployment-and-security).

@@ -1,0 +1,32 @@
+---
+title: E-mail transactionnel
+icon: "Mail"
+description: Configurez Resend, les modèles React Email, les liens locaux sûrs et la livraison par jobs durables.
+keywords: [Resend, React Email, email, jobs]
+tags: [email, opérations]
+author: "Sushi SaaS"
+publishedAt: "2025-09-29T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Synchronisé avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) du starter.
+
+Lisez cette page avant d’activer validation d’adresse, mot de passe oublié, facturation, invitations ou confirmations de réservation. Sushi SaaS livre un choix concret—Resend avec React Email—et non une abstraction multi-fournisseurs. Vous pouvez l’adopter ou remplacer `src/services/email/send.ts` tout en gardant les modèles et leurs contrats.
+
+## Décider quels messages les utilisateurs reçoivent
+
+- Validez un domaine d’envoi et choisissez un `EMAIL_FROM` reconnaissable ; SPF, DKIM et DMARC font partie de la fonctionnalité.
+- Validation et réinitialisation partent pendant la requête d’authentification car l’utilisateur attend le lien. Bienvenue, paiement, invitation et réservation passent par des jobs durables et peuvent arriver légèrement plus tard.
+- En local, les liens d’authentification peuvent être écrits dans les logs. La production refuse explicitement ce mode.
+
+**Prêt pour la production signifie :** une vraie boîte reçoit chaque modèle actif, les liens reviennent au bon domaine et à la bonne langue, les retries ne produisent qu’un envoi et un refus fournisseur apparaît dans la surveillance de file/readiness.
+
+Resend et React Email sont intégrés. Définissez `RESEND_API_KEY` et un `EMAIL_FROM` vérifié ; configurez SPF, DKIM puis DMARC en production.
+
+Les modèles couvrent vérification, récupération, bienvenue, paiement réussi/échoué, réservation et invitation. Personnalisez-les dans `src/services/email/` et gardez l’orchestration dans les services.
+
+En local, les liens peuvent être journalisés sans fournisseur ou avec `AUTH_DEV_EMAIL_LINKS=true` ; la production refuse ce mode. Les e-mails produit passent par des jobs durables et utilisent le UUID du job comme clé fournisseur. Faites tourner `/api/cron/jobs` et alertez sur readiness dégradé ou jobs épuisés.
+
+Pas de promesse fire-and-forget dans une route ni d’endpoint public de test. Enfilez après l’écriture métier, minimisez les données personnelles et testez panne, reprise, doublon, blocklist et liens traduits.
+
+**Étape suivante :** configurez livraison et reprises avec [Tâches durables et readiness](/fr/docs/jobs-and-readiness).
