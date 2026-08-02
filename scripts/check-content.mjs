@@ -4,7 +4,7 @@ import { pathToFileURL } from "node:url";
 
 export const LOCALES = ["en", "zh", "es", "fr", "ja"];
 export const COLLECTIONS = ["docs", "blog"];
-export const SITE_ORIGIN = "https://www.sushi-templates.com";
+export const SITE_ORIGIN = "https://www.sushisaas.com";
 export const STARTER_REPOSITORY =
   "https://github.com/PansaLegrand/sushi-saas-template";
 

@@ -16,18 +16,18 @@ const localeModule = await import(
 
 test("the homepage canonical retains the root slash", () => {
   assert.equal(
-    localeModule.absoluteLocaleUrl("https://www.sushi-templates.com", "en", "/"),
-    "https://www.sushi-templates.com/"
+    localeModule.absoluteLocaleUrl("https://www.sushisaas.com", "en", "/"),
+    "https://www.sushisaas.com/"
   );
 });
 
 test("non-root canonicals remain slashless", () => {
   assert.equal(
     localeModule.absoluteLocaleUrl(
-      "https://www.sushi-templates.com",
+      "https://www.sushisaas.com",
       "fr",
       "/docs/quick-start/"
     ),
-    "https://www.sushi-templates.com/fr/docs/quick-start"
+    "https://www.sushisaas.com/fr/docs/quick-start"
   );
 });

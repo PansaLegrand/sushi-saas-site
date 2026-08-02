@@ -51,6 +51,6 @@ export function absoluteLocaleUrl(
 ): string {
   // `localePath` already removes trailing slashes from non-root paths. Keep
   // URL's required slash for the origin root so the homepage canonical exactly
-  // matches the public URL: https://www.sushi-templates.com/.
+  // matches the public URL: https://www.sushisaas.com/.
   return new URL(localePath(locale, path), origin).toString();
 }
