@@ -1,6 +1,5 @@
 import "fumadocs-ui/css/style.css";
-import { CollectionLayout } from "@/components/content/collection-layout";
-import { blogSource } from "@/lib/source";
+import { GuidesLayout } from "@/components/content/guides-layout";
 
 export default async function BlogLayout({
   children,
@@ -10,9 +9,5 @@ export default async function BlogLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  return (
-    <CollectionLayout locale={locale} source={blogSource}>
-      {children}
-    </CollectionLayout>
-  );
+  return <GuidesLayout locale={locale}>{children}</GuidesLayout>;
 }

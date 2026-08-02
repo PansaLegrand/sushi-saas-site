@@ -1,0 +1,35 @@
+---
+title: "Sushi SaaS がリクエストを振り分ける仕組み"
+icon: "Workflow"
+description: "スターターの middleware が多言語ルーティング、リクエスト ID、確認可能な組織コンテキストを組み合わせる仕組み。"
+tags: [middleware, ルーティング, i18n]
+author: "Sushi SaaS"
+publishedAt: "2025-10-13T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS は一つの middleware 境界で、言語ルーティング、相関 ID、組織コンテキストという三つのリクエスト単位の処理を行います。認証と業務認可は、より内側の層で実行します。
+
+## すべてのリクエストに相関 ID を付ける
+
+Middleware は受信した `x-request-id` を正規化し、なければ生成してルートへ転送し、レスポンスにも設定します。形式不正な任意ヘッダーを信用せず、ルートとサービスのログを同じリクエストに関連付けられます。
+
+## API とページは別の経路を通る
+
+`/api` 配下は言語ネゴシエーションを行いません。正規化された ID と API 用組織コンテキストを持って直接続行します。
+
+ページは `next-intl` を通ります。その後、middleware は変更したリクエストヘッダーを転送する Next.js 内部メタデータをローカライズ済みレスポンスへコピーします。これにより、変更したヘッダーが送信レスポンスに付くだけでなく、実際にページや handler へ届きます。
+
+実装は [`7580470` の `src/middleware.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/middleware.ts) にあります。
+
+## 組織コンテキストを確認可能にする
+
+ページは URL の query parameter だけで組織を選びます。呼び出し元が送った組織 header はページリクエストから削除されるため、共有したリンクが実際のコンテキストを表します。
+
+API client は設定済みの組織 header を送れます。URL にも組織 slug があれば URL を優先します。サービスは引き続き所属と権限を検証し、middleware はコンテキストの正規化と運搬だけを担当します。
+
+## Matcher の対象
+
+Matcher は多言語ルート、API、通常ページを含みます。Next.js asset、Vercel 内部パス、拡張子付きファイル、別デプロイの管理アプリは除外します。
+
+レイヤーは[アーキテクチャとエラー契約](/docs/architecture-and-errors)、テナントと認可は[組織とチーム](/docs/organizations-and-teams)を参照してください。

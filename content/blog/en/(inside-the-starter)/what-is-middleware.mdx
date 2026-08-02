@@ -1,0 +1,35 @@
+---
+title: "How Sushi SaaS Routes Requests"
+icon: "Workflow"
+description: "How the starter combines locale routing, request IDs, and inspectable organization context in Next.js middleware."
+tags: [middleware, routing, i18n]
+author: "Sushi SaaS"
+publishedAt: "2025-10-13T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS uses one middleware boundary for three request-level concerns: locale routing, correlation IDs, and organization context. Authentication and business authorization still happen deeper in the application.
+
+## Every request gets a correlation ID
+
+The middleware normalizes an incoming `x-request-id` or creates one, forwards it to the route, and returns it on the response. Route and service logs can therefore refer to the same request without trusting an arbitrary malformed header.
+
+## API and page requests take different paths
+
+Requests under `/api` skip locale negotiation. They continue directly with the normalized request ID and API organization context.
+
+Page requests pass through `next-intl`. The middleware then copies Next.js request-header override metadata onto that localized response, so the changed headers reach the eventual page or handler instead of appearing only on the outgoing response.
+
+This detail is easy to miss when combining two middleware responses. The implementation is visible in [`src/middleware.ts` at `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/middleware.ts).
+
+## Organization context stays inspectable
+
+A page selects an organization only through the URL query parameter. A caller-provided organization header is deliberately removed from page requests, so a copied link represents the context that will be used.
+
+API clients may provide the configured organization header. If the URL contains an organization slug, it takes precedence. Services still validate membership and permissions; middleware only normalizes and transports context.
+
+## What the matcher covers
+
+The matcher includes locale routes, API routes, and ordinary application pages. It excludes Next.js assets, Vercel internals, files with extensions, and the separately deployed admin application.
+
+For the surrounding route/service/model boundaries, read [Architecture and Error Contracts](/docs/architecture-and-errors). For tenant selection and authorization, continue with [Organizations and Teams](/docs/organizations-and-teams).

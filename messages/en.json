@@ -7,7 +7,7 @@
   "nav": {
     "label": "Primary navigation",
     "docs": "Docs",
-    "blog": "Blog",
+    "blog": "Guides",
     "github": "GitHub",
     "language": "Choose language"
   },
@@ -54,19 +54,19 @@
   },
   "docs": {
     "title": "Next.js SaaS starter documentation",
-    "intro": "Practical setup and implementation guides for the Sushi SaaS starter.",
+    "intro": "Reference steps for installing, configuring, extending, and operating the Sushi SaaS starter. For architecture decisions and patterns, see Guides.",
     "empty": "Documentation is being prepared."
   },
   "blogs": {
-    "title": "SaaS engineering blog",
-    "intro": "Clear explanations of the architecture, trade-offs, and operating ideas behind modern SaaS products.",
-    "empty": "No field notes have been published yet."
+    "title": "Sushi SaaS guides",
+    "intro": "Architecture decisions and implementation patterns from the Sushi SaaS starter.",
+    "empty": "No guides have been published yet."
   },
   "footer": {
     "label": "Footer navigation",
-    "description": "Documentation and engineering notes for the Sushi SaaS open-source starter.",
+    "description": "Documentation and implementation guides for the Sushi SaaS open-source starter.",
     "docs": "Docs",
-    "blog": "Blog",
+    "blog": "Guides",
     "privacy": "Privacy",
     "terms": "Terms"
   },

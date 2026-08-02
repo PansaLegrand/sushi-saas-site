@@ -1,0 +1,51 @@
+---
+title: "How Sushi SaaS Is Structured"
+icon: "Blocks"
+description: "A tour of the starter's enforced route, service, model, and database layers, plus its separate admin application."
+tags: [architecture, nextjs, starter]
+author: "Sushi SaaS"
+publishedAt: "2025-10-07T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS is organized around one rule: data moves down through explicit layers. This is not just a suggested folder layout; architecture tests reject imports that cross the boundary.
+
+## The application path
+
+```text
+src/app/**       routes and pages
+  ↓
+src/services/**  business rules and orchestration
+  ↓
+src/models/**    typed persistence
+  ↓
+src/db/**        schema, migrations, connection
+```
+
+Routes translate HTTP. Services own invariants such as idempotency, authorization, ledger rules, and side effects. Models are the only application layer allowed to call `db()`. Database constraints provide the final concurrency boundary.
+
+The browser has a similarly deliberate split: Server Components call services directly, while Client Components call wrappers in `src/api/**`, which use the shared API client. This avoids internal HTTP calls on the server and prevents each component from inventing its own response handling.
+
+Read [Architecture and Error Contracts](/docs/architecture-and-errors) for the enforceable rules and error-envelope design.
+
+## Domains share the same layers
+
+Organizations, billing, credits, storage, reservations, and tasks are not isolated mini-apps. Each domain spreads across the same horizontal layers. For example, a credit spend enters through a route, is authorized and made idempotent by services, is persisted through models, and is protected by ledger constraints.
+
+That consistency matters more than the number of included features: a new domain has one obvious place for each responsibility. [Organizations and Teams](/docs/organizations-and-teams) shows how tenancy follows the same structure.
+
+## The admin console is a separate application
+
+`apps/admin` is its own Next.js application with its own pages, admin APIs, data access, MFA gate, and read/write roles. It shares the schema and core authentication, but it can deploy on a separate origin. This keeps operator-only routes out of the customer application.
+
+See [Admin Console Setup and Access](/docs/admin-console-setup) before deploying it.
+
+## What to preserve when extending it
+
+- Add business invariants to a service, not a route.
+- Add database access to a model, not a component or service.
+- Use capability checks instead of comparing plan names.
+- Keep admin-only queries and endpoints inside `apps/admin`.
+- Update the co-versioned runbooks when an implementation contract changes.
+
+This guide was reviewed against [starter commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470).

@@ -1,0 +1,90 @@
+---
+title: Admin Console Setup and Access
+icon: "ShieldCheck"
+description: Run and deploy the separate admin application, promote operators, require MFA, and configure its dedicated origin.
+keywords: [admin console, RBAC, MFA, deployment]
+tags: [admin, security, operations]
+author: "Sushi SaaS"
+publishedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+> Synced with starter commit [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8).
+
+The starter ships an operational admin console in `apps/admin`. It is a second Next.js application, not an `/admin` route inside the customer-facing app. This boundary lets you deploy the console on a private, dedicated origin and release it independently while sharing the same authentication, database schema, models, and services.
+
+## Run It Locally
+
+Complete the normal starter setup first, create a user through the public application, and then run the admin application:
+
+```bash
+pnpm dev:admin
+```
+
+It listens on `http://localhost:3001`. The related commands are:
+
+```bash
+pnpm build:admin
+pnpm start:admin
+```
+
+Set the local admin origin in `.env`:
+
+```dotenv
+NEXT_PUBLIC_ADMIN_WEB_URL=http://localhost:3001
+```
+
+When that value is present, the admin build uses it as the Better Auth origin unless the shell or deployment explicitly supplies `BETTER_AUTH_URL` or `NEXT_PUBLIC_AUTH_BASE_URL`. Because `NEXT_PUBLIC_ADMIN_WEB_URL` is embedded at build time, changing it in production requires a redeploy.
+
+## Promote an Operator
+
+Platform access uses `users.role`; it is separate from an organization's `owner`, `admin`, and `member` roles.
+
+- `admin_ro` can open the console and read operational data.
+- `admin_rw` can also perform the console's write actions.
+
+Promote an existing account from the repository root:
+
+```bash
+pnpm admin:promote operator@example.com admin_rw
+```
+
+The command defaults to `admin_rw`, supports `--dry-run`, and refuses to guess when the same email belongs to more than one sign-in provider. In that case, select the exact account with `--provider`, for example:
+
+```bash
+pnpm admin:promote operator@example.com --role admin_ro --provider google
+```
+
+Authorization never resolves a role by email. The server loads the database user matching the session's unique ID or UUID and checks the stored role on every protected page and API route.
+
+## MFA Is Required
+
+An admin role alone is not sufficient. Every operator must enable Better Auth two-factor authentication from the public account UI. An operator with an admin role but no MFA is sent to `/mfa-required`; after enrollment, the admin app completes its own `/two-factor` challenge.
+
+Google-only accounts need a password before Better Auth can enable two-factor authentication. The public account UI offers **Set a password** for that case. Google sign-in continues to work afterwards.
+
+Admin login uses the same challenged email sign-in endpoint as the public app, so the admin deployment also needs `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` when captcha protection is enabled.
+
+## Deploy It Separately
+
+Create a second hosting project from the same repository and run `pnpm build:admin`. Give it a dedicated origin such as `https://admin.example.com`.
+
+The admin application imports the starter's shared production environment validator. It therefore currently needs the complete required production environment set, even when an admin screen does not directly use every provider. Start from the customer application's production variables, compare them with `.env.example`, and follow [Deployment and Security](/docs/deployment-and-security). Then adjust the admin-specific values:
+
+- keep the same `DATABASE_URL` and `BETTER_AUTH_SECRET` as the customer application;
+- set `NEXT_PUBLIC_ADMIN_WEB_URL` to the admin origin (the admin build also uses it for the Better Auth URLs unless you override them explicitly);
+- provide a Turnstile site/secret pair that is valid for the admin hostname—reuse the customer keys only when their widget configuration allows that hostname;
+- choose an appropriate `ADMIN_MAX_CREDIT_GRANT` ceiling (the default is `100000`).
+
+Keep the web and admin origins distinct. The admin app applies `noindex`, `nofollow`, `noarchive`, and `no-store` response headers plus restrictive framing, referrer, and content-security policies. Those headers reduce exposure but do not replace authorization: the server layout and each admin API enforce role and MFA checks.
+
+## Launch Checklist
+
+1. Build the console with `pnpm build:admin`.
+2. Confirm the admin origin and auth base URL point to the same deployment.
+3. Sign in as `admin_ro` and verify that data is visible but write controls are unavailable.
+4. Sign in as `admin_rw`, complete MFA, and exercise one reversible write.
+5. Confirm that the action appears in `/audit`.
+6. Confirm that an ordinary user cannot open a page or call an admin API.
+
+Continue with [Admin Console Pages and Operations](/docs/admin-console-operations) for the exact surfaces that ship today.

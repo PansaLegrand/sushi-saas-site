@@ -1,0 +1,34 @@
+---
+title: "Cómo funcionan las recompensas por referidos en Sushi SaaS"
+icon: "Gift"
+description: "El flujo opcional de referidos, atribución de primer contacto, comisiones seguras ante reintentos y pagos manuales."
+tags: [referidos, facturación, idempotencia]
+author: "Sushi SaaS"
+publishedAt: "2025-10-09T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS incluye una implementación opcional de referidos, no un negocio de afiliación listo para activar. Está deshabilitada por defecto y el flujo integrado solo registra comisiones para revisión: nunca mueve dinero ni créditos automáticamente.
+
+## Del enlace a la atribución
+
+Una persona autenticada puede crear un código de ocho caracteres mediante `/api/affiliate/invite-code`. Un enlace como `/i/abc12345` busca al invitador, guarda su UUID en una cookie `ref` durante 30 días y redirige al inicio.
+
+El proveedor de tema compartido monta `AffiliateInit` automáticamente. Cuando los referidos están habilitados, llama en el cliente a `captureAffiliateAttribution()`, que envía un POST a `/api/affiliate/update-invite`. El endpoint exige una sesión autenticada y lee la cookie `ref`. Un intento correcto deja una marca en `sessionStorage` para la pestaña actual; un fallo, incluido el intento previo al login, no deja marca y permite reintentar en un montaje posterior. El modelo por defecto es primer contacto: una actualización condicional decide el ganador si dos solicitudes compiten. Se rechazan autorreferidos y una fila única de registro vuelve inocuos los reintentos.
+
+El comportamiento se define en [`src/config/affiliate.ts` en `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/config/affiliate.ts) y se coordina en [`src/services/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/services/affiliate.ts).
+
+## Después de una orden pagada
+
+Al habilitarlo, una orden pagada crea una sola comisión pendiente. La configuración incluida usa el mayor entre 5.000 unidades monetarias menores (50 USD si la moneda es dólar) y el 20 % de la orden. Un índice único parcial sobre el número de orden impide que dos workers de webhook dupliquen el premio.
+
+Un reembolso puede cancelar un premio aún pendiente. El pago completado queda fuera de la ruta automática: los operadores revisan los referidos en la consola y cada producto conecta su proveedor de pagos y proceso de cumplimiento.
+
+## Antes de habilitarlo
+
+1. Define moneda, tasa, ventana de atribución y elegibilidad.
+2. Decide identidad, fiscalidad, revisión de fraude y estados de pago.
+3. Sustituye los valores de ejemplo y mantén `enabled` en false hasta cerrar la política.
+4. Prueba visitas, atribución concurrente, replay de webhooks, cancelación y revisión admin.
+
+Configura primero [Stripe](/docs/stripe-setup) y consulta [Páginas y operaciones de la consola admin](/docs/admin-console-operations) para la superficie de revisión.

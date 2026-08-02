@@ -1,0 +1,31 @@
+---
+title: "How Sushi SaaS Authentication Works"
+icon: "ShieldCheck"
+description: "A product-specific map of Better Auth, verified email, optional Google sign-in, MFA, organizations, and abuse controls."
+tags: [authentication, better-auth, security]
+author: "Sushi SaaS"
+publishedAt: "2025-10-13T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS builds authentication on Better Auth with its Drizzle adapter and PostgreSQL schema. The starter supplies the surrounding product rules that a library cannot decide for you.
+
+## Supported sign-in paths
+
+Email and password are enabled, email verification is required, and signup sends a verification message. Password recovery revokes existing sessions after the reset. Google OAuth is registered only when both Google credentials are present, so a missing optional provider does not create a broken button.
+
+Two-factor authentication is available through Better Auth. The separate admin console goes further: an account needs an admin role **and** MFA before it can enter. Google-only operators can set an initial password before enabling MFA.
+
+The exact configuration is in [`src/lib/auth.ts` at `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/lib/auth.ts). Follow [Authentication and Admin](/docs/authentication-and-admin) for the required environment and callback settings.
+
+## Authentication creates product state
+
+The organization plugin provides owner, admin, and member roles for membership operations. Sushi SaaS maps its snake-case schema explicitly, limits seats through the entitlement service, queues invitation email, and disables generic organization deletion because deleting auth rows alone would orphan billing and product data.
+
+Authentication hooks also create or recover the user's personal organization and record sign-in events. Product authorization remains separate: a valid session does not automatically grant access to another organization's files, credits, or tasks. [Organizations and Teams](/docs/organizations-and-teams) explains those checks.
+
+## Abuse and recovery controls
+
+When configured, Cloudflare Turnstile protects credential and mail-sending endpoints. Signup and sign-in moderation checks can stop blocked or suspended accounts, and session creation is a final gate shared by password and OAuth flows. Errors are returned as catalog codes rather than raw server messages.
+
+Before production, test verification, password reset, Google callback, session revocation, MFA enrollment, and both admin roles. The [Admin Console Setup](/docs/admin-console-setup) guide covers the separate origin and operator bootstrap.

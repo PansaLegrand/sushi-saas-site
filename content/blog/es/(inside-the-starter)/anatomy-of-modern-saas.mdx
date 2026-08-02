@@ -1,0 +1,51 @@
+---
+title: "Cómo está estructurado Sushi SaaS"
+icon: "Blocks"
+description: "Un recorrido por las capas obligatorias de rutas, servicios, modelos y base de datos, además de la aplicación admin separada."
+tags: [arquitectura, nextjs, starter]
+author: "Sushi SaaS"
+publishedAt: "2025-10-07T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS se organiza alrededor de una regla: los datos avanzan hacia abajo por capas explícitas. No es solo una sugerencia de carpetas; las pruebas de arquitectura rechazan imports que crucen el límite.
+
+## El recorrido de la aplicación
+
+```text
+src/app/**       rutas y páginas
+  ↓
+src/services/**  reglas de negocio y orquestación
+  ↓
+src/models/**    persistencia tipada
+  ↓
+src/db/**        esquema, migraciones y conexión
+```
+
+Las rutas traducen HTTP. Los servicios son responsables de invariantes como idempotencia, autorización, reglas del libro contable y efectos externos. Los modelos son la única capa de aplicación que puede llamar a `db()`. Las restricciones de la base de datos forman el último límite ante la concurrencia.
+
+El navegador sigue otra separación deliberada: los Server Components llaman directamente a servicios; los Client Components usan módulos de `src/api/**` y el cliente API común. Así se evitan llamadas HTTP internas en el servidor y respuestas gestionadas de forma distinta en cada componente.
+
+[Arquitectura y contratos de error](/docs/architecture-and-errors) explica las reglas ejecutables y el formato de errores.
+
+## Todos los dominios comparten las capas
+
+Organizaciones, cobros, créditos, almacenamiento, reservas y tareas no son miniaplicaciones aisladas. Cada dominio atraviesa las mismas capas. Un gasto de créditos, por ejemplo, entra por una ruta, se autoriza y hace idempotente en servicios, se persiste mediante modelos y queda protegido por restricciones del libro.
+
+Esta consistencia da a cada responsabilidad un único lugar. [Organizaciones y equipos](/docs/organizations-and-teams) muestra cómo el tenancy usa la misma estructura.
+
+## La consola admin es otra aplicación
+
+`apps/admin` es una aplicación Next.js independiente, con páginas, APIs, acceso a datos, control MFA y roles de lectura/escritura propios. Comparte esquema y autenticación central, pero puede desplegarse en otro origen para aislar las rutas operativas de la aplicación de clientes.
+
+Lee [Configuración y acceso de la consola admin](/docs/admin-console-setup) antes de desplegarla.
+
+## Límites que conviene conservar
+
+- Añade invariantes de negocio a servicios, no a rutas.
+- Añade consultas a modelos, no a componentes ni servicios.
+- Comprueba capacidades en vez de comparar nombres de plan.
+- Mantén consultas y endpoints administrativos en `apps/admin`.
+- Actualiza los runbooks versionados cuando cambie un contrato.
+
+Esta guía fue revisada contra el [commit `7580470` del starter](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470).

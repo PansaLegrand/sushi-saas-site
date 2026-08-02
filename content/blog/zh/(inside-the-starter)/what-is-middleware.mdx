@@ -1,0 +1,35 @@
+---
+title: "Sushi SaaS 如何路由请求"
+icon: "Workflow"
+description: "Starter 如何在 Next.js middleware 中组合多语言路由、请求 ID 与可检查的组织上下文。"
+tags: [middleware, 路由, i18n]
+author: "Sushi SaaS"
+publishedAt: "2025-10-13T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS 用一个 middleware 边界处理三项请求级职责：语言路由、关联 ID 与组织上下文。认证和业务授权仍在应用更深层完成。
+
+## 每个请求都有可关联的 ID
+
+Middleware 会规范化传入的 `x-request-id`，没有时就创建一个，然后把它转发给路由并写回响应。路由和服务日志因此可以引用同一次请求，同时不会盲目信任格式异常的请求头。
+
+## API 与页面走不同路径
+
+`/api` 下的请求不参与语言协商，直接携带规范化后的请求 ID 与 API 组织上下文继续执行。
+
+页面请求则先经过 `next-intl`。Middleware 随后把 Next.js 的请求头覆盖元数据复制到本地化响应上，确保修改后的请求头真正传到页面或 handler，而不是只出现在响应端。
+
+两个 middleware 响应组合时很容易遗漏这一点。实现位于 [`7580470` 的 `src/middleware.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/middleware.ts)。
+
+## 组织上下文保持可检查
+
+页面只允许通过 URL 查询参数选择组织。调用者自行提供的组织请求头会从页面请求中删除，因此复制后的链接能明确表达实际上下文。
+
+API 客户端可以提供配置的组织请求头；若 URL 同时包含组织 slug，则 URL 优先。服务仍会校验成员关系和权限，middleware 只负责规范化和传递上下文。
+
+## Matcher 覆盖范围
+
+Matcher 包含语言路由、API 和普通应用页面，并排除 Next.js 静态资源、Vercel 内部路径、带扩展名的文件以及独立部署的管理应用。
+
+调用分层见[架构与错误契约](/docs/architecture-and-errors)，租户选择与授权见[组织与团队](/docs/organizations-and-teams)。

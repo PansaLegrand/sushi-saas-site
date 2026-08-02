@@ -1,0 +1,34 @@
+---
+title: "How Sushi SaaS Referral Rewards Work"
+icon: "Gift"
+description: "The starter's opt-in referral flow, first-touch attribution, replay-safe commission records, and manual payout boundary."
+tags: [referrals, billing, idempotency]
+author: "Sushi SaaS"
+publishedAt: "2025-10-09T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS includes an opt-in referral implementation, not a turnkey affiliate business. It is disabled by default, and its built-in workflow records commissions for review; it never sends money or credits automatically.
+
+## From share link to attribution
+
+An authenticated user can create an eight-character invite code through `/api/affiliate/invite-code`. A link such as `/i/abc12345` looks up the inviter, stores their UUID in a `ref` cookie for 30 days, and redirects to the home page.
+
+The shared theme provider mounts `AffiliateInit` automatically. When referrals are enabled, it calls `captureAffiliateAttribution()` on the client, which posts to `/api/affiliate/update-invite`. The endpoint requires an authenticated session and reads the `ref` cookie. A successful attempt is marked in `sessionStorage` for the current browser tab; a failed attempt, including one made before sign-in, leaves no marker so a later mount can retry. The default model is first touch: a conditional database update decides the winner if two requests race. Self-referrals are rejected, and a unique signup row makes retries harmless.
+
+The behavior is configured in [`src/config/affiliate.ts` at `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/config/affiliate.ts) and orchestrated by [`src/services/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/services/affiliate.ts).
+
+## What happens after a paid order
+
+When enabled, a paid order creates one pending commission record. The shipped configuration uses the greater of a fixed 5,000 minor units (for USD, $50) or 20 percent of the order. A partial unique index on the paid order number prevents two webhook workers from recording the same reward twice.
+
+A refund or cancellation can cancel a still-pending reward. Completed payout is intentionally outside the automated money path: operators review referrals in the admin console and adopters connect their own payout provider and compliance process.
+
+## Before enabling it
+
+1. Decide currency, rate, attribution window, and eligibility policy.
+2. Decide how identity, tax forms, fraud review, and payout status will work.
+3. Replace the example reward values and keep `enabled` false until the full policy is ready.
+4. Test link visits, concurrent attribution, Stripe webhook replay, cancellation, and admin review.
+
+Referral records depend on reliable order handling. Configure [Stripe Billing](/docs/stripe-setup) first, then use [Admin Console Pages and Operations](/docs/admin-console-operations) to understand the review surface.

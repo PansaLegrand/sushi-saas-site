@@ -1,0 +1,51 @@
+---
+title: "Sushi SaaS 的代码结构"
+icon: "Blocks"
+description: "了解 starter 强制执行的路由、服务、模型与数据库分层，以及独立管理应用。"
+tags: [架构, nextjs, starter]
+author: "Sushi SaaS"
+publishedAt: "2025-10-07T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS 围绕一条规则组织：数据沿明确的分层向下流动。这不只是文件夹建议；架构测试会拒绝跨越边界的 import。
+
+## 应用中的调用路径
+
+```text
+src/app/**       路由与页面
+  ↓
+src/services/**  业务规则与编排
+  ↓
+src/models/**    类型化持久化
+  ↓
+src/db/**        schema、migration 与连接
+```
+
+路由负责转换 HTTP。服务负责幂等、授权、账本规则与副作用等不变量。模型是应用中唯一允许调用 `db()` 的层，数据库约束则提供最终的并发边界。
+
+浏览器侧也有明确分工：Server Component 直接调用服务；Client Component 调用 `src/api/**` 中的封装，再经过统一 API client。这既避免服务端调用自己的 HTTP 接口，也避免每个组件自行处理响应和错误。
+
+[架构与错误契约](/docs/architecture-and-errors)详细说明了这些可执行规则。
+
+## 所有业务域使用同一套分层
+
+组织、计费、积分、存储、预约与任务不是各自封闭的小应用。每个业务域都横跨相同的分层。例如积分消费从路由进入，由服务完成授权与幂等控制，通过模型写入，并最终由账本约束保护。
+
+这种一致性比功能数量更重要：新增业务域时，每种职责都有唯一位置。[组织与团队](/docs/organizations-and-teams)展示了租户边界如何沿用该结构。
+
+## 管理后台是独立应用
+
+`apps/admin` 是独立的 Next.js 应用，拥有自己的页面、管理 API、数据访问、MFA 门禁和读写角色。它与主应用共享 schema 和核心认证，但可部署在不同域名，从客户应用中隔离运营入口。
+
+部署前请阅读[管理后台设置与访问](/docs/admin-console-setup)。
+
+## 扩展时应保留的边界
+
+- 业务不变量放在服务，而不是路由。
+- 数据库访问放在模型，而不是组件或服务。
+- 通过 capability 判断权限，不直接比较套餐名称。
+- 管理专用查询与接口保留在 `apps/admin`。
+- 实现契约变化时同步更新随代码版本管理的 runbook。
+
+本文已按 [starter commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470)核对。

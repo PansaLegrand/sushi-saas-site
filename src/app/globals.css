@@ -20,9 +20,34 @@
   --border: oklch(0.88 0.018 247);
   --input: var(--border);
   --ring: var(--primary);
+  --page-glow: oklch(0.89 0.085 194 / 0.44);
   --radius: 0.9rem;
   --font-sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+/*
+ * Fumadocs owns the theme switcher and its `--color-fd-*` palette. The public
+ * site also has a small semantic palette for its custom surfaces, so keep that
+ * palette in step with Fumadocs whenever the provider applies `.dark`.
+ */
+.dark {
+  color-scheme: dark;
+  --background: var(--color-fd-background);
+  --foreground: var(--color-fd-foreground);
+  --card: var(--color-fd-card);
+  --card-foreground: var(--color-fd-card-foreground);
+  --popover: var(--color-fd-popover);
+  --popover-foreground: var(--color-fd-popover-foreground);
+  --secondary: var(--color-fd-secondary);
+  --secondary-foreground: var(--color-fd-secondary-foreground);
+  --muted: var(--color-fd-muted);
+  --muted-foreground: var(--color-fd-muted-foreground);
+  --accent: var(--color-fd-accent);
+  --accent-foreground: var(--color-fd-accent-foreground);
+  --border: var(--color-fd-border);
+  --input: var(--color-fd-border);
+  --page-glow: oklch(0.42 0.09 194 / 0.16);
 }
 
 * {
@@ -37,7 +62,7 @@ html {
 body {
   margin: 0;
   background:
-    radial-gradient(circle at 86% 4%, oklch(0.89 0.085 194 / 0.44), transparent 26rem),
+    radial-gradient(circle at 86% 4%, var(--page-glow), transparent 26rem),
     var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
@@ -51,22 +76,48 @@ a {
 
 .article-meta {
   display: flex;
+  align-items: baseline;
   flex-wrap: wrap;
-  gap: 0.45rem 1rem;
-  margin-top: 0.9rem;
+  gap: 0.35rem 0.5rem;
+  margin-top: 0;
   color: var(--muted-foreground);
   font-size: 0.82rem;
 }
 
-.article-meta time::before {
+.article-meta > span + time {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.article-meta > span + time::before {
   content: "·";
-  margin-right: 1rem;
+}
+
+/*
+ * Guides are editorial reading pages, not a second documentation tree. Their
+ * HomeLayout supplies the top navigation; these dimensions reserve a calm
+ * reading column and an independent table of contents on wide screens.
+ */
+.guides-layout {
+  --fd-nav-height: 56px;
+  --fd-page-width: 1280px;
+}
+
+.guide-article-content {
+  max-width: 48rem;
+  padding-bottom: 4rem;
+}
+
+@media (min-width: 1280px) {
+  .guide-article-page {
+    --fd-toc-width: 260px;
+  }
 }
 
 @media (max-width: 420px) {
-  .article-meta time::before {
+  .article-meta > span + time::before {
     content: "";
-    margin: 0;
   }
 }
 

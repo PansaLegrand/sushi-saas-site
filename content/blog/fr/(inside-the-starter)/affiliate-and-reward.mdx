@@ -1,0 +1,34 @@
+---
+title: "Comment fonctionnent les récompenses de parrainage Sushi SaaS"
+icon: "Gift"
+description: "Le flux de parrainage optionnel, l’attribution au premier contact, les commissions résistantes au rejeu et la frontière de paiement manuel."
+tags: [parrainage, facturation, idempotence]
+author: "Sushi SaaS"
+publishedAt: "2025-10-09T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS inclut une implémentation de parrainage optionnelle, pas un programme d’affiliation prêt à lancer. Elle est désactivée par défaut et le flux fourni ne fait qu’enregistrer des commissions à vérifier : il ne transfère jamais automatiquement de l’argent ou des crédits.
+
+## Du lien à l’attribution
+
+Une personne connectée peut créer un code de huit caractères via `/api/affiliate/invite-code`. Un lien comme `/i/abc12345` retrouve le parrain, stocke son UUID dans un cookie `ref` pendant 30 jours et redirige vers l’accueil.
+
+Le provider de thème partagé monte automatiquement `AffiliateInit`. Quand le parrainage est activé, il appelle côté client `captureAffiliateAttribution()`, qui envoie un POST à `/api/affiliate/update-invite`. L’endpoint exige une session authentifiée et lit le cookie `ref`. Une tentative réussie pose un marqueur dans `sessionStorage` pour l’onglet courant ; un échec, y compris avant la connexion, ne pose aucun marqueur et autorise une nouvelle tentative lors d’un montage ultérieur. Le modèle par défaut est le premier contact : une mise à jour conditionnelle en base désigne le gagnant si deux requêtes sont concurrentes. L’auto-parrainage est refusé et une ligne d’inscription unique rend les rejeux inoffensifs.
+
+Le comportement est défini dans [`src/config/affiliate.ts` au commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/config/affiliate.ts) et orchestré par [`src/services/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/services/affiliate.ts).
+
+## Après une commande payée
+
+Une fois activé, une commande payée produit une seule commission pending. La configuration livrée retient le plus grand montant entre 5 000 unités monétaires mineures (50 USD si la devise est le dollar) et 20 % de la commande. Un index unique partiel sur le numéro de commande empêche deux workers webhook de dupliquer la récompense.
+
+Un remboursement peut annuler une récompense encore pending. Le paiement final reste volontairement hors du chemin automatisé : les opérateurs examinent les parrainages dans la console et chaque produit branche son fournisseur de payout et son processus de conformité.
+
+## Avant de l’activer
+
+1. Définissez devise, taux, fenêtre d’attribution et éligibilité.
+2. Décidez identité, fiscalité, contrôle anti-fraude et états de paiement.
+3. Remplacez les valeurs d’exemple et gardez `enabled` à false tant que la politique n’est pas prête.
+4. Testez visites, attribution concurrente, rejeu webhook, annulation et revue admin.
+
+Configurez d’abord [Stripe](/docs/stripe-setup), puis consultez [Pages et opérations de la console admin](/docs/admin-console-operations).

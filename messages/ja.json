@@ -4,7 +4,7 @@
     "description": "認証、Stripe、組織、クレジット、ストレージ、ジョブ、管理コンソールを備えた本番志向の Next.js スターター。",
     "keywords": ["Next.js SaaS スターター", "オープンソース SaaS", "Stripe 課金", "Better Auth", "Drizzle ORM"]
   },
-  "nav": { "label": "メインナビゲーション", "docs": "ドキュメント", "blog": "ブログ", "github": "GitHub", "language": "言語を選択" },
+  "nav": { "label": "メインナビゲーション", "docs": "ドキュメント", "blog": "ガイド", "github": "GitHub", "language": "言語を選択" },
   "landing": {
     "eyebrow": "MIT ライセンス · 本番運用志向",
     "heroLineOne": "基盤はできています。",
@@ -43,9 +43,9 @@
     },
     "closing": { "title": "自社にしか作れない部分へ、より近い場所から始めよう。", "action": "クイックスタートを開く" }
   },
-  "docs": { "title": "Next.js SaaS スターターのドキュメント", "intro": "Sushi SaaS スターターの実践的な設定・実装ガイド。", "empty": "ドキュメントを準備中です。" },
-  "blogs": { "title": "SaaS エンジニアリングブログ", "intro": "モダン SaaS の設計、判断、運用をわかりやすく解説します。", "empty": "まだ記事はありません。" },
-  "footer": { "label": "フッターナビゲーション", "description": "オープンソース Sushi SaaS スターターのドキュメントと技術記事。", "docs": "ドキュメント", "blog": "ブログ", "privacy": "プライバシー", "terms": "利用条件" },
+  "docs": { "title": "Next.js SaaS スターターのドキュメント", "intro": "Sushi SaaS スターターの導入、設定、拡張、運用に必要な手順です。設計判断や実装パターンは「ガイド」を参照してください。", "empty": "ドキュメントを準備中です。" },
+  "blogs": { "title": "Sushi SaaS ガイド", "intro": "Sushi SaaS スターターで採用している設計判断と実装パターンを解説します。", "empty": "まだガイドはありません。" },
+  "footer": { "label": "フッターナビゲーション", "description": "オープンソース Sushi SaaS スターターのドキュメントと実装ガイド。", "docs": "ドキュメント", "blog": "ガイド", "privacy": "プライバシー", "terms": "利用条件" },
   "privacy": {
     "title": "プライバシー通知",
     "description": "このドキュメントサイトにおける訪問者情報の取り扱い。",

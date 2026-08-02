@@ -1,0 +1,35 @@
+---
+title: "Cómo enruta solicitudes Sushi SaaS"
+icon: "Workflow"
+description: "Cómo combina el starter rutas por idioma, identificadores de solicitud y contexto de organización inspeccionable en middleware."
+tags: [middleware, rutas, i18n]
+author: "Sushi SaaS"
+publishedAt: "2025-10-13T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS usa un único middleware para tres responsabilidades de solicitud: idioma, identificador de correlación y contexto de organización. La autenticación y autorización de negocio se realizan más adentro de la aplicación.
+
+## Cada solicitud tiene un identificador
+
+El middleware normaliza el `x-request-id` entrante o crea uno, lo reenvía a la ruta y lo devuelve en la respuesta. Las trazas de rutas y servicios pueden referirse a la misma solicitud sin confiar en un header arbitrario mal formado.
+
+## Las APIs y las páginas siguen caminos distintos
+
+Las solicitudes bajo `/api` no participan en la negociación de idioma. Continúan directamente con el ID normalizado y el contexto de organización de API.
+
+Las páginas pasan por `next-intl`. Después, el middleware copia los metadatos internos de Next.js que reenvían headers a la respuesta localizada. Así los headers modificados llegan a la página o handler, en lugar de aparecer solo en la respuesta saliente.
+
+La implementación está en [`src/middleware.ts` en `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/middleware.ts).
+
+## El contexto de organización es inspeccionable
+
+Una página selecciona organización únicamente mediante el parámetro de la URL. Un header de organización enviado por quien llama se elimina de las páginas, de modo que un enlace copiado represente el contexto real.
+
+Los clientes API sí pueden enviar el header configurado. Si la URL contiene un slug de organización, este tiene prioridad. Los servicios aún validan membresía y permisos; el middleware solo normaliza y transporta contexto.
+
+## Cobertura del matcher
+
+El matcher incluye rutas localizadas, APIs y páginas normales. Excluye recursos de Next.js, rutas internas de Vercel, archivos con extensión y la aplicación admin desplegada por separado.
+
+Consulta [Arquitectura y contratos de error](/docs/architecture-and-errors) para las capas y [Organizaciones y equipos](/docs/organizations-and-teams) para tenancy y autorización.

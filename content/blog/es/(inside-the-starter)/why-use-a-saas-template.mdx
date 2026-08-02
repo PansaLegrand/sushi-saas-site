@@ -1,0 +1,37 @@
+---
+title: "Cuándo encaja Sushi SaaS"
+icon: "Scale"
+description: "Una lista basada en funciones reales para decidir si el starter Sushi SaaS encaja con tu producto y equipo."
+tags: [evaluación, arquitectura, open-source]
+author: "Sushi SaaS"
+publishedAt: "2025-10-07T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS es útil cuando sus decisiones difíciles coinciden con las que tu producto ya necesita. Aporta poco si vas a retirar casi toda la base.
+
+## Encaja bien cuando
+
+- El equipo quiere Next.js, TypeScript, PostgreSQL, Drizzle, Better Auth y Stripe.
+- Los clientes pertenecen a organizaciones personales o compartidas, y cobros, créditos, archivos o límites siguen ese tenant.
+- Las mutaciones de dinero y uso necesitan idempotencia, libro de créditos auditable y conciliación.
+- Necesitas subidas privadas S3, trabajos durables en base de datos, email transaccional y errores localizados.
+- Los operadores necesitan una consola separada con MFA, roles de lectura/escritura, moderación, inspección de cobros y auditoría.
+- Valoras tests que hacen cumplir arquitectura, puertas de autenticación y replay, no solo la UI feliz.
+
+[Cómo está estructurado Sushi SaaS](/blogs/anatomy-of-modern-saas) resume la superficie; [Inicio rápido](/docs/quick-start) explica la instalación.
+
+## Probablemente no encaja cuando
+
+- Construyes un sitio estático, herramienta individual o prototipo sin cuentas ni pagos.
+- Tu stack o despliegue obligatorio choca con Next.js y PostgreSQL.
+- Buscas un producto no-code alojado, no código fuente propio.
+- Tu tenancy, cobro o cumplimiento es tan específico que sustituir los contratos costaría más que empezar con una base pequeña.
+
+## Lo que no significa “pensado para producción”
+
+El starter aporta controles, no tu política de producción. Aún debes elegir planes y precios, configurar proveedores, escribir textos legales, establecer backups y restauración, monitorizar entregas y revisar amenazas. Los referidos siguen apagados hasta definir negocio y pagos. Los proveedores de tareas y pantallas de ejemplo también necesitan trabajo de producto.
+
+Ejecuta primero el entorno local y lee el código. Después revisa [Despliegue y seguridad](/docs/deployment-and-security) y elimina los dominios que no vas a operar.
+
+Esta evaluación refleja el [commit `7580470` del starter](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470), con la aplicación de cliente y la aplicación admin separada.

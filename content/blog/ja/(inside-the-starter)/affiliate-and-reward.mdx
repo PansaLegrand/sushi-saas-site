@@ -1,0 +1,34 @@
+---
+title: "Sushi SaaS の紹介報酬の仕組み"
+icon: "Gift"
+description: "任意の紹介フロー、初回接点の帰属、再実行に強い報酬記録、手動支払いの境界を解説します。"
+tags: [紹介, 課金, 冪等性]
+author: "Sushi SaaS"
+publishedAt: "2025-10-09T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS に含まれるのは任意の紹介実装であり、すぐに運営できる affiliate 事業ではありません。既定では無効で、組み込みフローは審査用の報酬を記録するだけです。お金やクレジットを自動移動することはありません。
+
+## 共有リンクから帰属まで
+
+サインイン済みユーザーは `/api/affiliate/invite-code` で8文字の招待コードを作れます。`/i/abc12345` のようなリンクは紹介者を検索し、その UUID を30日間の `ref` cookie に保存してホームへリダイレクトします。
+
+共通 theme provider が `AffiliateInit` を自動で mount します。紹介機能が有効な場合、client で `captureAffiliateAttribution()` を呼び、`/api/affiliate/update-invite` へ POST します。この endpoint は認証済み session を必要とし、`ref` cookie を読みます。成功すると現在のブラウザータブの `sessionStorage` にマーカーを保存します。サインイン前の呼び出しを含め、失敗時はマーカーを残さないため、後の mount で再試行できます。既定は first touch で、二つのリクエストが競合した場合は条件付き DB update が一つの結果を決めます。自分自身への紹介は拒否し、一意な signup 行によって再試行を無害にします。
+
+動作は [`7580470` の `src/config/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/config/affiliate.ts) で設定し、[`src/services/affiliate.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/services/affiliate.ts) が調整します。
+
+## 支払い済み注文の後
+
+有効にすると、一つの支払い済み注文から一つの pending 報酬を作成します。付属設定は5,000最小通貨単位（USD なら50ドル）と注文額の20%の大きい方を使います。注文番号の部分一意 index により、二つの webhook worker が同じ報酬を記録できません。
+
+返金や取消では、まだ pending の報酬を取消できます。支払い完了は意図的に自動資金経路の外です。運用担当者が管理コンソールで確認し、採用者が独自の payout provider とコンプライアンス手順を接続します。
+
+## 有効化の前に
+
+1. 通貨、料率、帰属期間、対象条件を決める。
+2. 本人確認、税務書類、不正審査、支払い状態を設計する。
+3. 例の報酬値を変更し、方針完成まで `enabled` を false にする。
+4. リンク訪問、並行帰属、Stripe webhook 再送、取消、管理審査をテストする。
+
+先に [Stripe 課金](/docs/stripe-setup)を設定し、審査画面は[管理コンソールのページと運用](/docs/admin-console-operations)で確認してください。

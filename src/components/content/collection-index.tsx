@@ -16,28 +16,58 @@ function timestamp(value: unknown): number {
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
+function treeOrder(source: any, locale: string): Map<string, number> {
+  const urls: string[] = [];
+
+  function visit(node: any): void {
+    if (node?.type === "page" && typeof node.url === "string") {
+      urls.push(node.url);
+      return;
+    }
+
+    if (node?.type === "folder") {
+      if (node.index) visit(node.index);
+      if (Array.isArray(node.children)) node.children.forEach(visit);
+    }
+  }
+
+  const tree = source.pageTree?.[locale];
+  if (Array.isArray(tree?.children)) tree.children.forEach(visit);
+  return new Map(urls.map((url, index) => [url, index]));
+}
+
 export function CollectionIndex({
   source,
   locale,
   title,
   description,
-  emptyLabel
+  emptyLabel,
+  order = "date"
 }: {
   source: any;
   locale?: string;
   title: string;
   description: string;
   emptyLabel: string;
+  order?: "date" | "tree";
 }) {
   const lang = normalizeLocale(locale);
-  const pages = source
-    .getPages(lang)
-    .filter((page: any) => page.data?.noindex !== true)
-    .sort(
+  const pages = source.getPages(lang).filter((page: any) => page.data?.noindex !== true);
+
+  if (order === "tree") {
+    const positions = treeOrder(source, lang);
+    pages.sort(
+      (left: any, right: any) =>
+        (positions.get(left.url) ?? Number.MAX_SAFE_INTEGER) -
+        (positions.get(right.url) ?? Number.MAX_SAFE_INTEGER)
+    );
+  } else {
+    pages.sort(
       (left: any, right: any) =>
         timestamp(right.data.updatedAt ?? right.data.publishedAt) -
         timestamp(left.data.updatedAt ?? left.data.publishedAt)
     );
+  }
 
   return (
     <DocsPage full>

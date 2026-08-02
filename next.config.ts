@@ -19,6 +19,16 @@ const MOVED_TO_DOCS = [
   "reservations-feature"
 ];
 
+const MERGED_GUIDES = [
+  ["frontend-vs-backend-vs-fullstack-saas", "anatomy-of-modern-saas"],
+  ["social-sign-in", "web-authentication-deep-dive"],
+  ["affiliates-and-referrals-for-beginners", "affiliate-and-reward"],
+  [
+    "why-sushi-templates-beats-minimal-starters-for-real-saas-projects",
+    "why-use-a-saas-template"
+  ]
+];
+
 const nextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react"]
@@ -71,8 +81,42 @@ const nextConfig = {
       }
     ]);
 
+    const guideMerges = MERGED_GUIDES.flatMap(([sourceSlug, destinationSlug]) => [
+      ...locales.map((locale) => ({
+        source: `/${locale}/blogs/${sourceSlug}`,
+        destination:
+          locale === defaultLocale
+            ? `/blogs/${destinationSlug}`
+            : `/${locale}/blogs/${destinationSlug}`,
+        permanent: true
+      })),
+      {
+        source: `/blogs/${sourceSlug}`,
+        destination: `/blogs/${destinationSlug}`,
+        permanent: true
+      }
+    ]);
+
+    const databaseGuideMove = [
+      ...locales.map((locale) => ({
+        source: `/${locale}/blogs/databases-for-saas-postgres-drizzle`,
+        destination:
+          locale === defaultLocale
+            ? "/docs/database-setup"
+            : `/${locale}/docs/database-setup`,
+        permanent: true
+      })),
+      {
+        source: "/blogs/databases-for-saas-postgres-drizzle",
+        destination: "/docs/database-setup",
+        permanent: true
+      }
+    ];
+
     return [
       ...contentMoves,
+      ...guideMerges,
+      ...databaseGuideMove,
       {
         source: `/${defaultLocale}`,
         destination: "/",

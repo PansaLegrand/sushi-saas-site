@@ -1,0 +1,37 @@
+---
+title: "When Sushi SaaS Is a Good Fit"
+icon: "Scale"
+description: "An evidence-based checklist for deciding whether the Sushi SaaS starter matches your product and team."
+tags: [evaluation, architecture, open-source]
+author: "Sushi SaaS"
+publishedAt: "2025-10-07T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS is useful when its hard decisions overlap with decisions your product already needs. It saves little if you plan to remove most of the foundation.
+
+## It is a strong fit when
+
+- Your team wants Next.js, TypeScript, PostgreSQL, Drizzle, Better Auth, and Stripe.
+- Customers belong to personal or shared organizations, and billing, credits, storage, or limits must follow that tenant boundary.
+- Money and usage mutations need idempotency, an auditable credit ledger, and reconciliation paths.
+- You need private S3-compatible uploads, durable database jobs, transactional email, and localized user-facing errors.
+- Operators need a separately deployed admin console with MFA, read/write roles, moderation, billing inspection, and an audit trail.
+- You value tests that enforce architecture, authentication gates, and replay behavior—not only happy-path UI tests.
+
+The full shipped surface is summarized in [How Sushi SaaS Is Structured](/blogs/anatomy-of-modern-saas) and documented at [Quick Start](/docs/quick-start).
+
+## It is probably the wrong fit when
+
+- You are building a static site, a single-user tool, or a prototype that does not need accounts or billing.
+- Your required stack or deployment model conflicts with Next.js and PostgreSQL.
+- You want a hosted no-code product rather than source code your team owns.
+- Your tenancy, billing, or compliance model is so specialized that replacing the supplied contracts would cost more than starting smaller.
+
+## What “production-minded” does not mean
+
+The starter provides controls, not your production policy. You still choose plans and prices, configure provider credentials, write product-specific legal terms, establish backup and restore procedures, monitor delivery, and perform a threat review. Referral rewards are disabled until you define their business and payout rules. Example task providers and demo screens also need product work.
+
+Start by running the local setup and reading the source rather than judging the feature list. Then review [Deployment and Security](/docs/deployment-and-security) and remove domains you do not intend to operate.
+
+This assessment reflects [starter commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470), which includes both the customer application and the separate admin application.

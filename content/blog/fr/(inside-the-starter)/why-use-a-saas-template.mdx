@@ -1,0 +1,37 @@
+---
+title: "Quand Sushi SaaS est un bon choix"
+icon: "Scale"
+description: "Une liste fondée sur les fonctions réelles pour décider si le starter Sushi SaaS correspond à votre produit et votre équipe."
+tags: [évaluation, architecture, open-source]
+author: "Sushi SaaS"
+publishedAt: "2025-10-07T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS est utile lorsque ses décisions difficiles recouvrent celles dont votre produit a déjà besoin. Il apporte peu si vous comptez retirer la majorité du socle.
+
+## Il correspond bien si
+
+- Votre équipe choisit Next.js, TypeScript, PostgreSQL, Drizzle, Better Auth et Stripe.
+- Les clients appartiennent à des organisations personnelles ou partagées, et facturation, crédits, stockage ou limites suivent ce tenant.
+- Les mutations financières et d’usage exigent idempotence, registre de crédits auditable et rapprochement.
+- Vous avez besoin d’uploads S3 privés, de tâches durables en base, d’emails transactionnels et d’erreurs localisées.
+- Les opérateurs ont besoin d’une console séparée avec MFA, rôles lecture/écriture, modération, inspection billing et audit.
+- Vous valorisez des tests qui imposent architecture, portes d’authentification et rejeu, au-delà du parcours UI nominal.
+
+[Comment Sushi SaaS est structuré](/blogs/anatomy-of-modern-saas) résume l’ensemble ; [Démarrage rapide](/docs/quick-start) explique l’installation.
+
+## Il correspond probablement mal si
+
+- Vous créez un site statique, un outil mono-utilisateur ou un prototype sans comptes ni paiements.
+- Votre stack ou déploiement imposé contredit Next.js et PostgreSQL.
+- Vous cherchez un produit no-code hébergé plutôt qu’un code source à posséder.
+- Votre modèle de tenant, facturation ou conformité est si spécifique que remplacer les contrats coûterait plus cher que partir d’un socle réduit.
+
+## Ce que « pensé pour la production » ne signifie pas
+
+Le starter fournit des contrôles, pas votre politique de production. Vous devez encore choisir offres et prix, configurer les fournisseurs, écrire les textes juridiques, organiser sauvegarde et restauration, surveiller la livraison et mener une revue de menace. Le parrainage reste désactivé jusqu’à la définition des règles métier et de paiement. Les fournisseurs de tâches et écrans de démonstration demandent aussi du travail produit.
+
+Lancez d’abord l’environnement local et lisez le code. Examinez ensuite [Déploiement et sécurité](/docs/deployment-and-security) et retirez les domaines que vous n’exploiterez pas.
+
+Cette évaluation reflète le [commit `7580470` du starter](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470), qui contient l’application client et l’application admin séparée.

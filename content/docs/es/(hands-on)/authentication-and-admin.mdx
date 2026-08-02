@@ -4,9 +4,9 @@ icon: "ShieldCheck"
 description: Configura Better Auth, identidad, organización personal y la aplicación administrativa independiente con MFA.
 keywords: [Better Auth, autenticación, administración, MFA]
 tags: [autenticación, administración, seguridad]
-author: "Sushi Templates"
+author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
 > Sincronizado con el commit [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8) del starter.
@@ -26,4 +26,4 @@ Configura `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_AUTH_BASE_URL` y
 
 `pnpm dev:admin` usa el puerto 3001. Despliega `apps/admin` aparte, con origen y URL de auth propios. Promueve operadores con `pnpm admin:promote`: `admin_ro` lee y `admin_rw` modifica. Se exige MFA y las escrituras generan auditoría. Los roles de organización no son roles de plataforma.
 
-Antes de lanzar prueba alta, verificación, acceso, recuperación, callback Google, revocación de sesiones, MFA y ambos permisos admin.
+Antes de lanzar prueba alta, verificación, acceso, recuperación, callback Google, revocación de sesiones, MFA y ambos permisos admin. Sigue la guía específica de [Configuración y acceso a la consola](/es/docs/admin-console-setup) para el despliegue y el alta de operadores.

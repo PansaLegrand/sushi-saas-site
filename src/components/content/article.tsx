@@ -11,11 +11,11 @@ type ContentKind = "docs" | "blogs";
 type PageParams = { slug?: string[]; locale?: string };
 
 const collectionNames: Record<string, Record<ContentKind, string>> = {
-  en: { docs: "Documentation", blogs: "Blog" },
-  zh: { docs: "文档", blogs: "博客" },
-  es: { docs: "Documentación", blogs: "Blog" },
-  fr: { docs: "Documentation", blogs: "Blog" },
-  ja: { docs: "ドキュメント", blogs: "ブログ" }
+  en: { docs: "Documentation", blogs: "Guides" },
+  zh: { docs: "文档", blogs: "指南" },
+  es: { docs: "Documentación", blogs: "Guías" },
+  fr: { docs: "Documentation", blogs: "Guides" },
+  ja: { docs: "ドキュメント", blogs: "ガイド" }
 };
 
 function values(value: unknown): string[] | undefined {
@@ -94,11 +94,19 @@ export function Article({
     inLanguage: locale,
     author: isAboutPage
       ? undefined
-      : authors?.map((name) => ({
-          "@type": "Person",
-          name,
-          url: absoluteLocaleUrl(SiteConfig.origin, locale, "/blogs/about")
-        })),
+      : authors?.map((name) =>
+          name === SiteConfig.name
+            ? {
+                "@type": "Organization",
+                name,
+                url: SiteConfig.origin
+              }
+            : {
+                "@type": "Person",
+                name,
+                url: absoluteLocaleUrl(SiteConfig.origin, locale, "/blogs/about")
+              }
+        ),
     publisher: {
       "@type": "Organization",
       name: SiteConfig.name,
@@ -140,10 +148,12 @@ export function Article({
     <DocsPage
       toc={page.data.toc}
       full={page.data.full}
+      container={kind === "blogs" ? { className: "guide-article-page" } : undefined}
+      article={kind === "blogs" ? { className: "guide-article-content" } : undefined}
       tableOfContent={{ style: "clerk" }}
     >
       <DocsTitle>{page.data.title}</DocsTitle>
-      <DocsDescription>{page.data.description}</DocsDescription>
+      <DocsDescription className="mb-0">{page.data.description}</DocsDescription>
       {!isAboutPage && (authors?.length || data.updatedAt || data.publishedAt) ? (
         <div className="article-meta">
           {authors?.length ? <span>{authors.join(", ")}</span> : null}

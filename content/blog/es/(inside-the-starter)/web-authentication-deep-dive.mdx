@@ -1,0 +1,31 @@
+---
+title: "Cómo funciona la autenticación en Sushi SaaS"
+icon: "ShieldCheck"
+description: "Un mapa específico de Better Auth, email verificado, Google opcional, MFA, organizaciones y controles contra abuso."
+tags: [autenticación, better-auth, seguridad]
+author: "Sushi SaaS"
+publishedAt: "2025-10-13T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS construye la autenticación con Better Auth, su adaptador Drizzle y un esquema PostgreSQL. El starter añade las reglas de producto que una biblioteca no puede decidir.
+
+## Formas de iniciar sesión
+
+Email y contraseña están activos, se exige verificar el correo y el registro envía el mensaje de verificación. Recuperar la contraseña revoca las sesiones existentes. Google OAuth solo se registra cuando están presentes ambas credenciales, por lo que un proveedor opcional sin configurar no deja un botón roto.
+
+Better Auth aporta autenticación de dos factores. La consola admin exige además un rol administrativo **y** MFA. Los operadores creados solo con Google pueden establecer una contraseña inicial antes de activar MFA.
+
+La configuración exacta está en [`src/lib/auth.ts` en `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/lib/auth.ts). Sigue [Autenticación y administración](/docs/authentication-and-admin) para variables y callbacks.
+
+## La autenticación crea estado de producto
+
+El plugin de organizaciones ofrece roles owner, admin y member para gestionar membresías. Sushi SaaS mapea explícitamente su esquema snake_case, limita asientos mediante entitlements, encola los emails de invitación y desactiva el borrado genérico de organizaciones: borrar solo las tablas de autenticación dejaría datos de producto y facturación huérfanos.
+
+Los hooks también crean o recuperan la organización personal y registran eventos de acceso. La autorización de producto permanece separada: una sesión válida no concede acceso a archivos, créditos o tareas de otra organización. Lee [Organizaciones y equipos](/docs/organizations-and-teams).
+
+## Controles contra abuso y recuperación
+
+Cuando se configura, Cloudflare Turnstile protege endpoints de credenciales y envío de correo. Los controles de moderación pueden bloquear cuentas suspendidas, y la creación de sesión es la puerta final común a contraseña y OAuth. Los errores devuelven códigos catalogados, no mensajes internos.
+
+Antes de producción, prueba verificación, recuperación, callback de Google, revocación de sesiones, alta de MFA y ambos roles admin. [Configuración de la consola admin](/docs/admin-console-setup) cubre el origen separado y el primer operador.

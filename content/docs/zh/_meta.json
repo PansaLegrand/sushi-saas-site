@@ -3,6 +3,7 @@
   "root": true,
   "defaultOpen": true,
   "pages": [
-    "(hands-on)"
+    "(hands-on)",
+    "(admin-console)"
   ]
 }

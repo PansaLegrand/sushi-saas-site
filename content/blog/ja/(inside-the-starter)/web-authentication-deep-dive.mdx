@@ -1,0 +1,31 @@
+---
+title: "Sushi SaaS の認証の仕組み"
+icon: "ShieldCheck"
+description: "Better Auth、メール確認、任意の Google ログイン、MFA、組織、不正利用対策を製品に沿って解説します。"
+tags: [認証, better-auth, セキュリティ]
+author: "Sushi SaaS"
+publishedAt: "2025-10-13T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS は Better Auth、Drizzle adapter、PostgreSQL スキーマを認証基盤に使い、ライブラリーだけでは決められない製品ルールをその周囲に実装しています。
+
+## 対応するサインイン経路
+
+メールとパスワードは有効で、メール確認は必須、登録時に確認メールを送ります。パスワード復旧後は既存 session を失効させます。Google OAuth は Google の二つの認証情報が揃ったときだけ登録されるため、未設定の任意 provider が壊れたボタンとして表示されません。
+
+Better Auth による二要素認証も利用できます。独立した管理コンソールでは、管理ロールと MFA の**両方**が必要です。Google だけで登録した運用担当者は、MFA を有効にする前に初回パスワードを設定できます。
+
+正確な設定は [`7580470` の `src/lib/auth.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/lib/auth.ts) にあります。環境変数と callback は[認証と管理](/docs/authentication-and-admin)に従ってください。
+
+## 認証が製品状態を作る
+
+組織 plugin はメンバー管理用の owner、admin、member ロールを提供します。Sushi SaaS は snake_case スキーマを明示的に map し、entitlement サービスで席数を制限し、招待メールを queue に入れ、汎用の組織削除を無効にしています。認証テーブルだけの削除では課金や製品データが孤立するためです。
+
+Hook は個人組織の作成・復旧とサインインイベントの記録も行います。製品認可は別です。有効な session があっても、別組織のファイル、クレジット、タスクへはアクセスできません。[組織とチーム](/docs/organizations-and-teams)で確認できます。
+
+## 不正利用と復旧の制御
+
+設定時は Cloudflare Turnstile が認証情報とメール送信 endpoint を保護します。登録・サインイン時のモデレーションで停止アカウントを拒否でき、session 作成がパスワードと OAuth に共通する最後のゲートです。エラーは内部メッセージではなくカタログ化したコードを返します。
+
+本番前に、メール確認、パスワード復旧、Google callback、session 失効、MFA 登録、二つの管理ロールをテストしてください。別オリジンと初回運用者は[管理コンソールの設定](/docs/admin-console-setup)を参照してください。

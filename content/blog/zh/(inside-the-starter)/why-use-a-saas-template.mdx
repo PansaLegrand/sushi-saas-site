@@ -1,0 +1,37 @@
+---
+title: "什么情况下 Sushi SaaS 适合你"
+icon: "Scale"
+description: "用基于实际功能的清单判断 Sushi SaaS starter 是否适合你的产品与团队。"
+tags: [选型, 架构, 开源]
+author: "Sushi SaaS"
+publishedAt: "2025-10-07T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+当 Sushi SaaS 已处理的困难决策与你的产品需求高度重合时，它最有价值。如果大部分基础能力都会被删除，starter 并不会节省多少时间。
+
+## 适合的情况
+
+- 团队希望使用 Next.js、TypeScript、PostgreSQL、Drizzle、Better Auth 与 Stripe。
+- 客户属于个人或共享组织，计费、积分、存储与限额需要遵循同一租户边界。
+- 资金和用量变更需要幂等、可审计的积分账本与对账路径。
+- 你需要私有 S3 兼容上传、持久数据库任务、事务邮件与本地化用户错误。
+- 运营人员需要独立部署、带 MFA、读写角色、审核、账单检查和审计日志的管理后台。
+- 你重视架构边界、认证门禁与重放行为测试，而不只是 UI 正常路径测试。
+
+[Sushi SaaS 的代码结构](/blogs/anatomy-of-modern-saas)概括了完整功能；安装步骤见[快速开始](/docs/quick-start)。
+
+## 可能不适合的情况
+
+- 你在构建静态网站、单用户工具或无需账户与计费的原型。
+- 必须使用的技术栈或部署方式与 Next.js、PostgreSQL 冲突。
+- 你需要托管式无代码产品，而不是团队拥有的源码。
+- 租户、计费或合规模型非常特殊，替换现有契约比从更小基础开始更昂贵。
+
+## “面向生产”不等于替你完成上线
+
+Starter 提供控制机制，而不是你的生产政策。你仍需确定套餐与价格、配置 provider、编写产品法律文本、制定备份恢复流程、监控交付并完成威胁评估。推荐功能在业务与打款规则明确前默认关闭；示例任务 provider 与演示页面也需要产品化。
+
+先运行本地环境并阅读源码，再判断功能清单。随后检查[部署与安全](/docs/deployment-and-security)，并移除不准备运营的业务域。
+
+本判断基于 [starter commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470)，该版本同时包含客户应用与独立管理应用。

@@ -1,10 +1,9 @@
 {
-  "title": "Blogs",
+  "title": "Guides",
   "root": true,
   "defaultOpen": true,
   "pages": [
     "about",
-    "(pre-requisite-knowledge)",
-    "(running-a-saas)"
+    "(inside-the-starter)"
   ]
 }

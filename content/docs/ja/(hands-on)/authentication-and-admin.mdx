@@ -4,9 +4,9 @@ icon: "ShieldCheck"
 description: Better Auth、アカウント ID、個人組織、MFA 必須の独立管理アプリを設定します。
 keywords: [Better Auth, 認証, 管理, MFA]
 tags: [認証, 管理, セキュリティ]
-author: "Sushi Templates"
+author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
 > スターターのコミット [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8) と同期済みです。
@@ -26,4 +26,4 @@ Sushi SaaS は Better Auth でメール/パスワード、メール確認、パ�
 
 `pnpm dev:admin` は 3001 番で起動します。`apps/admin` は独自 origin と auth URL で別デプロイします。`pnpm admin:promote` で昇格し、`admin_ro` は閲覧、`admin_rw` は変更が可能です。MFA は必須で、書き込みは監査記録になります。組織 role を platform admin role に流用しません。
 
-公開前に登録、確認、ログイン、回復、Google callback、session 失効、MFA、両 admin 権限をテストしてください。
+公開前に登録、確認、ログイン、回復、Google callback、session 失効、MFA、両 admin 権限をテストしてください。デプロイと運用担当者の導入は、専用の[管理コンソールのセットアップとアクセス](/ja/docs/admin-console-setup)に従ってください。

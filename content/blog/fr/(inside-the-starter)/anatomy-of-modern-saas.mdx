@@ -1,0 +1,51 @@
+---
+title: "Comment Sushi SaaS est structuré"
+icon: "Blocks"
+description: "Un parcours des couches routes, services, modèles et base de données imposées par le starter, ainsi que de l’application admin séparée."
+tags: [architecture, nextjs, starter]
+author: "Sushi SaaS"
+publishedAt: "2025-10-07T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS suit une règle centrale : les données descendent à travers des couches explicites. Ce n’est pas une simple convention de dossiers ; les tests d’architecture refusent les imports qui franchissent la frontière.
+
+## Le parcours dans l’application
+
+```text
+src/app/**       routes et pages
+  ↓
+src/services/**  règles métier et orchestration
+  ↓
+src/models/**    persistance typée
+  ↓
+src/db/**        schéma, migrations et connexion
+```
+
+Les routes traduisent HTTP. Les services portent les invariants : idempotence, autorisation, règles du registre et effets externes. Les modèles sont la seule couche applicative autorisée à appeler `db()`. Les contraintes de la base forment la dernière frontière face à la concurrence.
+
+Le navigateur suit une séparation comparable : les Server Components appellent les services directement ; les Client Components passent par `src/api/**` et le client API commun. Cela évite au serveur de s’appeler lui-même en HTTP et empêche chaque composant de réinventer la gestion des réponses.
+
+[Architecture et contrats d’erreur](/docs/architecture-and-errors) détaille ces règles exécutables.
+
+## Tous les domaines suivent les mêmes couches
+
+Organisations, facturation, crédits, stockage, réservations et tâches ne sont pas des mini-applications isolées. Chaque domaine traverse les mêmes couches. Une dépense de crédits entre par une route, devient autorisée et idempotente dans les services, est persistée par un modèle et protégée par les contraintes du registre.
+
+Cette cohérence donne une place unique à chaque responsabilité. [Organisations et équipes](/docs/organizations-and-teams) montre comment le tenant suit cette structure.
+
+## La console admin est une application séparée
+
+`apps/admin` est une application Next.js autonome avec ses pages, APIs, accès aux données, contrôle MFA et rôles lecture/écriture. Elle partage le schéma et l’authentification centrale, mais peut être déployée sur une autre origine afin d’isoler les routes opérateur.
+
+Lisez [Configuration et accès à la console admin](/docs/admin-console-setup) avant son déploiement.
+
+## Frontières à conserver
+
+- Placez les invariants métier dans un service, pas dans une route.
+- Placez l’accès à la base dans un modèle, pas dans un composant ou service.
+- Vérifiez des capacités plutôt que des noms d’offres.
+- Gardez requêtes et endpoints administratifs dans `apps/admin`.
+- Mettez à jour les runbooks versionnés lorsqu’un contrat change.
+
+Ce guide a été vérifié avec le [commit `7580470` du starter](https://github.com/PansaLegrand/sushi-saas-template/tree/7580470).

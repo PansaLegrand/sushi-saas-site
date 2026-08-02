@@ -1,0 +1,35 @@
+---
+title: "Comment Sushi SaaS route les requêtes"
+icon: "Workflow"
+description: "Comment le starter combine routage localisé, identifiants de requête et contexte d’organisation inspectable dans le middleware."
+tags: [middleware, routage, i18n]
+author: "Sushi SaaS"
+publishedAt: "2025-10-13T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS utilise une seule frontière middleware pour trois préoccupations liées à la requête : langue, identifiant de corrélation et contexte d’organisation. L’authentification et l’autorisation métier restent plus profondes dans l’application.
+
+## Chaque requête reçoit un identifiant
+
+Le middleware normalise le `x-request-id` entrant ou en crée un, le transmet à la route et le renvoie dans la réponse. Les logs de routes et services peuvent ainsi désigner la même requête sans faire confiance à un header arbitraire mal formé.
+
+## APIs et pages prennent des chemins différents
+
+Les requêtes sous `/api` ne participent pas à la négociation de langue. Elles continuent directement avec l’identifiant normalisé et le contexte d’organisation API.
+
+Les pages passent par `next-intl`. Le middleware copie ensuite les métadonnées internes de Next.js qui transmettent les headers modifiés vers la réponse localisée. Ces headers atteignent donc réellement la page ou le handler au lieu de n’exister que dans la réponse sortante.
+
+L’implémentation se trouve dans [`src/middleware.ts` au commit `7580470`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/middleware.ts).
+
+## Le contexte d’organisation reste inspectable
+
+Une page choisit une organisation uniquement par le paramètre d’URL. Tout header d’organisation fourni par l’appelant est supprimé des pages, afin qu’un lien copié représente le contexte utilisé.
+
+Les clients API peuvent fournir le header configuré. Si l’URL contient aussi un slug d’organisation, l’URL l’emporte. Les services vérifient encore appartenance et permissions ; le middleware ne fait que normaliser et transporter le contexte.
+
+## Ce que couvre le matcher
+
+Le matcher inclut routes localisées, APIs et pages ordinaires. Il exclut les assets Next.js, les chemins internes Vercel, les fichiers avec extension et l’application admin déployée séparément.
+
+Consultez [Architecture et contrats d’erreur](/docs/architecture-and-errors) pour les couches et [Organisations et équipes](/docs/organizations-and-teams) pour le tenant et les autorisations.

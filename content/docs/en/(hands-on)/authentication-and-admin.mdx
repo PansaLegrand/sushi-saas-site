@@ -4,9 +4,9 @@ icon: "ShieldCheck"
 description: Configure Better Auth, account identity, organization creation, and the separate MFA-protected admin application.
 keywords: [Better Auth, authentication, admin, MFA]
 tags: [authentication, admin, security]
-author: "Sushi Templates"
+author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-01T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
 ---
 
 > Synced with starter commit [`7d452a6`](https://github.com/PansaLegrand/sushi-saas-template/tree/7d452a6c327c8acaee98a8b00f9444003f5e63c8).
@@ -26,4 +26,4 @@ Set `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_AUTH_BASE_URL`, and th
 
 Run `pnpm dev:admin` on port 3001. Deploy `apps/admin` independently and give it its own origin and auth base URL. Promote operators with `pnpm admin:promote`; `admin_ro` may inspect while `admin_rw` may mutate. Admin access requires MFA, and write operations produce audit records. Do not repurpose organization roles as platform-admin roles.
 
-Before launch, test sign-up, verification, sign-in, recovery, Google callback if enabled, session revocation, MFA enrollment, and both admin permission levels.
+Before launch, test sign-up, verification, sign-in, recovery, Google callback if enabled, session revocation, MFA enrollment, and both admin permission levels. Follow the dedicated [Admin Console Setup and Access](/docs/admin-console-setup) guide for deployment and operator onboarding.

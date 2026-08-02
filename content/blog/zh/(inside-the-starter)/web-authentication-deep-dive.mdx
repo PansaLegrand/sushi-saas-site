@@ -1,0 +1,31 @@
+---
+title: "Sushi SaaS 的认证机制"
+icon: "ShieldCheck"
+description: "了解 Better Auth、邮箱验证、可选 Google 登录、MFA、组织与滥用防护如何协作。"
+tags: [认证, better-auth, 安全]
+author: "Sushi SaaS"
+publishedAt: "2025-10-13T00:00:00.000Z"
+updatedAt: "2026-08-02T00:00:00.000Z"
+---
+
+Sushi SaaS 使用 Better Auth、Drizzle adapter 与 PostgreSQL schema 构建认证，并在其外补充认证库无法替产品决定的业务规则。
+
+## 支持的登录路径
+
+邮箱密码登录默认启用，注册时必须验证邮箱并发送验证邮件。密码找回完成后会撤销已有 session。只有 Google Client ID 与 Secret 同时存在时才注册 Google OAuth，因此未配置的可选 provider 不会留下失效按钮。
+
+Better Auth 提供双因素认证。独立管理后台要求更严格：账户必须同时拥有管理角色并启用 MFA 才能进入。仅用 Google 注册的运营人员可以先设置初始密码，再启用 MFA。
+
+完整配置见 [`7580470` 的 `src/lib/auth.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/lib/auth.ts)。环境变量与 callback 设置请按[认证与管理](/docs/authentication-and-admin)操作。
+
+## 认证会创建产品状态
+
+组织插件为成员管理提供 owner、admin 与 member 角色。Sushi SaaS 显式映射 snake_case schema，通过 entitlement 服务限制席位，把邀请邮件加入队列，并关闭通用组织删除：只删除认证表会留下计费和产品数据孤儿。
+
+认证 hook 也会创建或恢复用户的个人组织，并记录登录事件。产品授权仍是另一层：有效 session 不等于可以访问其他组织的文件、积分或任务。[组织与团队](/docs/organizations-and-teams)解释了这些检查。
+
+## 防滥用与恢复
+
+配置后，Cloudflare Turnstile 会保护凭据和发信接口。注册与登录审核能阻止被封禁或暂停的账户，而 session 创建是密码与 OAuth 流程共用的最后门禁。错误只返回目录化代码，不暴露服务端原始信息。
+
+上线前应测试邮箱验证、密码重置、Google callback、session 撤销、MFA 注册以及两种管理角色。[管理后台设置](/docs/admin-console-setup)说明了独立域名与首位运营人员的配置。
