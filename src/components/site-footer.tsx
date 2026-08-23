@@ -13,6 +13,7 @@ export async function SiteFooter() {
           <p>{t("description")}</p>
         </div>
         <nav aria-label={t("label")}>
+          <Link href="/docs/quick-start">{t("start")}</Link>
           <Link href="/docs">{t("docs")}</Link>
           <Link href="/blogs">{t("blog")}</Link>
           <Link href="/privacy">{t("privacy")}</Link>

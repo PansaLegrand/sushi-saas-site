@@ -1,11 +1,12 @@
 {
   "metadata": {
     "title": "Production-minded open-source Next.js SaaS starter",
-    "description": "A production-minded Next.js starter with authentication, Stripe billing, organizations, credits, storage, jobs, and an operator-ready admin console.",
-    "keywords": ["Next.js SaaS starter", "open source SaaS", "Stripe billing", "Better Auth", "Drizzle ORM"]
+    "description": "An open-source Next.js SaaS starter with guided setup, authentication, organizations, Stripe, credits, private storage, durable jobs, Content Studio, observability, and tested operations.",
+    "keywords": ["Next.js SaaS starter", "open source SaaS", "Stripe billing", "Better Auth", "Drizzle ORM", "SaaS boilerplate"]
   },
   "nav": {
     "label": "Primary navigation",
+    "start": "Quick start",
     "docs": "Docs",
     "blog": "Guides",
     "github": "GitHub",
@@ -15,16 +16,27 @@
     "eyebrow": "MIT licensed · Production-minded",
     "heroLineOne": "The plumbing is done.",
     "heroLineTwo": "Build the product.",
-    "subtitle": "Authentication, organizations, Stripe billing, a credit ledger, private storage, background jobs, and a separate admin console—connected through one enforceable architecture.",
-    "primaryAction": "See if it fits",
+    "subtitle": "Go from guided local setup to a deployable web app, admin console, and Content Studio—with replay-safe billing, private storage, durable work, observability, and restore-tested operations.",
+    "primaryAction": "Run it locally",
     "secondaryAction": "Inspect the source",
+    "fitPrompt": "Evaluating the stack first?",
+    "fitAction": "See when Sushi SaaS is a good fit.",
     "signalsLabel": "Project signals",
     "signals": [
-      { "title": "Replay-safe money", "body": "Idempotent checkout, webhooks, ledger grants, and refunds." },
-      { "title": "Organization-first", "body": "Billing, members, storage, and credits share one tenant boundary." },
-      { "title": "No-leak errors", "body": "Catalogued server failures resolve to localized browser copy." },
-      { "title": "Tests as architecture", "body": "Layering, auth gates, replay behavior, and DB constraints are executable." }
+      { "title": "One-command development", "body": "Setup, doctor, unified runner, safe fixtures, and local Postgres, Redis, and Garage." },
+      { "title": "Replay-safe money", "body": "Idempotent checkout, webhooks, ledger spends, and exactly-once compensation." },
+      { "title": "Deployable operations", "body": "Portable workers, containers, readiness, telemetry, backups, retention, and launch audits." },
+      { "title": "Tests as architecture", "body": "Layering, auth gates, replay behavior, migrations, and DB constraints are executable." }
     ],
+    "journeys": {
+      "title": "Enter through the question you have now.",
+      "intro": "New adopters need different levels of detail. Start the complete stack, trace one paid workflow, or inspect the production controls before choosing what to keep.",
+      "items": [
+        { "title": "Explore the starter", "body": "Install it, customize the product identity, verify local dependencies, seed a demo account, and open every shipped application.", "action": "Follow the quick start" },
+        { "title": "Learn one complete feature", "body": "Follow the five-credit image task through authentication, entitlements, ledger replay, the durable worker, private output, and compensation.", "action": "Trace the reference workflow" },
+        { "title": "Prepare a real launch", "body": "Build hardened containers, inspect migrations and data integrity, run restore drills, and execute the launch-readiness audit.", "action": "Open the launch path" }
+      ]
+    },
     "systems": {
       "title": "A backbone, not a demo.",
       "intro": "The starter focuses on the parts that become expensive after launch: ownership, retries, reconciliation, operational access, and explicit boundaries.",
@@ -33,8 +45,24 @@
         { "title": "Billing & entitlements", "body": "Stripe Prices drive checkout; lifecycle webhooks update organization subscriptions and capability checks." },
         { "title": "Credit accounting", "body": "An append-only, traceable ledger connects purchases, grants, task spending, reversals, and balances." },
         { "title": "Organizations & teams", "body": "Personal and shared workspaces, invitations, roles, last-owner protection, and pooled resources." },
-        { "title": "Storage & jobs", "body": "Private S3-compatible uploads, signed access, lifecycle state, and a durable retryable database queue." },
-        { "title": "Operator console", "body": "A separately deployed admin application with MFA, read/write roles, audit events, and billing visibility." }
+        { "title": "Storage & jobs", "body": "Private S3-compatible objects, signed access, generated outputs, lifecycle state, and a durable retryable database queue." },
+        { "title": "Operator console", "body": "A separately deployed admin application with MFA, read/write roles, job recovery, audit events, and billing visibility." },
+        { "title": "Content & lifecycle", "body": "An independently deployed Payload studio, signed marketing gateway, consent records, account exports, and delayed erasure." },
+        { "title": "Release operations", "body": "OpenTelemetry, structured logs, migration integrity, backups, restore drills, retention, containers, and launch checks." }
+      ]
+    },
+    "referenceFlow": {
+      "eyebrow": "Runnable reference workflow",
+      "title": "One image request crosses the whole SaaS backbone.",
+      "intro": "The local image provider is deliberately simple. The value is the production-shaped chain around it: one request key, one five-credit spend, durable execution, private output, and a refund that can recover after a crash.",
+      "action": "Read the complete implementation guide",
+      "steps": [
+        { "title": "Authorize", "body": "Resolve the member, organization, capability, quota, and same-origin boundary." },
+        { "title": "Reserve", "body": "Persist a fingerprinted task and a deterministic five-credit ledger spend." },
+        { "title": "Dispatch", "body": "Deduplicate a durable job that survives the original HTTP request." },
+        { "title": "Generate", "body": "Call the provider with a stable idempotency identity and bounded retries." },
+        { "title": "Store", "body": "Write and verify a private Garage/S3 object, then return a short-lived signed URL." },
+        { "title": "Compensate", "body": "On terminal failure, restore the spend exactly once before the task becomes failed." }
       ]
     },
     "architecture": {
@@ -66,7 +94,8 @@
   },
   "footer": {
     "label": "Footer navigation",
-    "description": "Documentation and implementation guides for the Sushi SaaS open-source starter.",
+    "description": "Explore, evaluate, build, and operate the Sushi SaaS open-source starter.",
+    "start": "Quick start",
     "docs": "Docs",
     "blog": "Guides",
     "privacy": "Privacy",

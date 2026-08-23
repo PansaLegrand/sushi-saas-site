@@ -1,24 +1,35 @@
 {
   "metadata": {
     "title": "面向生产环境的开源 Next.js SaaS 启动模板",
-    "description": "面向生产的 Next.js starter，包含认证、Stripe、组织、积分、存储、任务与独立管理后台。",
-    "keywords": ["Next.js SaaS starter", "开源 SaaS", "Stripe 计费", "Better Auth", "Drizzle ORM"]
+    "description": "开源 Next.js SaaS starter，包含引导式设置、认证、组织、Stripe、积分、私有存储、持久任务、内容工作室、可观测性与经过测试的运维能力。",
+    "keywords": ["Next.js SaaS starter", "开源 SaaS", "Stripe 计费", "Better Auth", "Drizzle ORM", "SaaS 模板"]
   },
-  "nav": { "label": "主导航", "docs": "文档", "blog": "指南", "github": "GitHub", "language": "选择语言" },
+  "nav": { "label": "主导航", "start": "快速开始", "docs": "文档", "blog": "指南", "github": "GitHub", "language": "选择语言" },
   "landing": {
     "eyebrow": "MIT 协议 · 面向生产",
     "heroLineOne": "基础设施已经就绪。",
     "heroLineTwo": "专注构建产品。",
-    "subtitle": "认证、组织、Stripe 计费、积分账本、私有存储、后台任务和独立管理后台，通过一套可执行的架构连接在一起。",
-    "primaryAction": "先判断是否适合",
+    "subtitle": "从引导式本地设置到可部署的 Web 应用、管理后台与内容工作室，并内置可安全重放的计费、私有存储、持久任务、可观测性和恢复演练。",
+    "primaryAction": "在本地运行",
     "secondaryAction": "查看源码",
+    "fitPrompt": "想先评估技术栈？",
+    "fitAction": "了解 Sushi SaaS 适合哪些项目。",
     "signalsLabel": "项目特性",
     "signals": [
-      { "title": "资金操作可安全重放", "body": "Checkout、Webhook、积分发放和退款都具备幂等性。" },
-      { "title": "组织优先", "body": "计费、成员、文件和积分共享同一个租户边界。" },
-      { "title": "错误不泄漏", "body": "服务端分类错误会解析为本地化的前端文案。" },
-      { "title": "用测试约束架构", "body": "分层、鉴权、重放与数据库约束都是可执行规则。" }
+      { "title": "一条命令开始开发", "body": "设置、诊断、统一运行器、安全测试数据，以及本地 PostgreSQL、Redis 和 Garage。" },
+      { "title": "资金操作可安全重放", "body": "Checkout、Webhook、账本消耗和仅执行一次的补偿都具备幂等性。" },
+      { "title": "可部署的运维能力", "body": "可移植 Worker、容器、就绪检查、遥测、备份、保留策略和上线审计。" },
+      { "title": "用测试约束架构", "body": "分层、鉴权、重放、迁移与数据库约束都是可执行规则。" }
     ],
+    "journeys": {
+      "title": "从你当前的问题开始。",
+      "intro": "不同阶段需要不同深度：先运行完整技术栈，跟踪一个付费工作流，或在决定保留哪些能力前检查生产控制。",
+      "items": [
+        { "title": "探索 starter", "body": "安装项目、自定义产品身份、检查本地依赖、创建演示账户，并打开每个随附应用。", "action": "查看快速开始" },
+        { "title": "学习一项完整功能", "body": "跟踪 5 积分图像任务如何经过认证、权限、账本重放、持久 Worker、私有输出和失败补偿。", "action": "跟踪参考工作流" },
+        { "title": "准备真正上线", "body": "构建加固容器、检查迁移与数据完整性、执行恢复演练并运行上线就绪审计。", "action": "打开上线路径" }
+      ]
+    },
     "systems": {
       "title": "是基础架构，不是演示。",
       "intro": "Starter 聚焦上线后最昂贵的问题：所有权、重试、对账、运营访问和明确边界。",
@@ -27,8 +38,24 @@
         { "title": "计费与权限", "body": "Stripe Price 驱动 checkout；生命周期 Webhook 更新组织订阅和功能权限。" },
         { "title": "积分会计", "body": "只追加的可追踪账本连接购买、发放、任务消耗、撤销与余额。" },
         { "title": "组织与团队", "body": "个人与共享空间、邀请、角色、最后所有者保护和资源池。" },
-        { "title": "存储与任务", "body": "私有 S3 兼容上传、签名访问、生命周期状态和可重试的持久队列。" },
-        { "title": "运营控制台", "body": "独立部署的管理应用，包含 MFA、读写角色、审计事件和计费可见性。" }
+        { "title": "存储与任务", "body": "私有 S3 兼容对象、签名访问、生成结果、生命周期状态和可重试的持久队列。" },
+        { "title": "运营控制台", "body": "独立部署的管理应用，包含 MFA、读写角色、任务恢复、审计事件和计费可见性。" },
+        { "title": "内容与数据生命周期", "body": "独立部署的 Payload 工作室、签名营销网关、同意记录、账户导出与延迟删除。" },
+        { "title": "发布运维", "body": "OpenTelemetry、结构化日志、迁移完整性、备份、恢复演练、保留策略、容器与上线检查。" }
+      ]
+    },
+    "referenceFlow": {
+      "eyebrow": "可运行的参考工作流",
+      "title": "一次图像请求贯穿整个 SaaS 主干。",
+      "intro": "本地图像提供器刻意保持简单，真正的价值在于周围的生产级链路：一个请求键、一次 5 积分消耗、持久执行、私有输出，以及崩溃后仍可恢复的退款。",
+      "action": "阅读完整实现指南",
+      "steps": [
+        { "title": "授权", "body": "解析成员、组织、功能权限、配额与同源边界。" },
+        { "title": "预留", "body": "保存带指纹的任务和确定性的 5 积分账本消耗。" },
+        { "title": "派发", "body": "去重并保存一个能够超过原始 HTTP 请求生命周期的持久任务。" },
+        { "title": "生成", "body": "使用稳定的幂等身份和有限重试调用提供器。" },
+        { "title": "存储", "body": "写入并验证私有 Garage/S3 对象，再返回短时签名 URL。" },
+        { "title": "补偿", "body": "最终失败时，在任务标记失败前仅恢复一次积分。" }
       ]
     },
     "architecture": {
@@ -45,7 +72,7 @@
   },
   "docs": { "title": "构建并运营 Sushi SaaS", "intro": "按任务查找准确的配置与验证步骤。需要理解某项选择，或决定该改什么时，请查看“指南”。", "empty": "文档正在准备中。", "topics": "主题" },
   "blogs": { "title": "理解并调整 Sushi SaaS", "intro": "了解 starter 选择了什么、为什么这样选择、有哪些可选方案，以及你的产品应保留、修改或移除什么。", "empty": "暂时没有已发布的指南。", "topics": "主题" },
-  "footer": { "label": "页脚导航", "description": "Sushi SaaS 开源 starter 的文档与实现指南。", "docs": "文档", "blog": "指南", "privacy": "隐私", "terms": "条款" },
+  "footer": { "label": "页脚导航", "description": "探索、评估、构建并运营 Sushi SaaS 开源 starter。", "start": "快速开始", "docs": "文档", "blog": "指南", "privacy": "隐私", "terms": "条款" },
   "privacy": {
     "title": "隐私说明",
     "description": "此文档网站如何处理访客信息。",

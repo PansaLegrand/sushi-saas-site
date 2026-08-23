@@ -19,6 +19,7 @@ export async function SiteHeader({ locale }: { locale?: string }) {
         </Link>
 
         <nav className="site-nav" aria-label={t("label")}>
+          <Link href="/docs/quick-start">{t("start")}</Link>
           <Link href="/docs">{t("docs")}</Link>
           <Link href="/blogs">{t("blog")}</Link>
           <a

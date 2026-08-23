@@ -44,8 +44,22 @@ export default async function LandingPage({
   const lang = normalizeLocale(locale);
   const t = await getTranslations("landing");
   const signals = t.raw("signals") as Array<{ title: string; body: string }>;
+  const journeys = t.raw("journeys.items") as Array<{
+    title: string;
+    body: string;
+    action: string;
+  }>;
   const systems = t.raw("systems.items") as Array<{ title: string; body: string }>;
+  const referenceFlow = t.raw("referenceFlow.steps") as Array<{
+    title: string;
+    body: string;
+  }>;
   const flow = t.raw("architecture.steps") as Array<{ title: string; body: string }>;
+  const journeyPaths = [
+    "/docs/quick-start",
+    "/docs/image-generation-workflow",
+    "/docs/containers-and-launch-readiness"
+  ] as const;
   const homeUrl = absoluteLocaleUrl(SiteConfig.origin, lang);
   const jsonLd = {
     "@context": "https://schema.org",
@@ -107,7 +121,7 @@ export default async function LandingPage({
             </h1>
             <p className="hero__lede">{t("subtitle")}</p>
             <div className="hero__actions">
-              <Link href="/blogs/why-use-a-saas-template" className="button">
+              <Link href="/docs/quick-start" className="button">
                 {t("primaryAction")}
                 <ArrowRight size={17} aria-hidden="true" />
               </Link>
@@ -121,6 +135,10 @@ export default async function LandingPage({
                 {t("secondaryAction")}
               </a>
             </div>
+            <p className="hero__fit">
+              {t("fitPrompt")} {" "}
+              <Link href="/blogs/why-use-a-saas-template">{t("fitAction")}</Link>
+            </p>
           </div>
         </section>
 
@@ -132,6 +150,28 @@ export default async function LandingPage({
             </div>
           ))}
         </div>
+
+        <section className="section section--compact">
+          <div className="shell">
+            <div className="section-heading">
+              <h2>{t("journeys.title")}</h2>
+              <p>{t("journeys.intro")}</p>
+            </div>
+            <div className="journey-grid">
+              {journeys.map((journey, index) => (
+                <article className="journey-card" key={journey.title}>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <h3>{journey.title}</h3>
+                  <p>{journey.body}</p>
+                  <Link href={journeyPaths[index] ?? "/docs"}>
+                    {journey.action}
+                    <ArrowRight size={16} aria-hidden="true" />
+                  </Link>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
 
         <section className="section">
           <div className="shell">
@@ -147,6 +187,31 @@ export default async function LandingPage({
                   </span>
                   <h3>{system.title}</h3>
                   <p>{system.body}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section reference-section">
+          <div className="shell">
+            <p className="eyebrow">{t("referenceFlow.eyebrow")}</p>
+            <div className="reference-section__heading">
+              <h2>{t("referenceFlow.title")}</h2>
+              <div>
+                <p>{t("referenceFlow.intro")}</p>
+                <Link href="/docs/image-generation-workflow" className="text-link">
+                  {t("referenceFlow.action")}
+                  <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+              </div>
+            </div>
+            <div className="reference-flow">
+              {referenceFlow.map((step, index) => (
+                <article key={step.title}>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <h3>{step.title}</h3>
+                  <p>{step.body}</p>
                 </article>
               ))}
             </div>

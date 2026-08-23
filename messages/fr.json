@@ -1,24 +1,35 @@
 {
   "metadata": {
     "title": "Starter SaaS Next.js open source, pensé pour la production",
-    "description": "Un starter Next.js pensé pour la production avec authentification, Stripe, organisations, crédits, stockage, tâches et console admin.",
-    "keywords": ["starter SaaS Next.js", "SaaS open source", "facturation Stripe", "Better Auth", "Drizzle ORM"]
+    "description": "Un starter SaaS Next.js open source avec configuration guidée, authentification, organisations, Stripe, crédits, stockage privé, tâches durables, Content Studio, observabilité et opérations testées.",
+    "keywords": ["starter SaaS Next.js", "SaaS open source", "facturation Stripe", "Better Auth", "Drizzle ORM", "modèle SaaS"]
   },
-  "nav": { "label": "Navigation principale", "docs": "Documentation", "blog": "Guides", "github": "GitHub", "language": "Choisir la langue" },
+  "nav": { "label": "Navigation principale", "start": "Démarrage rapide", "docs": "Documentation", "blog": "Guides", "github": "GitHub", "language": "Choisir la langue" },
   "landing": {
     "eyebrow": "Licence MIT · Pensé pour la production",
     "heroLineOne": "L’infrastructure est prête.",
     "heroLineTwo": "Construisez le produit.",
-    "subtitle": "Authentification, organisations, Stripe, registre de crédits, stockage privé, tâches de fond et console admin séparée — reliés par une architecture vérifiable.",
-    "primaryAction": "Voir s’il vous convient",
+    "subtitle": "Passez d’une configuration locale guidée à une application web, une console admin et un Content Studio déployables, avec facturation rejouable, stockage privé, tâches durables, observabilité et restaurations testées.",
+    "primaryAction": "Lancer en local",
     "secondaryAction": "Voir le code",
+    "fitPrompt": "Vous évaluez d’abord la stack ?",
+    "fitAction": "Voyez quand Sushi SaaS est un bon choix.",
     "signalsLabel": "Signaux du projet",
     "signals": [
-      { "title": "Paiements sûrs au rejeu", "body": "Checkout, webhooks, crédits et remboursements idempotents." },
-      { "title": "Organisations d’abord", "body": "Facturation, membres, fichiers et crédits partagent une frontière tenant." },
-      { "title": "Erreurs sans fuite", "body": "Les erreurs cataloguées deviennent des messages localisés." },
-      { "title": "Architecture testée", "body": "Couches, droits, rejeux et contraintes sont exécutables." }
+      { "title": "Développement en une commande", "body": "Setup, doctor, runner unifié, fixtures sûres et PostgreSQL, Redis et Garage locaux." },
+      { "title": "Paiements sûrs au rejeu", "body": "Checkout, webhooks, dépenses du registre et compensation exactement une fois." },
+      { "title": "Opérations déployables", "body": "Workers portables, conteneurs, readiness, télémétrie, sauvegardes, rétention et audit de lancement." },
+      { "title": "Architecture testée", "body": "Couches, droits, rejeux, migrations et contraintes sont exécutables." }
     ],
+    "journeys": {
+      "title": "Entrez par la question que vous vous posez.",
+      "intro": "Chaque étape demande un niveau de détail différent. Lancez la stack, suivez un flux payant ou examinez les contrôles de production avant de choisir quoi conserver.",
+      "items": [
+        { "title": "Explorer le starter", "body": "Installez-le, personnalisez l’identité, vérifiez les dépendances, créez un compte de démo et ouvrez chaque application livrée.", "action": "Suivre le démarrage rapide" },
+        { "title": "Apprendre une fonction complète", "body": "Suivez la tâche image à cinq crédits : authentification, droits, rejeu du registre, worker durable, sortie privée et compensation.", "action": "Tracer le flux de référence" },
+        { "title": "Préparer un vrai lancement", "body": "Construisez les conteneurs durcis, inspectez migrations et intégrité, testez la restauration et lancez l’audit de mise en production.", "action": "Ouvrir le parcours de lancement" }
+      ]
+    },
     "systems": {
       "title": "Un socle, pas une démo.",
       "intro": "Le starter traite ce qui coûte cher après le lancement : propriété, rejeux, rapprochement, opérations et frontières explicites.",
@@ -27,8 +38,24 @@
         { "title": "Facturation et droits", "body": "Les Price Stripe pilotent le checkout ; les webhooks mettent à jour abonnements et capacités." },
         { "title": "Comptabilité des crédits", "body": "Un registre immuable relie achats, attributions, dépenses, annulations et soldes." },
         { "title": "Organisations et équipes", "body": "Espaces personnels et partagés, invitations, rôles, dernier propriétaire et ressources mutualisées." },
-        { "title": "Stockage et tâches", "body": "Uploads S3 privés, accès signé, cycle de vie et file durable avec reprises." },
-        { "title": "Console opérateur", "body": "Application admin déployée séparément avec MFA, rôles lecture/écriture, audit et visibilité billing." }
+        { "title": "Stockage et tâches", "body": "Objets S3 privés, accès signé, résultats générés, cycle de vie et file durable avec reprises." },
+        { "title": "Console opérateur", "body": "Application admin séparée avec MFA, rôles lecture/écriture, reprise des jobs, audit et visibilité billing." },
+        { "title": "Contenu et cycle des données", "body": "Payload Studio indépendant, passerelle marketing signée, consentements, export de compte et effacement différé." },
+        { "title": "Opérations de release", "body": "OpenTelemetry, logs structurés, intégrité des migrations, sauvegardes, restauration, rétention, conteneurs et launch checks." }
+      ]
+    },
+    "referenceFlow": {
+      "eyebrow": "Flux de référence exécutable",
+      "title": "Une requête d’image traverse tout le socle SaaS.",
+      "intro": "Le fournisseur local reste simple volontairement. La valeur est dans la chaîne : une clé de requête, une dépense de cinq crédits, une exécution durable, une sortie privée et un remboursement récupérable après incident.",
+      "action": "Lire le guide complet",
+      "steps": [
+        { "title": "Autoriser", "body": "Résoudre membre, organisation, capacité, quota et origine de confiance." },
+        { "title": "Réserver", "body": "Persister une tâche avec empreinte et une dépense déterministe de cinq crédits." },
+        { "title": "Distribuer", "body": "Dédupliquer un job durable qui survit à la requête HTTP." },
+        { "title": "Générer", "body": "Appeler le fournisseur avec une identité idempotente stable et des reprises bornées." },
+        { "title": "Stocker", "body": "Écrire et vérifier un objet Garage/S3 privé, puis signer un accès court." },
+        { "title": "Compenser", "body": "En cas d’échec terminal, restaurer la dépense une seule fois avant l’état failed." }
       ]
     },
     "architecture": {
@@ -45,7 +72,7 @@
   },
   "docs": { "title": "Construire et exploiter Sushi SaaS", "intro": "Choisissez une tâche pour obtenir les étapes exactes de configuration et de vérification. Pour comprendre un choix ou décider quoi modifier, consultez les Guides.", "empty": "La documentation est en préparation.", "topics": "Sujets" },
   "blogs": { "title": "Comprendre et adapter Sushi SaaS", "intro": "Découvrez les choix du starter, leurs raisons, les autres options possibles et ce qu’il faut conserver, modifier ou supprimer pour votre produit.", "empty": "Aucun guide n’est encore publié.", "topics": "Sujets" },
-  "footer": { "label": "Navigation de pied de page", "description": "Documentation et guides d’implémentation du starter open source Sushi SaaS.", "docs": "Documentation", "blog": "Guides", "privacy": "Confidentialité", "terms": "Conditions" },
+  "footer": { "label": "Navigation de pied de page", "description": "Explorez, évaluez, construisez et exploitez le starter open source Sushi SaaS.", "start": "Démarrage rapide", "docs": "Documentation", "blog": "Guides", "privacy": "Confidentialité", "terms": "Conditions" },
   "privacy": {
     "title": "Avis de confidentialité",
     "description": "Comment ce site de documentation traite les informations des visiteurs.",

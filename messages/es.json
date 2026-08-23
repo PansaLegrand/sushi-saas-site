@@ -1,24 +1,35 @@
 {
   "metadata": {
     "title": "Starter SaaS de código abierto para Next.js, listo para producción",
-    "description": "Un starter Next.js orientado a producción con autenticación, Stripe, organizaciones, créditos, almacenamiento, tareas y consola de administración.",
-    "keywords": ["starter SaaS Next.js", "SaaS open source", "facturación Stripe", "Better Auth", "Drizzle ORM"]
+    "description": "Un starter SaaS Next.js open source con configuración guiada, autenticación, organizaciones, Stripe, créditos, almacenamiento privado, trabajos durables, Content Studio, observabilidad y operaciones probadas.",
+    "keywords": ["starter SaaS Next.js", "SaaS open source", "facturación Stripe", "Better Auth", "Drizzle ORM", "plantilla SaaS"]
   },
-  "nav": { "label": "Navegación principal", "docs": "Documentación", "blog": "Guías", "github": "GitHub", "language": "Elegir idioma" },
+  "nav": { "label": "Navegación principal", "start": "Inicio rápido", "docs": "Documentación", "blog": "Guías", "github": "GitHub", "language": "Elegir idioma" },
   "landing": {
     "eyebrow": "Licencia MIT · Pensado para producción",
     "heroLineOne": "La infraestructura está lista.",
     "heroLineTwo": "Construye el producto.",
-    "subtitle": "Autenticación, organizaciones, Stripe, libro de créditos, almacenamiento privado, tareas en segundo plano y una consola admin separada, conectados por una arquitectura verificable.",
-    "primaryAction": "Comprueba si encaja",
+    "subtitle": "Pasa de una configuración local guiada a una aplicación web, consola admin y Content Studio desplegables, con facturación segura ante reintentos, almacenamiento privado, trabajo durable, observabilidad y restauraciones probadas.",
+    "primaryAction": "Ejecutarlo en local",
     "secondaryAction": "Ver el código",
+    "fitPrompt": "¿Primero quieres evaluar el stack?",
+    "fitAction": "Descubre cuándo encaja Sushi SaaS.",
     "signalsLabel": "Señales del proyecto",
     "signals": [
-      { "title": "Dinero seguro ante reintentos", "body": "Checkout, webhooks, créditos y reembolsos idempotentes." },
-      { "title": "Organizaciones primero", "body": "Cobros, miembros, archivos y créditos comparten un límite de tenant." },
-      { "title": "Errores sin filtraciones", "body": "Los fallos catalogados se convierten en mensajes localizados." },
-      { "title": "Tests de arquitectura", "body": "Capas, autorización, reintentos y restricciones se ejecutan como pruebas." }
+      { "title": "Desarrollo en un comando", "body": "Setup, doctor, runner unificado, fixtures seguros y PostgreSQL, Redis y Garage locales." },
+      { "title": "Dinero seguro ante reintentos", "body": "Checkout, webhooks, gastos del libro y compensación exactamente una vez." },
+      { "title": "Operaciones desplegables", "body": "Workers portables, contenedores, readiness, telemetría, copias, retención y auditoría de lanzamiento." },
+      { "title": "Tests de arquitectura", "body": "Capas, autorización, reintentos, migraciones y restricciones se ejecutan como pruebas." }
     ],
+    "journeys": {
+      "title": "Entra por la pregunta que tienes ahora.",
+      "intro": "Cada fase necesita un nivel distinto de detalle. Ejecuta todo el stack, sigue un flujo de pago o revisa los controles de producción antes de decidir qué conservar.",
+      "items": [
+        { "title": "Explora el starter", "body": "Instálalo, personaliza la identidad, verifica dependencias, crea una cuenta demo y abre cada aplicación incluida.", "action": "Seguir el inicio rápido" },
+        { "title": "Aprende una función completa", "body": "Sigue la tarea de imagen de cinco créditos por autenticación, permisos, replay del libro, worker durable, salida privada y compensación.", "action": "Trazar el flujo de referencia" },
+        { "title": "Prepara un lanzamiento real", "body": "Construye contenedores reforzados, inspecciona migraciones e integridad, ejecuta restauraciones y la auditoría de lanzamiento.", "action": "Abrir la ruta de lanzamiento" }
+      ]
+    },
     "systems": {
       "title": "Una base, no una demo.",
       "intro": "El starter se centra en lo que se vuelve caro tras el lanzamiento: propiedad, reintentos, conciliación, operación y límites explícitos.",
@@ -27,8 +38,24 @@
         { "title": "Facturación y permisos", "body": "Los Price de Stripe controlan el checkout; los webhooks actualizan suscripciones y capacidades." },
         { "title": "Contabilidad de créditos", "body": "Un libro inmutable conecta compras, concesiones, consumo, reversiones y saldos." },
         { "title": "Organizaciones y equipos", "body": "Espacios personales y compartidos, invitaciones, roles, protección del último propietario y recursos comunes." },
-        { "title": "Almacenamiento y tareas", "body": "Subidas privadas S3, acceso firmado, ciclo de vida y cola durable con reintentos." },
-        { "title": "Consola operativa", "body": "Aplicación admin desplegada aparte con MFA, roles de lectura/escritura, auditoría y visibilidad de cobros." }
+        { "title": "Almacenamiento y tareas", "body": "Objetos S3 privados, acceso firmado, resultados generados, ciclo de vida y cola durable con reintentos." },
+        { "title": "Consola operativa", "body": "Aplicación admin separada con MFA, roles de lectura/escritura, recuperación de jobs, auditoría y visibilidad de cobros." },
+        { "title": "Contenido y ciclo de datos", "body": "Payload Studio independiente, gateway de marketing firmado, consentimientos, exportación de cuenta y borrado diferido." },
+        { "title": "Operaciones de release", "body": "OpenTelemetry, logs estructurados, integridad de migraciones, copias, restauración, retención, contenedores y launch checks." }
+      ]
+    },
+    "referenceFlow": {
+      "eyebrow": "Flujo de referencia ejecutable",
+      "title": "Una petición de imagen recorre toda la base SaaS.",
+      "intro": "El proveedor local es sencillo a propósito. El valor está en la cadena que lo rodea: una clave, un gasto de cinco créditos, ejecución durable, salida privada y un reembolso recuperable tras una caída.",
+      "action": "Leer la guía completa",
+      "steps": [
+        { "title": "Autorizar", "body": "Resuelve miembro, organización, capacidad, cuota y límite de mismo origen." },
+        { "title": "Reservar", "body": "Persiste una tarea con huella y un gasto determinista de cinco créditos." },
+        { "title": "Despachar", "body": "Deduplica un job durable que sobrevive a la petición HTTP." },
+        { "title": "Generar", "body": "Llama al proveedor con identidad idempotente estable y reintentos limitados." },
+        { "title": "Guardar", "body": "Escribe y verifica un objeto Garage/S3 privado y firma su acceso temporal." },
+        { "title": "Compensar", "body": "Ante un fallo terminal, restaura el gasto una vez antes de marcar la tarea fallida." }
       ]
     },
     "architecture": {
@@ -45,7 +72,7 @@
   },
   "docs": { "title": "Construye y opera Sushi SaaS", "intro": "Elige una tarea para ver pasos exactos de configuración y verificación. Si necesitas entender una decisión o elegir qué cambiar, consulta Guías.", "empty": "La documentación está en preparación.", "topics": "Temas" },
   "blogs": { "title": "Entiende y adapta Sushi SaaS", "intro": "Descubre qué elige el starter, por qué, qué alternativas encajan y qué conviene conservar, cambiar o eliminar para tu producto.", "empty": "Todavía no hay guías publicadas.", "topics": "Temas" },
-  "footer": { "label": "Navegación del pie", "description": "Documentación y guías de implementación del starter open source Sushi SaaS.", "docs": "Documentación", "blog": "Guías", "privacy": "Privacidad", "terms": "Términos" },
+  "footer": { "label": "Navegación del pie", "description": "Explora, evalúa, construye y opera el starter open source Sushi SaaS.", "start": "Inicio rápido", "docs": "Documentación", "blog": "Guías", "privacy": "Privacidad", "terms": "Términos" },
   "privacy": {
     "title": "Aviso de privacidad",
     "description": "Cómo trata este sitio de documentación la información de visitantes.",
