@@ -1,0 +1,36 @@
+---
+title: "1 つの 5-credit task が SaaS 全体をテストする理由"
+icon: "ScanSearch"
+description: "単純な画像 provider で identity、credit、job、storage、運用、recovery の難しい接続を検証します。"
+tags: [architecture, tasks, credits, reliability]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> コミット [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) に基づきます。
+
+多くの demo は button が API を呼ぶことだけを証明します。Browser replay、write 間の crash、provider accept 後の timeout、object success 後の DB failure、refund を一時記録できない場合は証明しません。
+
+Sushi SaaS は意図的に単純な image task で接続部分をテストします。Image は local SVG で、周囲の workflow が reference です。
+
+Request は same-origin、rate limit、Better Auth、organization、entitlement、quota、pooled ledger、task、durable queue、provider idempotency、private S3、signed URL、localized error、admin recovery、log、test を通ります。
+
+`Idempotency-Key` と fingerprint が request を識別し、task UUID が transaction、job dedupe、provider identity、file、object key を導出します。そのため replay は既存 effect を発見して完了できます。
+
+- insert 後 crash：deterministic spend を 1 回適用
+- spend 後 crash：job を 1 回 dispatch
+- object active で task 未完了：worker が link を修復
+- refund 後 state 未完了：replay が既存 refund を発見
+
+## Failure 用の独立 retry budget
+
+Provider は 5 attempts、job は 8 です。追加 3 回は refund 時の PostgreSQL failure を補償するためで、provider 再呼び出しではありません。Task は `refunding` に入り、deterministic refund 後だけ `failed` になります。
+
+Mock は cost、credential、non-determinism を避けます。E2E は request replay、正確な 5-credit debit、worker、signed Garage object を確認し、DB test は terminal failure で 1 spend/1 refund を証明します。
+
+`src/services/ai/image.ts` だけを置き換え、key、AbortSignal、bytes/type、error を保ちます。他の task、credit、job、storage、UI、recovery は model を知りません。
+
+これが production-minded の意味です。Clone の認証ではなく、高価な failure question を visible/testable にします。
+
+[画像 workflow](/ja/docs/image-generation-workflow)と[テスト・CI](/ja/docs/testing-and-ci)を参照してください。

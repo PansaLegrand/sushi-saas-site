@@ -5,7 +5,7 @@ description: "理解 starter 强制执行的分层、背后的取舍，以及如
 tags: [架构, nextjs, starter]
 author: "Sushi SaaS"
 publishedAt: "2025-10-07T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
 本指南面向正在判断第一个产品功能应放在哪里的采用者。Sushi SaaS 的所有业务域共用一套水平架构，并由测试强制执行。
@@ -56,6 +56,12 @@ Client Component  → src/api/** → 公共 API client → /api/**
 `apps/admin` 有自己的页面、管理 API、数据访问、MFA 门禁和运营角色。它共享 schema 和认证数据，但可运行在不同 origin。代价是多一次构建与部署，收益是清晰的运营边界。
 
 如果团队更希望单次部署，可以把它合并到客户应用，但必须保留服务端管理授权和审计规则；仅隐藏导航不构成安全边界。先查看[管理后台设置](/zh/docs/admin-console-setup)。
+
+## 横向分层中的完整纵向旅程
+
+图像生成参考说明了这种结构的价值：HTTP route 负责认证与校验；task service 指纹化请求、预留确定性的五积分消耗并派发持久任务；model 拥有 SQL；数据库约束连接关系；provider adapter 可替换；Worker 保存私有输出或补偿账本。Route、service、database、component 与 Playwright 测试分别证明不同边界。
+
+设计第一个付费业务域前，请阅读[为什么一个五积分任务能测试整个 SaaS](/zh/blogs/five-credit-task-tests-the-whole-saas)。
 
 ## 添加第一个业务域
 

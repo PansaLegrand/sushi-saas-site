@@ -13,7 +13,7 @@ keywords:
 tags: [概要, 評価, アーキテクチャ]
 author: "Sushi SaaS"
 publishedAt: "2025-10-02T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
 Sushi SaaS は、サブスクリプション型・従量課金型プロダクト向けの MIT ライセンスのソースコードスターターです。ホスティングサービスでも、フォームからアプリを生成するツールでもありません。リポジトリをクローンし、コードを所有・運用しながら、組み込まれた判断を自社ユーザーに合わせて変えていきます。
@@ -30,12 +30,14 @@ Next.js、TypeScript、PostgreSQL、Drizzle、Better Auth、Stripe を採用予�
 
 ## 含まれるアプリ
 
-リポジトリには二つのアプリがあります。
+リポジトリには 3 つの独立 deploy app と portable worker があります。
 
-- `src/app` の顧客アプリ：認証、組織、課金、クレジット、ストレージ、予約、従量タスクの例
-- `apps/admin` の独立管理アプリ：必須 MFA、読み取り専用/読み書き可能な運用ロール、モデレーション、照合、課金確認、監査記録
+- `src/app`：auth、組織、課金、credit、private storage、予約、paid task reference
+- `apps/admin`：MFA、role、job 復旧、moderation、reconciliation、課金、audit
+- `apps/content-studio`：独自 DB と editor auth を持つ Payload authoring/campaign app
+- VM/container または scheduler で動く durable worker
 
-二つは PostgreSQL スキーマと認証データを共有します。公開サイトとコードリポジトリは意図的に分離されています。このサイトではリリース済みスターターを説明し、コード変更と同時に更新すべき技術運用手順書はコード側に置きます。
+Web と admin は SaaS schema/auth を共有しますが Content Studio は共有しません。Customer identity、consent、delivery audit は SaaS に残ります。公開 site は 4 番目の独立 repository です。
 
 ## 引き継ぐ設計判断
 
@@ -63,7 +65,7 @@ Next.js、TypeScript、PostgreSQL、Drizzle、Better Auth、Stripe を採用予�
 
 ## 実際に評価する
 
-1. [クイックスタート](/ja/docs/quick-start)で顧客アプリと管理アプリを開きます。
+1. [クイックスタート](/ja/docs/quick-start)で client、admin、Content Studio、worker を開きます。
 2. 必要な一つの処理（登録、Checkout、アップロード、クレジット消費）を、ルートからデータベースまで追います。
 3. [Sushi SaaS が適しているケース](/ja/blogs/why-use-a-saas-template)を読み、各判断を「維持・変更・削除」に分けます。
 4. 本番工数を見積もる前に[デプロイとセキュリティ](/ja/docs/deployment-and-security)を確認します。

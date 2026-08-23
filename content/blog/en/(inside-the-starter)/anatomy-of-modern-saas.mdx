@@ -5,7 +5,7 @@ description: "Understand the starter's enforced layers, the choices behind them,
 tags: [architecture, nextjs, starter]
 author: "Sushi SaaS"
 publishedAt: "2025-10-07T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
 This guide is for adopters deciding where their first product feature belongs. Sushi SaaS uses one horizontal architecture across every domain, and tests enforce it.
@@ -56,6 +56,12 @@ Keep that model if teams are possible later. If the product will always be singl
 `apps/admin` has its own pages, admin APIs, data access, MFA gate, and operator roles. It shares the schema and authentication data but can run on another origin. The cost is a second build and deployment; the benefit is a clear operator boundary.
 
 You can merge it into the customer application if your team prefers one deployment. Preserve server-side admin authorization and audit rules—the navigation boundary alone is not security. Start with [Admin Console Setup](/docs/admin-console-setup).
+
+## A complete vertical journey through horizontal layers
+
+The image-generation reference shows why the structure matters. Its HTTP route authenticates and validates; a task service fingerprints the request, reserves one deterministic five-credit spend, and dispatches durable work; task/credit/file models own SQL; database constraints bind the relationships; the provider adapter remains replaceable; the worker stores private output or compensates the ledger. Route, service, database, component, and Playwright tests each prove a different boundary.
+
+Read [Why One Five-Credit Task Tests the Whole SaaS](/blogs/five-credit-task-tests-the-whole-saas) before designing your first paid domain.
 
 ## Add your first domain
 

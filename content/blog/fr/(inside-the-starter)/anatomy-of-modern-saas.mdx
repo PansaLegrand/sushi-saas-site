@@ -5,7 +5,7 @@ description: "Comprendre les couches imposées, leurs compromis et comment ajout
 tags: [architecture, nextjs, starter]
 author: "Sushi SaaS"
 publishedAt: "2025-10-07T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
 Ce guide aide les adoptants à placer leur première fonctionnalité produit. Sushi SaaS applique une architecture horizontale à tous les domaines et des tests en imposent les règles.
@@ -56,6 +56,12 @@ Gardez ce modèle si des équipes sont possibles. Pour un produit toujours mono-
 `apps/admin` possède pages, APIs, accès aux données, barrière MFA et rôles opérateur. Il partage schéma et auth, mais peut tourner sur une autre origine. Le coût est un build et un déploiement supplémentaires ; le bénéfice, une frontière opérateur claire.
 
 Vous pouvez le fusionner avec l’application client pour un déploiement unique. Conservez l’autorisation admin côté serveur et l’audit : masquer la navigation n’est pas une mesure de sécurité. Commencez par [Configurer la console d’administration](/fr/docs/admin-console-setup).
+
+## Un parcours vertical complet à travers les couches
+
+La référence image montre l’intérêt de la structure. La route authentifie ; le service empreinte la requête, réserve une dépense déterministe de cinq crédits et distribue le job ; les modèles possèdent SQL ; les contraintes relient les enregistrements ; l’adaptateur reste remplaçable ; le worker stocke en privé ou compense le registre. Tests route, service, base, composant et Playwright prouvent chacun une frontière.
+
+Lisez [Pourquoi une tâche de cinq crédits teste tout le SaaS](/fr/blogs/five-credit-task-tests-the-whole-saas) avant votre premier domaine payant.
 
 ## Ajouter votre premier domaine
 

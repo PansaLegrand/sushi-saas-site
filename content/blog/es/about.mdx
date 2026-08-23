@@ -13,7 +13,7 @@ keywords:
 tags: [resumen, evaluación, arquitectura]
 author: "Sushi SaaS"
 publishedAt: "2025-10-02T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
 Sushi SaaS es un starter de código fuente, con licencia MIT, para productos de suscripción y pago por uso. No es una plataforma alojada ni genera una aplicación a partir de un formulario. Clonas el repositorio, eres responsable del código resultante y adaptas sus decisiones de producto a tus usuarios.
@@ -30,12 +30,14 @@ Elige una base menor si solo validas una landing page, creas una herramienta par
 
 ## Qué incluye
 
-El repositorio contiene dos aplicaciones:
+El repositorio contiene tres aplicaciones desplegables y un worker portable:
 
-- la aplicación para clientes en `src/app`, con autenticación, organizaciones, cobros, créditos, almacenamiento, reservas y una tarea de uso como ejemplo;
-- una aplicación de administración separada en `apps/admin`, con MFA obligatorio, roles de operador de solo lectura/lectura-escritura, moderación, conciliación, inspección de cobros y registros de auditoría.
+- la app cliente en `src/app`, con auth, organizaciones, cobros, créditos, storage privado, reservas y tareas de pago de referencia;
+- `apps/admin`, con MFA, roles, recuperación de jobs, moderación, conciliación, cobros y auditoría;
+- `apps/content-studio`, una aplicación Payload con base y autenticación editorial propias;
+- un worker durable que funciona junto a VM/contenedores o mediante scheduler.
 
-Ambas usan el mismo esquema PostgreSQL y los mismos datos de autenticación. El sitio público y el repositorio de código están separados a propósito: este sitio explica el starter publicado; los runbooks de ingeniería que deben cambiar con el código permanecen en el repositorio.
+Web y admin comparten esquema y auth SaaS; Content Studio nunca. Identidad, consentimiento y auditoría de entrega permanecen en el SaaS. El sitio público es un cuarto repositorio desacoplado.
 
 ## Decisiones que heredas
 

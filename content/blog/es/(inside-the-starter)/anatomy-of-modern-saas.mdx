@@ -5,7 +5,7 @@ description: "Entiende las capas obligatorias del starter, sus motivos y cómo a
 tags: [arquitectura, nextjs, starter]
 author: "Sushi SaaS"
 publishedAt: "2025-10-07T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
 Esta guía es para quien debe decidir dónde colocar su primera función de producto. Sushi SaaS utiliza una arquitectura horizontal para todos los dominios y la hace cumplir con tests.
@@ -56,6 +56,12 @@ Conserva el modelo si podría haber equipos. Si el producto siempre será indivi
 `apps/admin` tiene páginas, APIs, acceso a datos, puerta MFA y roles de operador propios. Comparte esquema y autenticación, pero puede ejecutarse en otro origen. El coste es otra compilación y despliegue; el beneficio es una frontera operativa clara.
 
 Puedes integrarlo en la aplicación de cliente si prefieres un único despliegue. Conserva autorización de admin en servidor y auditoría: ocultar navegación no es seguridad. Empieza por [Configuración de la consola de administración](/es/docs/admin-console-setup).
+
+## Un recorrido vertical completo por capas horizontales
+
+La referencia de imagen muestra por qué importa la estructura. La ruta autentica; el servicio crea huella, reserva un gasto determinista de cinco créditos y despacha trabajo durable; modelos poseen SQL; restricciones unen relaciones; el adaptador es reemplazable; el worker guarda salida privada o compensa el libro. Tests de ruta, servicio, base, componente y Playwright prueban límites distintos.
+
+Lee [Por qué una tarea de cinco créditos prueba todo el SaaS](/es/blogs/five-credit-task-tests-the-whole-saas) antes de diseñar tu primer dominio de pago.
 
 ## Añade tu primer dominio
 

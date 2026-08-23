@@ -1,0 +1,56 @@
+---
+title: "Why One Five-Credit Task Tests the Whole SaaS"
+icon: "ScanSearch"
+description: "See why Sushi SaaS uses a deliberately simple image provider to prove the difficult connections between identity, credits, jobs, storage, operations, and recovery."
+tags: [architecture, tasks, credits, reliability]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> Based on starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+
+Most starter demos prove that a button can call an API. They do not prove what happens when the browser retries, a process dies between writes, the provider accepts work before timing out, object storage succeeds before the database does, or a refund temporarily cannot be recorded.
+
+Sushi SaaS uses one intentionally modest image-generation task to test those seams. The image itself is a local SVG. The surrounding workflow is the product.
+
+## What one request crosses
+
+The request passes through same-origin protection, rate limiting, Better Auth, organization membership, plan entitlements, monthly limits, a pooled credit ledger, task persistence, a durable queue, provider idempotency, private S3-compatible storage, signed delivery, localized errors, admin job recovery, structured logs, and test tiers.
+
+That makes it a better reference than a large “AI feature” whose SDK call hides the important system decisions.
+
+## Stable identity at every boundary
+
+One browser attempt owns an `Idempotency-Key`. The task stores a fingerprint, so reusing the key with changed input is a conflict rather than accidental access to an earlier result. The task UUID derives the ledger transaction, job dedupe key, provider identity, file record, and object key.
+
+This is the central recovery idea: a retry can discover and complete the effect that already exists. It does not need to guess whether to create another one.
+
+The flow remains repairable if a process stops:
+
+- after task insert but before spending: replay applies the one deterministic spend;
+- after spending but before dispatch: replay finds the spend and enqueues one job;
+- after object upload but before task completion: the worker finds the active deterministic file and completes the task;
+- after refund but before marking failure: compensation replay finds the existing refund and finishes the state transition.
+
+## Failure needs its own retry budget
+
+Provider work gets five attempts. The durable job gets eight. Those extra attempts are not more chances to charge the provider—they are reserved for compensation if PostgreSQL is unavailable at the moment credits must be restored.
+
+On the terminal provider failure, the task enters `refunding`. Only after the deterministic ledger compensation exists may the task become `failed`. A replay of `refunding` never calls the provider again.
+
+That distinction is easy to omit when “refund on error” is a `catch` block. It becomes obvious when failure is a durable state that operators and tests can inspect.
+
+## Why a mock provider is useful
+
+A commercial provider would make the default test slower, costly, credential-dependent, and nondeterministic. The local adapter lets every contributor force the first N attempts to fail and verify the full product chain with PostgreSQL, Redis, and Garage.
+
+The E2E test creates the same request twice, confirms one task and an exact five-credit debit, drains the real worker, loads the tenant-scoped task, follows the signed URL, and reads the stored image. A separate real-database test forces terminal failure and proves one spend plus one refund after handler replay.
+
+## Replace the narrowest part
+
+An adopter swaps `src/services/ai/image.ts` for the real provider while keeping the supplied idempotency key, abort signal, byte/content-type output, and public error boundary. Task, credits, durable execution, private storage, UI polling, and operational recovery do not need to know which model generated the bytes.
+
+This is what “production-minded” should mean in a starter: not that a clone is certified for every product, but that the expensive failure questions are visible, executable, and hard to bypass accidentally.
+
+Trace the exact implementation in [Five-Credit Image Generation Workflow](/docs/image-generation-workflow), then use [Testing and CI Contracts](/docs/testing-and-ci) to choose which tier should prove your own paid feature.

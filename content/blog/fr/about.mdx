@@ -13,7 +13,7 @@ keywords:
 tags: [présentation, évaluation, architecture]
 author: "Sushi SaaS"
 publishedAt: "2025-10-02T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
 Sushi SaaS est un starter open source sous licence MIT pour les produits par abonnement ou à l’usage. Ce n’est ni une plateforme hébergée, ni un générateur d’application par formulaire. Vous clonez le dépôt, devenez responsable du code obtenu et adaptez ses choix produit à vos utilisateurs.
@@ -30,12 +30,14 @@ Préférez une base plus légère pour valider une landing page, construire un o
 
 ## Ce qui est livré
 
-Le dépôt contient deux applications :
+Le dépôt contient trois applications déployables et un worker portable :
 
-- l’application client sous `src/app`, avec authentification, organisations, facturation, crédits, stockage, réservations et un exemple de tâche à l’usage ;
-- une application d’administration séparée sous `apps/admin`, avec MFA obligatoire, rôles opérateur lecture seule/lecture-écriture, modération, rapprochement, inspection des paiements et journal d’audit.
+- l’application client `src/app`, avec auth, organisations, facturation, crédits, stockage privé, réservations et tâches payantes de référence ;
+- `apps/admin`, avec MFA, rôles, reprise des jobs, modération, rapprochement, facturation et audit ;
+- `apps/content-studio`, application Payload avec base et auth éditoriale propres ;
+- un worker durable pour VM/conteneurs ou scheduler.
 
-Elles partagent le même schéma PostgreSQL et les mêmes données d’authentification. Le site public et le dépôt de code sont volontairement séparés : ce site explique le starter publié ; les runbooks qui doivent évoluer avec le code restent dans le dépôt.
+Web et admin partagent schéma et auth SaaS ; Content Studio jamais. Identité, consentement et audit de livraison restent dans le SaaS. Le site public est un quatrième dépôt indépendant.
 
 ## Les décisions héritées
 
@@ -63,7 +65,7 @@ Le starter ne choisit pas vos prix, remboursements, rétention, textes légaux, 
 
 ## Une évaluation concrète
 
-1. Suivez le [Démarrage rapide](/fr/docs/quick-start) et ouvrez les applications client et admin.
+1. Suivez le [Démarrage rapide](/fr/docs/quick-start) et ouvrez client, admin, Content Studio et worker.
 2. Suivez un flux dont vous avez besoin—inscription, Checkout, upload ou dépense de crédits—de la route à la base.
 3. Lisez [Quand Sushi SaaS est un bon choix](/fr/blogs/why-use-a-saas-template) et listez les décisions à garder, modifier ou supprimer.
 4. Consultez [Déploiement et sécurité](/fr/docs/deployment-and-security) avant d’estimer la mise en production.

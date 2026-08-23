@@ -40,6 +40,7 @@ test("guides use a stable decision-first tree order", () => {
   const expected = [
     "why-use-a-saas-template",
     "anatomy-of-modern-saas",
+    "five-credit-task-tests-the-whole-saas",
     "web-authentication-deep-dive",
     "what-is-middleware",
     "affiliate-and-reward"
@@ -56,6 +57,26 @@ test("guides use a stable decision-first tree order", () => {
       json(`${root}/(inside-the-starter)/meta.json`).pages,
       expected
     );
+  }
+});
+
+test("current starter capabilities remain discoverable in every locale", () => {
+  const required = {
+    "(02-build-the-product)": ["content-studio-and-marketing"],
+    "(03-operate-and-launch)": [
+      "testing-and-ci",
+      "logging",
+      "backups-retention-and-restore",
+      "containers-and-launch-readiness"
+    ],
+    "(04-optional-examples)": ["image-generation-workflow"]
+  };
+
+  for (const locale of locales) {
+    for (const [group, slugs] of Object.entries(required)) {
+      const pages = json(`content/docs/${locale}/${group}/meta.json`).pages;
+      for (const slug of slugs) assert.ok(pages.includes(slug), `${locale}: ${slug}`);
+    }
   }
 });
 

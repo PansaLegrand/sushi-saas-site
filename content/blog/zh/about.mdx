@@ -13,7 +13,7 @@ keywords:
 tags: [概览, 选型, 架构]
 author: "Sushi SaaS"
 publishedAt: "2025-10-02T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
 Sushi SaaS 是一个采用 MIT 许可、面向订阅制和按量计费产品的源码 starter。它不是托管平台，也不会根据表单自动生成应用。你需要克隆仓库、拥有并维护代码，再根据自己的用户调整其中的产品决策。
@@ -30,12 +30,14 @@ Sushi SaaS 是一个采用 MIT 许可、面向订阅制和按量计费产品的�
 
 ## 仓库里有什么
 
-仓库包含两个应用：
+仓库包含三个可独立部署的应用和一个可移植 Worker：
 
-- `src/app` 下的客户应用，包括认证、组织、计费、积分、存储、预约和一个按量计费任务示例；
-- `apps/admin` 下的独立管理应用，包括强制 MFA、只读/读写运营角色、风控、对账、账单检查和审计记录。
+- `src/app` 客户应用，包括认证、组织、计费、积分、私有存储、预约和付费任务参考；
+- `apps/admin` 独立管理应用，包括 MFA、读写角色、任务恢复、风控、对账、账单与审计；
+- `apps/content-studio` 独立 Payload 创作和活动应用，拥有自己的数据库与编辑认证；
+- 可在 VM/容器旁运行或通过调度路径执行的持久 Worker。
 
-二者共享 PostgreSQL schema 和认证数据。公开网站与代码仓库有意分离：本网站解释已发布的 starter；必须随代码一起变化的工程 runbook 则留在代码仓库中。
+Web 与 Admin 共享 SaaS schema 和认证数据，Content Studio 绝不共享；客户身份、同意和投递审计留在 SaaS。公开网站是第四个独立仓库，使产品指导不与应用发布耦合。
 
 ## 你会继承的决策
 
@@ -63,7 +65,7 @@ Starter 无法替你决定价格、退款政策、数据保留、法律条款、
 
 ## 一次实际评估
 
-1. 按[快速开始](/zh/docs/quick-start)运行客户应用和管理应用。
+1. 按[快速开始](/zh/docs/quick-start)运行客户应用、管理后台、Content Studio 和 Worker。
 2. 选择一个真实需要的流程——注册、Checkout、上传或积分消费——从路由追到数据库。
 3. 阅读[什么情况下 Sushi SaaS 适合你](/zh/blogs/why-use-a-saas-template)，列出准备保留、修改和删除的默认决策。
 4. 在估算生产工作前阅读[部署与安全](/zh/docs/deployment-and-security)。

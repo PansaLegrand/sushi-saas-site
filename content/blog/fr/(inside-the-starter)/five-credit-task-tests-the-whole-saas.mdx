@@ -1,0 +1,36 @@
+---
+title: "Pourquoi une tâche de cinq crédits teste tout le SaaS"
+icon: "ScanSearch"
+description: "Un fournisseur image simple révèle les liens difficiles entre identité, crédits, jobs, stockage, opérations et reprise."
+tags: [architecture, tasks, credits, reliability]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> Basé sur le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+
+Beaucoup de démos prouvent seulement qu’un bouton appelle une API. Elles ne prouvent pas le rejeu navigateur, une panne entre écritures, un fournisseur qui accepte avant timeout, un objet stocké avant l’échec DB ou un remboursement temporairement impossible.
+
+Sushi SaaS utilise une tâche image volontairement simple pour tester ces jointures. L’image est un SVG local ; le workflow autour est la référence.
+
+La requête traverse origine, rate limit, Better Auth, organisation, entitlement, quota, registre mutualisé, tâche, file durable, idempotence fournisseur, stockage S3 privé, URL signée, erreurs traduites, reprise admin, logs et tests.
+
+Une `Idempotency-Key` et une empreinte identifient la requête. L’UUID de tâche dérive transaction, déduplication job, identité fournisseur, fichier et objet. Un replay peut donc terminer l’effet existant.
+
+- panne après insertion : un seul débit déterministe ;
+- panne après débit : un seul job ;
+- objet actif sans tâche terminée : le worker répare ;
+- refund écrit sans état final : le replay retrouve le refund.
+
+## Un budget réservé à la compensation
+
+Le fournisseur a cinq tentatives, le job huit. Les trois restantes compensent une indisponibilité PostgreSQL pendant le remboursement, elles ne rappellent pas le fournisseur. La tâche passe en `refunding` et ne devient `failed` qu’après le refund déterministe.
+
+Le mock évite coût, secrets et non-déterminisme. E2E rejoue la requête, confirme exactement cinq crédits, exécute le worker et lit l’objet Garage signé. Un test DB force l’échec terminal et prouve un débit/un refund.
+
+Remplacez seulement `src/services/ai/image.ts` en conservant clé, AbortSignal, bytes/type et erreurs. Tâche, crédits, jobs, stockage, UI et reprise ignorent le modèle utilisé.
+
+Voilà le sens de « pensé pour la production » : rendre les pannes coûteuses visibles et testables, pas certifier automatiquement un clone.
+
+Lisez [Flux image](/fr/docs/image-generation-workflow) et [Tests et CI](/fr/docs/testing-and-ci).

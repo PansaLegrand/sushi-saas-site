@@ -1,0 +1,36 @@
+---
+title: "Por qué una tarea de cinco créditos prueba todo el SaaS"
+icon: "ScanSearch"
+description: "Un proveedor de imagen sencillo revela las conexiones difíciles entre identidad, créditos, jobs, storage, operaciones y recuperación."
+tags: [architecture, tasks, credits, reliability]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> Basado en el commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+
+Muchas demos solo prueban que un botón llama a una API. No prueban reintentos del navegador, una caída entre escrituras, un proveedor que acepta antes del timeout, un objeto guardado antes de fallar la base o un reembolso temporalmente imposible.
+
+Sushi SaaS usa una tarea de imagen deliberadamente simple para probar esas uniones. La imagen es un SVG local; el workflow que la rodea es la referencia.
+
+La solicitud atraviesa origen, rate limit, Better Auth, organización, entitlement, cuota mensual, libro común, tarea, cola durable, idempotencia del proveedor, storage S3 privado, URL firmada, errores localizados, recuperación admin, logs y tests.
+
+Una `Idempotency-Key` y una huella identifican la petición. El UUID de tarea deriva la transacción, dedupe del job, identidad del proveedor, archivo y objeto. Así un replay descubre y termina el efecto existente.
+
+- caída tras insertar: replay aplica un gasto determinista;
+- caída tras gastar: replay despacha un solo job;
+- objeto activo sin tarea completa: el worker repara el enlace;
+- refund escrito sin estado final: replay encuentra el refund y termina.
+
+## Presupuesto separado para el fallo
+
+El proveedor tiene cinco intentos y el job ocho. Los tres extra son para compensar si PostgreSQL falla al devolver créditos, no para volver a llamar al proveedor. La tarea entra en `refunding` y solo llega a `failed` después del reembolso determinista.
+
+El mock evita coste, credenciales y no determinismo. E2E repite la petición, confirma un gasto exacto de cinco, ejecuta worker y lee el objeto Garage firmado. Un test de base fuerza fallo terminal y prueba un gasto y un refund.
+
+Sustituye únicamente `src/services/ai/image.ts`, conservando clave, AbortSignal, bytes/tipo y errores. Tarea, créditos, jobs, storage, UI y recuperación no dependen del modelo.
+
+Eso significa “pensado para producción”: las preguntas caras de fallo son visibles y comprobables, no una certificación automática.
+
+Lee [Flujo de imagen](/es/docs/image-generation-workflow) y [Pruebas y CI](/es/docs/testing-and-ci).

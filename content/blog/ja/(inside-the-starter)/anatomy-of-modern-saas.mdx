@@ -5,7 +5,7 @@ description: "強制されるレイヤー、そのトレードオフ、二つ目
 tags: [アーキテクチャ, nextjs, starter]
 author: "Sushi SaaS"
 publishedAt: "2025-10-07T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
 このガイドは、最初のプロダクト機能をどこに置くか判断する、導入チーム向けの説明です。Sushi SaaS はすべての機能領域で一つの水平アーキテクチャを使い、テストで規約を強制します。
@@ -56,6 +56,12 @@ Client Component  → src/api/** → 共通 API クライアント → /api/**
 `apps/admin` は独自のページ、管理 API、データアクセス、MFA の入口、運用担当者の権限を持ちます。スキーマと認証データを共有しながら、別のオリジンへデプロイできます。ビルドとデプロイが一つ増える代わりに、運用アクセスの境界が明確になります。
 
 一つのデプロイにまとめたい場合は顧客アプリへ統合できます。ただし、サーバー側の管理者認可と監査は維持してください。ナビゲーションを隠すだけではセキュリティ対策になりません。[管理コンソールの設定](/ja/docs/admin-console-setup)から確認します。
+
+## 横方向 layer を通る完全な縦 journey
+
+画像 reference は構造の価値を示します。Route が auth、service が fingerprint、deterministic 5-credit spend、durable dispatch、model が SQL、DB constraint が relation、replaceable provider adapter、worker が private output または ledger compensation を担います。Route、service、DB、component、Playwright test が別々の boundary を証明します。
+
+最初の有料 domain を設計する前に、[1 つの 5-credit task が SaaS 全体をテストする理由](/ja/blogs/five-credit-task-tests-the-whole-saas)を読んでください。
 
 ## 最初の機能領域を追加する
 

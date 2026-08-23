@@ -13,7 +13,7 @@ keywords:
 tags: [overview, evaluation, architecture]
 author: "Sushi SaaS"
 publishedAt: "2025-10-02T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
 Sushi SaaS is an MIT-licensed source-code starter for subscription and usage-based products. It is not a hosted platform and it does not generate an application from a form. You clone the repository, own the resulting code, and adapt its product decisions to your users.
@@ -30,12 +30,14 @@ Choose a smaller foundation if you are validating a landing page, building a sin
 
 ## What ships
 
-The repository contains two applications:
+The repository contains three independently deployable applications plus a portable worker:
 
-- the customer application under `src/app`, with authentication, organizations, billing, credits, storage, reservations, and an example usage-based task;
-- a separate admin application under `apps/admin`, with mandatory MFA, read-only/read-write operator roles, moderation, reconciliation, billing inspection, and audit records.
+- the customer application under `src/app`, with authentication, organizations, billing, credits, private storage, reservations, and reference paid tasks;
+- a separate admin application under `apps/admin`, with mandatory MFA, read-only/read-write roles, job recovery, moderation, reconciliation, billing inspection, and audit records;
+- `apps/content-studio`, a separate Payload authoring and campaign application with its own database and editor authentication;
+- a dedicated durable worker that can run beside containers/VMs or through the bounded scheduler path.
 
-Both use the same PostgreSQL schema and authentication data. The public website and the code repository are deliberately separate: this site explains the released starter, while engineering runbooks that must change with code stay in the repository.
+Web and admin share the SaaS PostgreSQL schema and authentication data. Content Studio never does: customer identity, consent, and delivery audit remain in the SaaS. The public website is a fourth, detached repository so product guidance can evolve without coupling application releases to publishing.
 
 ## Decisions you inherit
 
@@ -63,7 +65,7 @@ The starter cannot choose your prices, refund policy, data retention, legal term
 
 ## A practical evaluation
 
-1. Follow [Quick Start](/docs/quick-start) and open both the customer and admin applications.
+1. Follow [Quick Start](/docs/quick-start) and open the customer app, admin console, Content Studio, and worker.
 2. Trace one real flow you need—signup, Checkout, upload, or credit spend—from route to database.
 3. Read [When Sushi SaaS Is a Good Fit](/blogs/why-use-a-saas-template) and list the shipped decisions you would keep, change, or remove.
 4. Review [Deployment and Security](/docs/deployment-and-security) before estimating production work.
