@@ -6,7 +6,7 @@ keywords: [SaaS customization, branding, locales, theme, legal setup, feature de
 tags: [setup, product decisions, customization]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
 By the end of this page, the starter will look and route like **your** product, and you will have an explicit keep, configure, or remove decision for every optional system. Do this before changing individual screens: identity and product boundaries affect URLs, emails, legal copy, analytics, billing, and the admin console.
@@ -15,8 +15,8 @@ By the end of this page, the starter will look and route like **your** product, 
 
 | Area | Shipped behavior | Your decision |
 | --- | --- | --- |
-| Product identity | `NEXT_PUBLIC_APP_NAME` falls back to `Your SaaS`; `NEXT_PUBLIC_DOCS_URL` is optional | Set the public name and the reviewed documentation URL |
-| Support | `SiteConfig.contactEmail` is `null`, so no support address is shown | Edit `src/config/site.ts` to add an address, or deliberately leave support elsewhere |
+| Product identity | `saas.config.json` tracks the neutral name, slug, support, and docs URL | Run the customizer and review the tracked diff |
+| Support | Support email is an explicit tracked product value | Set it before launch, or deliberately leave the public support promise elsewhere |
 | Languages | English, Chinese, Spanish, French, and Japanese are available; URL prefixes are `as-needed` | Choose the default, enabled set, and browser-locale detection |
 | Visual language | `studio` is the build-time preset shared by the web and admin apps | Keep it or choose `glass`, `soft`, `editorial`, or `brutalist` in code |
 | Color mode | The customer app defaults to `system` through an environment variable | Choose `system`, `light`, or `dark`; the admin app does not yet have a theme-mode switch |
@@ -31,30 +31,33 @@ The alternatives are valid, but they create work. More locales widen your audien
 
 ## Set identity and locale behavior
 
-Start with the public values in `.env`:
+Run the tracked customizer before editing individual screens:
 
 ```bash
-NEXT_PUBLIC_APP_NAME=Acme Cloud
-NEXT_PUBLIC_DOCS_URL=https://docs.example.com
-NEXT_PUBLIC_DEFAULT_THEME=system
-NEXT_PUBLIC_DEFAULT_LOCALE=en
-NEXT_PUBLIC_LOCALES=en,fr
-NEXT_PUBLIC_LOCALE_DETECTION=true
+pnpm customize
+
+pnpm customize -- \
+  --name "Acme Cloud" \
+  --slug acme-cloud \
+  --preset glass \
+  --locales en,fr \
+  --default-locale en \
+  --support-email support@example.com \
+  --docs-url https://docs.example.com \
+  --yes
 ```
 
-The default locale has no prefix; other enabled locales do. With the values above, English uses `/pricing` and French uses `/fr/pricing`. `NEXT_PUBLIC_LOCALE_DETECTION` controls whether a browser preference can select an enabled language. Public variables are compiled into the client build, so rebuild and redeploy after changing them.
-
-`NEXT_PUBLIC_DOCS_URL` may be blank. If you publish external documentation, set it to the reviewed production origin. Support contact is intentionally not an environment variable: set `SiteConfig.contactEmail` in `src/config/site.ts`, or leave it `null` if another support surface owns that promise.
+The command validates and atomically writes `saas.config.json`, then synchronizes matching public values into existing ignored environment profiles without touching secrets. `--dry-run` prints the candidate; `--no-env` leaves profiles unchanged. Deployment variables may override public values, but the production config gate rejects an override that contradicts the tracked product identity.
 
 ## Choose one visual preset
 
-Edit the typed constant in `src/config/style.ts`:
+Choose the preset through `pnpm customize` or edit the tracked value:
 
-```ts
-export const stylePreset: StylePreset = "glass";
+```json
+{ "appearance": { "preset": "glass" } }
 ```
 
-The same value is rendered by the customer app and the admin console. This is a build-time product choice, not a per-user picker. Review common pages, forms, tables, dialogs, empty states, and errors in both apps before keeping a non-default preset. The customer app supports light, dark, and system modes; the admin currently renders the preset without a theme-mode provider.
+`src/config/style.ts` derives its typed value from this file. The same preset is rendered by web and admin; it is a build-time product choice, not a per-user picker.
 
 ## Finish the legal identity
 
@@ -75,6 +78,8 @@ Continue with [Plans and Entitlements](/docs/plans-and-entitlements), [Stripe Bi
 ## Verify before feature work
 
 ```bash
+pnpm config:check
+pnpm config:check:prod
 pnpm lint
 pnpm test:run
 pnpm build:web
@@ -89,9 +94,9 @@ The starter does not include a brand configurator, runtime preset picker, admin 
 
 ## Source snapshot
 
-Verified against starter commit `7580470`:
+Verified against starter commit `2a1a04a`:
 
-- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/site.ts)
-- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/i18n/locale.ts)
-- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/style.ts)
-- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/legal.ts)
+- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/site.ts)
+- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/i18n/locale.ts)
+- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/style.ts)
+- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/legal.ts)

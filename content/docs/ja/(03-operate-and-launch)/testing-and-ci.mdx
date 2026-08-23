@@ -1,0 +1,37 @@
+---
+title: テストと CI の契約
+icon: "TestTube2"
+description: テスト階層、実インフラ、Playwright、カバレッジのラチェット、build gate を保証を弱めずに使います。
+keywords: [Vitest, Playwright, CI, テスト DB, カバレッジ]
+tags: [testing, CI, reliability]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> コミット [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) で確認済みです。
+
+テストは「何を mock できるか」で分かれます。DB を mock したテストは unique constraint を証明できず、auth guard を mock した route test はデータ取得前の認証を証明できません。
+
+| 階層 | 証明すること | mock 可能 |
+| --- | --- | --- |
+| Unit | 純粋ルールとアーキテクチャ | なし |
+| API | HTTP、envelope、認証順序 | service/model、guard 以外 |
+| Service | orchestration、再試行、コスト、補償 | model、外部 SDK |
+| Component | ユーザーに見える挙動 | `fetch` |
+| Database | 制約、lock、実 timestamp | なし |
+| E2E | ログイン済み browser とローカル基盤 | なし |
+
+全 route に 401/403 より前にデータ関数が呼ばれないことを証明する auth test が必要です。金銭・credit mutation には 2 回の同一呼び出しで 1 effect を証明する replay test が必要です。
+
+```bash
+pnpm test:fast
+pnpm test:run
+pnpm test:cov
+pnpm test:db
+pnpm test:e2e
+```
+
+Harness が table を truncate するため DB 名に `test` が必要です。Coverage は service、model、API、admin data を保護します。Playwright は login、tenant credit、Garage upload/delete、5-credit image task から worker と signed download まで検証します。
+
+CI は lint、PostgreSQL 16 migration、Redis、coverage、全 build、browser flow を実行します。緑にするため threshold を下げたり、実インフラ test を mock に置き換えないでください。

@@ -2,26 +2,26 @@
 title: Téléversements privés
 icon: "UploadCloud"
 description: Configurez des uploads S3 privés avec politique, entitlement, quota, checksum et suppression durable.
-keywords: [S3, R2, MinIO, upload, stockage]
+keywords: [S3, R2, Garage, MinIO, upload, stockage]
 tags: [stockage, sécurité]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> Synchronisé avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) du starter.
+> Synchronisé avec le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) du starter.
 
 Utilisez cette fonction lorsque votre produit doit conserver des avatars, documents, imports ou fichiers générés sans les rendre publics ni faire transiter chaque octet par le serveur Next.js. À la fin, une personne connectée doit pouvoir charger, télécharger et supprimer un fichier depuis **Compte → Fichiers**, sans qu’une autre organisation puisse y accéder.
 
 ## Choisir la politique de stockage adaptée
 
-- **Cloudflare R2** est souvent le chemin le plus court vers une API compatible S3 sans compte AWS. **AWS S3** convient à une infrastructure AWS et **MinIO** aux environnements locaux ou auto-hébergés. Les trois utilisent le même adaptateur, configuré par l’environnement.
+- Docker Compose utilise **Garage** comme défaut local open source maintenu et crée le bucket privé. **Cloudflare R2** et **AWS S3** sont des choix production courants. `minio` reste supporté pour les équipes qui l’exploitent, mais n’est plus le défaut livré. Tous partagent le même adaptateur.
 - Choisissez `general` pour des fichiers mixtes, `images` pour les images avec une limite de politique de 10 Mo, `documents` pour les fichiers bureautiques et texte, ou `verified` lorsque le navigateur doit fournir un SHA-256.
 - La limite réelle est la plus petite entre le plan, `STORAGE_MAX_UPLOAD_MB` et la politique. Gardez le bucket privé ; le modèle livré utilise des URL signées de courte durée.
 
 **Prêt pour la production signifie :** le parcours UI fonctionne, CORS n’accepte que vos origines, une URL publique directe échoue, l’accès inter-organisation est refusé et cron supprime finalement l’objet d’un fichier effacé.
 
-Définissez `STORAGE_PROVIDER` à `s3`, `r2` ou `minio`, puis bucket, région, endpoint et identifiants. Les objets restent privés ; le navigateur reçoit des URL signées courtes, jamais les secrets. Configurez CORS pour l’origine web et les headers PUT ; évitez les ACL sauf nécessité fournisseur.
+Définissez `STORAGE_PROVIDER` à `garage`, `s3`, `r2` ou `minio`, puis bucket, région, endpoint et identifiants. Les objets restent privés et le navigateur ne reçoit que des URL signées courtes. L’exemple image utilise le même cycle privé.
 
 ## Contrat
 

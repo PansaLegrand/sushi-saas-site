@@ -3,11 +3,14 @@
   "defaultOpen": false,
   "pages": [
     "jobs-and-readiness",
+    "testing-and-ci",
     "email-service",
     "logging",
     "notifications-slack",
     "analytics-and-consent",
     "account-data-lifecycle",
+    "backups-retention-and-restore",
+    "containers-and-launch-readiness",
     "deployment-and-security"
   ]
 }

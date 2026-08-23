@@ -6,10 +6,10 @@ keywords: [管理页面, 账单运维, 账号风控, 审计日志]
 tags: [管理, 账单, 账号风控]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> 与 starter 提交 [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) 同步。
+> 与 starter 提交 [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) 同步。
 
 请从操作员的问题出发，而不是从菜单出发：“哪个工作区拥有这笔扣款？”“为什么没发积分？”“是否应停用该账号？”“谁改了这个上限？”控制台汇总应用侧证据，但不会替代 Stripe、分析平台或工单系统。
 
@@ -62,3 +62,6 @@ updatedAt: "2026-08-02T00:00:00.000Z"
 控制台刻意没有重放已保存 Stripe webhook 载荷的按钮。修正原因后，请使用 Stripe 的 Resend。停用也不会变成删除：用户请求的数据导出和清除属于独立的账户数据生命周期。
 
 在将管理应用暴露到本地开发环境之外前，请先阅读[管理控制台的配置与访问](/zh/docs/admin-console-setup)，并在[部署与安全](/zh/docs/deployment-and-security)上线测试中覆盖管理端操作流程。
+## 持久任务恢复
+
+`/jobs` 显示队列状态、尝试次数、等待时间、主体和安全错误信息，不暴露 payload JSON 或去重键。读写操作员可带必填审计说明重试失败的幂等任务，或取消尚未领取的独立通知。运行中的任务不能取消，因为提供器效果可能已经开始。积分、存储删除、账户生命周期和活动投递必须通过所属工作流恢复。

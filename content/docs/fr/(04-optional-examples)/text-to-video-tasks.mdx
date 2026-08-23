@@ -6,10 +6,10 @@ keywords: [tâches, texte vers vidéo, crédits, idempotence]
 tags: [tâches, IA]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> Synchronisé avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) du starter.
+> Synchronisé avec le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) du starter.
 
 Utilisez cette page comme modèle d’une fonction IA facturée à l’usage, pas comme un produit vidéo prêt à vendre. Le starter fournit un écran mock local et les éléments difficiles : tenancy, droits, limites mensuelles, crédits partagés, idempotence, échec et remboursement. La production ignore les flags de démonstration ; cloner le dépôt n’active donc aucune génération réelle.
 
@@ -30,3 +30,4 @@ Le coût est dans `src/config/tasks.ts`. Plus : 50 tâches/organisation/mois et 
 Pour un vrai traitement long, gardez les invariants mais exécutez en asynchrone durable, utilisez l’idempotence fournisseur, validez les callbacks, stockez les IDs et testez doublon, solde, timeout, replay et échec de remboursement.
 
 **Avant de connecter un fournisseur :** alignez [Plans, limites et droits](/fr/docs/plans-and-entitlements), le [Registre de crédits d’organisation](/fr/docs/account-ledger) et [Tâches durables et readiness](/fr/docs/jobs-and-readiness).
+Pour une nouvelle fonction payante asynchrone, commencez par [Génération d’image à cinq crédits](/fr/docs/image-generation-workflow). C’est la référence durable actuelle : identités récupérables tâche/dépense/job, sortie privée, reprises bornées et compensation terminale unique. Texte-vers-vidéo reste l’exemple synchrone plus petit.

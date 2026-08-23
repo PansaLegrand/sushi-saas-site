@@ -6,10 +6,10 @@ keywords: [plans, droits, limites, abonnements, Stripe, tarification SaaS]
 tags: [plans, facturation, droits]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> Vérifié avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) du starter.
+> Vérifié avec le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) du starter.
 
 Commencez ici pour remplacer la tarification de démonstration. Décidez quelles actions chaque plan autorise, quelles quantités il limite et ce qui se passe en cas d’échec de paiement ou de downgrade. Le starter fournit un catalogue et une frontière d’application uniques pour garder ces décisions cohérentes.
 
@@ -35,10 +35,13 @@ Ce sont des valeurs fonctionnelles, pas une recommandation commerciale. Renommez
 | Fichier maximal | 5 Mo | 25 Mo | 200 Mo |
 | Stockage total | 100 Mo | 5 000 Mo | 50 000 Mo |
 | Texte vers vidéo | Non | Oui | Oui |
-| Tâches mensuelles | 0 | 50 | Illimité |
+| Génération d’image | Oui | Oui | Oui |
+| Tâches mensuelles | 10 | 50 | Illimité |
 | Crédits mensuels | 0 | 500 | 2 500 |
 
 `null` signifie illimité. Les crédits d’inscription sont une attribution unique ; Free n’a pas de tâche récurrente.
+
+Le flux image est disponible sur tous les niveaux car son coût fixe de cinq crédits est mesuré par le registre. Free peut utiliser l’attribution initiale sans contourner la frontière d’entitlement.
 
 ## Résolution du plan
 

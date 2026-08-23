@@ -7,7 +7,7 @@ export const COLLECTIONS = ["docs", "blog"];
 export const SITE_ORIGIN = "https://www.sushisaas.com";
 export const STARTER_REPOSITORY =
   "https://github.com/PansaLegrand/sushi-saas-template";
-export const STARTER_COMMIT = "7580470";
+export const STARTER_COMMIT = "2a1a04a";
 
 const LEGACY_DOC_SLUGS = new Set([
   "quick-start",

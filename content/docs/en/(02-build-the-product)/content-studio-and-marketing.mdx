@@ -1,0 +1,53 @@
+---
+title: Content Studio and Marketing Email
+icon: "PanelsTopLeft"
+description: Run the separate Payload authoring app, keep customer data in the SaaS, and launch consent-aware marketing campaigns safely.
+keywords: [Payload CMS, content studio, marketing email, consent, Resend]
+tags: [content, marketing, email]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> Verified against starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+
+Content Studio is the third application in the starter. It is a separately deployed Payload/Next.js authoring environment for pages, posts, briefs, media, and marketing campaigns. It does not share customer authentication or the SaaS database.
+
+## Keep the deployment boundary explicit
+
+| Application | Local port | Database | Owns |
+| --- | ---: | --- | --- |
+| Customer app | 3000 | `DATABASE_URL` | accounts, organizations, billing, consent, delivery audit |
+| Admin console | 3001 | `DATABASE_URL` | operational views and audited actions |
+| Content Studio | 3002 | `CONTENT_DATABASE_URL` | editorial documents, media metadata, campaign drafts |
+
+`PAYLOAD_SECRET` signs editor sessions. `CONTENT_STUDIO_URL` lets the admin console link operators to publishing. Never point Payload at the SaaS database or copy subscribers and customer records into Content Studio.
+
+Locally, `./scripts/setup.sh development` creates `sushi_content`, writes the missing Studio profile, and applies Payload migrations. `pnpm dev:all` starts all three apps plus the durable worker; `pnpm dev:studio` starts only authoring.
+
+## Editorial workflow
+
+Pages and posts support the five starter locales, drafts, autosave, preview, review, approval, scheduled publishing, and version history. Content uses registered blocks rather than arbitrary HTML, CSS, or JavaScript. Service accounts expose scoped, idempotent automation endpoints for draft creation, review, publishing, briefs, and batch imports.
+
+After changing a Payload collection, run:
+
+```bash
+pnpm studio:generate
+pnpm studio:migrate:create
+pnpm studio:migrate
+pnpm --dir apps/content-studio check
+```
+
+Payload migrations are independent from the SaaS Drizzle migration history.
+
+## Marketing without a shadow CRM
+
+Content Studio owns campaign layout, copy, preview, approval, and schedule. The SaaS owns exact email addresses, consent evidence, unsubscribe and suppression state, audience resolution, durable delivery jobs, provider credentials, and delivery audit.
+
+An approved campaign launches through a signed gateway. The SaaS resolves the currently consented audience, creates one deduplicated job per subscriber, checks consent again immediately before Resend, adds postal and unsubscribe content, and sends one-click unsubscribe headers. Retrying a launch cannot duplicate delivery. A provider-accepted message cannot be recalled; cancellation stops work that has not reached the provider.
+
+Required shared configuration includes `CONTENT_MARKETING_SECRET`; keep `MARKETING_UNSUBSCRIBE_SECRET` separate so gateway rotation does not invalidate delivered links. Configure `RESEND_WEBHOOK_SECRET` and the `/api/marketing/webhooks/resend` endpoint for delivery, bounce, complaint, failure, and suppression events.
+
+**Ready to launch means:** editor access is isolated, Payload and Drizzle migrations are independently deployable, campaign approval is enforced, a duplicate launch sends once, unsubscribe takes effect before the next provider call, and no subscriber address is stored in Payload.
+
+**Related:** [Transactional Email](/docs/email-service), [Durable Jobs and Readiness](/docs/jobs-and-readiness), and [Account Export and Erasure](/docs/account-data-lifecycle).

@@ -6,10 +6,10 @@ keywords: [task, text to video, credit, idempotency]
 tags: [task, AI]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> スターターのコミット [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) と同期済みです。
+> スターターのコミット [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) と同期済みです。
 
 これは従量制の AI 機能を作るための実装例であり、そのまま販売できる動画製品ではありません。ローカルだけで使える模擬 UI と、テナント分離、エンタイトルメント、月次上限、共有クレジット、冪等性、失敗処理、クレジット返却を提供します。本番環境ではデモ用設定を無視するため、クローンしただけでは動画生成は有効になりません。
 
@@ -28,3 +28,4 @@ updatedAt: "2026-08-02T00:00:00.000Z"
 費用は `src/config/tasks.ts` で定義します。Plus は組織あたり月50タスク・500クレジット、Max はタスク数無制限・2,500クレジット、Free は対象外です。`GET /api/tasks/[uuid]` は組織の範囲に限定されます。
 
 長時間かかる生成サービスでは、不変条件を保ちながら永続的な非同期実行、外部サービス側の冪等性、コールバック検証、外部 ID の保存を行います。重複実行、残高不足、タイムアウト、コールバックの再処理、クレジット返却の失敗をテストしてください。料金と上限は[プランと権限](/ja/docs/plans-and-entitlements)、消費と返却は[組織のクレジット台帳](/ja/docs/account-ledger)、非同期処理は[永続ジョブと稼働準備](/ja/docs/jobs-and-readiness)で確認できます。
+新しい非同期有料機能は[5 クレジット画像生成](/ja/docs/image-generation-workflow)から始めてください。回復可能な task/spend/job identity、private output、bounded retry、1 回だけの terminal compensation を持つ現在の durable reference です。Text-to-video は小さな synchronous adapter example として残ります。

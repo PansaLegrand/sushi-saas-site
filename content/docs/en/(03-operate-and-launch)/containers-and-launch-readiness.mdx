@@ -1,0 +1,50 @@
+---
+title: Containers and Launch Readiness
+icon: "Container"
+description: Build the web, admin, worker, and Content Studio images, keep migrations separate, and run the complete production launch audit.
+keywords: [Docker, containers, deployment, launch checklist, readiness]
+tags: [containers, deployment, launch]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> Verified against starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+
+The repository ships four independent production images: customer web, admin console, durable worker, and optional Content Studio. PostgreSQL, Redis, and object storage remain external managed services with their own backup, encryption, and availability policy.
+
+| Process | Dockerfile | Default port |
+| --- | --- | ---: |
+| Web | `Dockerfile.web` | 3000 |
+| Admin | `Dockerfile.admin` | 3001 |
+| Worker | `Dockerfile.worker` | none |
+| Content Studio | `Dockerfile.studio` | 3002 |
+
+Start with a validated product and production profile:
+
+```bash
+pnpm customize
+./scripts/setup.sh production
+pnpm containers:check
+```
+
+Build and start the required processes with `compose.production.yml`. Public `NEXT_PUBLIC_*` values are build arguments; database credentials, auth secrets, Stripe/Resend keys, and storage credentials stay runtime-only. Final images use a pinned non-root Node runtime, read-only filesystems where practical, dropped capabilities, and no package manager or development tooling.
+
+No image runs migrations at startup. Apply and verify them as a separate release step before promoting app containers:
+
+```bash
+pnpm db:migrate:prod
+pnpm db:check:prod
+```
+
+Scale web and workers independently. Multiple workers are safe because claims use `FOR UPDATE SKIP LOCKED`. The web liveness check is `/api/health`; external readiness monitoring should use `/api/ready` so database, Redis, migrations, and queue degradation remain visible.
+
+## Run the launch audit
+
+```bash
+pnpm launch:check
+```
+
+The audit composes product configuration, production environment validation, container contracts, migration state, data integrity, retention, application tests, Content Studio tests, and all builds. Use its explicit skip flags only when the omitted check is performed and recorded elsewhere in the same release process.
+
+**Ready to launch means:** all required images come from one revision, migrations are already applied, readiness is healthy, the worker and scheduler are live, restore drills meet target, demo flags are absent, admin MFA works, and the launch audit is green.

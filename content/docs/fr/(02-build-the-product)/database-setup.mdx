@@ -6,10 +6,10 @@ keywords: [PostgreSQL, Drizzle, migrations, base de données]
 tags: [base de données, opérations]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> Vérifié avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) du starter.
+> Vérifié avec le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) du starter.
 
 À la fin, vous saurez quelle base utiliser dans chaque environnement, transformer une modification du schéma en SQL révisable et l’appliquer séparément de la version applicative.
 
@@ -23,6 +23,7 @@ Après un changement de schéma :
 
 ```bash
 pnpm db:generate
+pnpm db:lint
 pnpm db:migrate
 pnpm test:db:setup
 pnpm test:db
@@ -37,6 +38,7 @@ Les migrations ne sont jamais automatiques au déploiement. C’est le choix de 
 ```bash
 pnpm db:check:prod
 pnpm db:migrate:prod
+pnpm db:integrity
 ```
 
 L’outil non interactif prend un advisory lock PostgreSQL et vérifie les checksums. Sauvegardez d’abord et appliquez expand/contract afin que versions actuelle et suivante coexistent pendant les déploiements séparés.
@@ -47,14 +49,14 @@ L’outil non interactif prend un advisory lock PostgreSQL et vérifie les check
 - L’argent est stocké en unités mineures entières avec sa devise.
 - Les données tenant portent `org_uuid` et chaque requête modèle le filtre.
 - Clés d’idempotence et numéros de transaction sont uniques en base.
-- Le starter évite le couplage généralisé par clés étrangères ; services et politiques de cycle de vie gèrent suppression et intégrité.
+- Les identités restent logiques car l’effacement utilise des pseudonymes irréversibles. Les relations tâche vers registre, job et fichier sont contraintes ; lifecycle garde l’ordre de suppression.
 - Les réservations ajoutent une contrainte d’exclusion PostgreSQL contre les créneaux qui se chevauchent.
 
 ## Choix à faire avant la production
 
 - Choisissez qui lance les migrations : un job CI de release ou un opérateur. Ne les exécutez pas depuis chaque instance web.
 - Définissez une politique de sauvegarde et restauration adaptée à vos données ; le verrou de migration ne remplace pas une sauvegarde.
-- Gardez la stratégie légère de clés étrangères ou ajoutez des contraintes après avoir défini suppression et conservation. Dans les deux cas, maintenez l’isolation tenant.
+- Exécutez `db:integrity` avant et après une relation. Le linter refuse drop destructif, rename risqué, réécriture sans limite et index unique bloquant sans exception documentée.
 - Préférez expand/contract pour une release sans interruption. Un renommage destructif en une étape est plus simple, mais couple schéma et code et rend le rollback dangereux.
 
 Vous êtes prêt lorsque `pnpm db:check:prod` montre exactement les migrations attendues, que la sauvegarde est récente, que la migration a été testée sur une copie de staging et que les anciennes et nouvelles versions peuvent coexister pendant le déploiement.

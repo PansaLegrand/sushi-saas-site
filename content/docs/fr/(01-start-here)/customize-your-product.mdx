@@ -6,7 +6,7 @@ keywords: [personnalisation SaaS, marque, langues, thème, configuration juridiq
 tags: [configuration, décisions produit, personnalisation]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
 À la fin de cette page, le starter portera le nom, les URL, les langues et le style de **votre produit**, et chaque système optionnel aura une décision explicite : conserver, adapter ou supprimer. Faites ces choix avant de modifier des écrans précis ; l'identité et le périmètre influencent les URL, les e-mails, les textes légaux, l'analytique, la facturation et la console d'administration.
@@ -15,8 +15,8 @@ updatedAt: "2026-08-02T00:00:00.000Z"
 
 | Domaine | Comportement livré | Votre décision |
 | --- | --- | --- |
-| Identité | `NEXT_PUBLIC_APP_NAME` utilise `Your SaaS` par défaut ; `NEXT_PUBLIC_DOCS_URL` est facultatif | Définir le nom public et l'URL de documentation validée |
-| Assistance | `SiteConfig.contactEmail` vaut `null`, donc aucune adresse n'est affichée | Modifier `src/config/site.ts` ou confier clairement l'assistance à un autre canal |
+| Identité | `saas.config.json` suit nom, slug, assistance et URL de docs | Lancer le customizer et revoir le diff |
+| Assistance | L’email d’assistance est une valeur produit suivie | Le définir avant lancement ou choisir un autre canal |
 | Langues | Anglais, chinois, espagnol, français et japonais sont disponibles ; les préfixes sont `as-needed` | Choisir la langue par défaut, les langues actives et la détection du navigateur |
 | Style visuel | `studio` est le preset de compilation partagé par le web et l'admin | Le garder ou choisir en code `glass`, `soft`, `editorial` ou `brutalist` |
 | Mode de couleur | L'app client utilise `system` par défaut via l'environnement | Choisir `system`, `light` ou `dark` ; l'admin n'a pas encore de sélecteur de mode |
@@ -31,30 +31,25 @@ Les alternatives sont possibles, mais ont un coût. Plus de langues élargissent
 
 ## Définir l'identité et les langues
 
-Commencez par les valeurs publiques de `.env` :
+Lancez d’abord le customizer suivi dans Git :
 
 ```bash
-NEXT_PUBLIC_APP_NAME=Acme Cloud
-NEXT_PUBLIC_DOCS_URL=https://docs.example.com
-NEXT_PUBLIC_DEFAULT_THEME=system
-NEXT_PUBLIC_DEFAULT_LOCALE=fr
-NEXT_PUBLIC_LOCALES=fr,en
-NEXT_PUBLIC_LOCALE_DETECTION=true
+pnpm customize
+
+pnpm customize -- --name "Acme Cloud" --slug acme-cloud --preset glass --locales fr,en --default-locale fr --support-email support@example.com --docs-url https://docs.example.com --yes
 ```
 
-La langue par défaut n'a pas de préfixe ; les autres en ont un. Ici, le français utilise `/pricing` et l'anglais `/en/pricing`. `NEXT_PUBLIC_LOCALE_DETECTION` autorise ou non la préférence du navigateur à sélectionner une langue active. Les variables `NEXT_PUBLIC_*` sont intégrées au client lors de la compilation : recompilez et redéployez après modification.
-
-`NEXT_PUBLIC_DOCS_URL` peut rester vide. Si vous publiez une documentation externe, indiquez son origine de production validée. Le contact d'assistance n'est volontairement pas une variable d'environnement : renseignez `SiteConfig.contactEmail` dans `src/config/site.ts`, ou laissez `null` si un autre canal porte cette promesse.
+La commande valide et écrit atomiquement `saas.config.json`, puis synchronise uniquement les valeurs publiques des profils ignorés existants sans toucher aux secrets. `--dry-run` affiche le candidat et `--no-env` évite la synchronisation. Le gate de production refuse les overrides qui contredisent l’identité suivie.
 
 ## Choisir un preset visuel
 
-Modifiez la constante typée dans `src/config/style.ts` :
+Choisissez le preset avec le customizer ou modifiez la configuration suivie :
 
-```ts
-export const stylePreset: StylePreset = "glass";
+```json
+{ "appearance": { "preset": "glass" } }
 ```
 
-L'app client et la console utilisent la même valeur. C'est un choix produit à la compilation, pas un sélecteur par utilisateur. Avant de conserver un preset différent, vérifiez pages, formulaires, tableaux, dialogues, états vides et erreurs dans les deux apps. Le web gère clair, sombre et système ; l'admin est encore rendu sans provider de mode de thème.
+`src/config/style.ts` dérive sa valeur typée de `saas.config.json`. Web et admin partagent le preset ; c’est un choix de build, pas un sélecteur utilisateur.
 
 ## Finaliser l'identité légale
 
@@ -91,9 +86,9 @@ Si vous activez mesure d’audience ou publicité, prenez cette décision avec [
 
 ## Instantané des sources
 
-Vérifié avec le commit `7580470` du starter :
+Vérifié avec le commit `2a1a04a` du starter :
 
-- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/site.ts)
-- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/i18n/locale.ts)
-- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/style.ts)
-- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/legal.ts)
+- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/site.ts)
+- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/i18n/locale.ts)
+- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/style.ts)
+- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/legal.ts)

@@ -1,0 +1,38 @@
+---
+title: バックアップ、保持、復元訓練
+icon: "ArchiveRestore"
+description: 検証可能な PostgreSQL dump を作り、保護された一時 DB だけに復元し、明示的な保持を適用します。
+keywords: [PostgreSQL バックアップ, 復元訓練, 保持, RPO, RTO]
+tags: [backups, recovery, retention]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> コミット [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) で確認済みです。
+
+別の DB に復元し、同じ migration check を通すまで backup は証明されません。Starter は安全なコマンドを提供し、provider snapshot、頻度、暗号化、地域、RPO、RTO、法的保持はチームが決めます。
+
+```bash
+pnpm db:backup
+pnpm db:backup -- --output-dir /secure/backup/path --label production
+```
+
+PostgreSQL custom dump、SHA-256 manifest、制限された permission、atomic filename を作成します。両方を暗号化された別ホストの storage へコピーしてください。
+
+`RESTORE_DATABASE_URL` を名前に `restore`、`scratch`、`drill` を含む disposable DB へ向けます。
+
+```bash
+pnpm db:restore:drill -- --backup .data/backups/example.dump --confirm sushi_restore_drill
+```
+
+訓練は dev、test、Studio、maintenance DB を拒否し、manifest、restore、migration、table を確認して RTO を記録します。DB の作成・削除は行いません。
+
+既定の保持は completed jobs 14 日、marketing receipt 30 日、auth events 90 日、admin audit 365 日です。Financial ledger、order、subscription、product record、content は対象外です。
+
+```bash
+pnpm retention:report
+pnpm retention:apply -- --confirm your_database --production
+```
+
+**リリース可能条件：** 目標が文書化され、別ホストの copy があり、復元が RTO 内で migration check を通り、保持が公開 policy と一致し、次の訓練担当が決まっていること。

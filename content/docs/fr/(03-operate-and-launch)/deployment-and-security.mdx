@@ -6,10 +6,10 @@ keywords: [déploiement, sécurité, Vercel, production]
 tags: [déploiement, sécurité]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> Synchronisé avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) du starter.
+> Synchronisé avec le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) du starter.
 
 Utilisez cette liste finale une fois l’application fonctionnelle en local. Le but n’est pas seulement un déploiement vert, mais une version que vous pouvez authentifier, facturer, exploiter, restaurer et administrer sans raccourci de développement.
 
@@ -37,3 +37,5 @@ Déployez web et `apps/admin` comme services et origines séparés. Utilisez Nod
 `/api/health` teste la vie ; `/api/ready` contrôle environnement, base, migrations, Redis et file. Une file dégradée doit alerter même si le trafic passe.
 
 HSTS est actif en production et CSP dispose d’un mode report-only. Observez avant d’imposer une politique compatible. Après déploiement, testez auth, isolation, checkout/webhooks, cron, export/suppression et MFA admin. Lisez `DEPLOYMENT.md`, `docs/security-headers.md` et `.env.example`.
+
+La version actuelle livre aussi des images durcies web, admin, worker et Content Studio, plus `pnpm launch:check` qui regroupe configuration, conteneurs, migrations, intégrité, rétention, tests et builds. Continuez avec [Conteneurs et lancement](/fr/docs/containers-and-launch-readiness) et prouvez la restauration via [Sauvegardes et exercices](/fr/docs/backups-retention-and-restore).

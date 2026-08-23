@@ -1,0 +1,38 @@
+---
+title: Sauvegardes, rétention et exercices de restauration
+icon: "ArchiveRestore"
+description: Créez des dumps PostgreSQL vérifiables, restaurez uniquement dans une base temporaire protégée et appliquez une rétention explicite.
+keywords: [sauvegarde PostgreSQL, restauration, rétention, RPO, RTO]
+tags: [backups, recovery, retention]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> Vérifié avec le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+
+Une sauvegarde n’est prouvée qu’après restauration dans une autre base et validation par le même contrôle de migrations. Le starter fournit les commandes protégées ; votre équipe choisit snapshots, fréquence, chiffrement, région, RPO, RTO et obligations légales.
+
+```bash
+pnpm db:backup
+pnpm db:backup -- --output-dir /secure/backup/path --label production
+```
+
+La commande produit un dump custom PostgreSQL, un manifeste SHA-256, des permissions restrictives et un nom atomique. Copiez les deux fichiers vers un stockage chiffré hors de l’hôte.
+
+Pointez `RESTORE_DATABASE_URL` vers une base jetable dont le nom contient `restore`, `scratch` ou `drill` :
+
+```bash
+pnpm db:restore:drill -- --backup .data/backups/example.dump --confirm sushi_restore_drill
+```
+
+L’exercice refuse les bases de développement, test, Studio et maintenance. Il vérifie le manifeste, restaure, contrôle les migrations et tables, puis mesure le RTO. Il ne crée ni ne supprime de base.
+
+Rétention par défaut : jobs terminés 14 jours, reçus marketing minimaux 30, événements d’auth 90, audit admin 365. Registres financiers, commandes, abonnements, données produit et contenu sont exclus.
+
+```bash
+pnpm retention:report
+pnpm retention:apply -- --confirm your_database --production
+```
+
+**Prêt à lancer :** objectifs écrits, copies externes, restauration dans le RTO, migrations validées sur la copie, rétention cohérente avec la politique et responsable du prochain exercice.

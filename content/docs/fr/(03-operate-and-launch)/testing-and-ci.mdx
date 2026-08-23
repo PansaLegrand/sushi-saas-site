@@ -1,0 +1,37 @@
+---
+title: Contrats de test et CI
+icon: "TestTube2"
+description: Utilisez les niveaux de test, l’infrastructure réelle, Playwright, la couverture croissante et les gates de build sans réduire les garanties.
+keywords: [Vitest, Playwright, CI, base de test, couverture]
+tags: [testing, CI, reliability]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> Vérifié avec le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+
+La suite est organisée par ce que chaque niveau peut simuler. Une base mockée ne prouve pas une contrainte unique ; une route qui mocke son guard ne prouve pas que l’authentification précède la lecture.
+
+| Niveau | Prouve | Peut mocker |
+| --- | --- | --- |
+| Unit | règles pures et architecture | rien |
+| API | HTTP, enveloppe, ordre d’auth | services/modèles, pas les guards |
+| Service | orchestration, reprises, coût, compensation | modèles et SDK externes |
+| Component | comportement visible | `fetch` |
+| Database | contraintes, verrous, vrais timestamps | rien |
+| E2E | navigateur connecté et infrastructure locale | rien |
+
+Chaque route a un test d’auth qui vérifie qu’aucune fonction de données n’est appelée avant 401/403. Toute mutation de crédit ou d’argent a un test de rejeu avec un seul effet.
+
+```bash
+pnpm test:fast
+pnpm test:run
+pnpm test:cov
+pnpm test:db
+pnpm test:e2e
+```
+
+Le nom de la base doit contenir `test`, car le harness tronque les tables. La couverture protège services, modèles, API et données admin. Playwright teste connexion, crédits tenant, upload/suppression Garage et la tâche image à cinq crédits jusqu’au worker et au téléchargement signé.
+
+La CI exécute lint, migrations PostgreSQL 16, Redis, couverture, builds et navigateur. Ne baissez pas un seuil et ne remplacez pas l’infrastructure réelle par des mocks pour obtenir du vert.

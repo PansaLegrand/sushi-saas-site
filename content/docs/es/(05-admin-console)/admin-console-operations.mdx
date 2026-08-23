@@ -6,10 +6,10 @@ keywords: [páginas de administración, operaciones de facturación, moderación
 tags: [administración, facturación, moderación]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> Sincronizado con el commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) del starter.
+> Sincronizado con el commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) del starter.
 
 Empieza por la pregunta operativa, no por el menú: “¿Qué workspace posee este cobro?”, “¿Por qué no se concedieron créditos?”, “¿Debemos suspender esta cuenta?” o “¿Quién cambió este límite?”. La consola reúne evidencia del lado de la aplicación, pero no sustituye Stripe, analytics ni soporte.
 
@@ -62,3 +62,6 @@ Todas las rutas de escritura incluidas exigen `admin_rw`, validan solicitudes de
 La consola no incluye deliberadamente un botón para reproducir una carga de webhook de Stripe guardada. Corrige la causa y utiliza Resend en Stripe. Tampoco convierte una suspensión en borrado: la exportación y eliminación solicitadas por el usuario siguen el ciclo de vida de datos de la cuenta.
 
 Consulta [Configuración y acceso a la consola](/es/docs/admin-console-setup) y completa [Despliegue y seguridad](/es/docs/deployment-and-security) antes de exponer la aplicación fuera del desarrollo local.
+## Recuperación de jobs durables
+
+`/jobs` muestra estado, intentos, edad, sujetos y errores seguros sin exponer payload JSON ni claves. Un operador de escritura puede reintentar un job idempotente fallido o cancelar una notificación pendiente no reclamada con nota auditada. No se cancela trabajo en ejecución porque el proveedor puede haber actuado. Créditos, storage, lifecycle y campañas se recuperan desde su workflow propietario.

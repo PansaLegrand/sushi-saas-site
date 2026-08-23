@@ -1,0 +1,42 @@
+---
+title: Flux de génération d’image à cinq crédits
+icon: "Image"
+description: Suivez une tâche payante asynchrone à travers auth, droits, crédits idempotents, worker durable, stockage privé et compensation.
+keywords: [génération image, tâches AI, crédits, jobs, idempotence]
+tags: [tasks, AI, credits, storage]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> Vérifié avec le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+
+La génération d’image est l’exemple minimal d’un flux payant de forme production. Le fournisseur local génère un SVG sans appeler de modèle commercial ; la valeur est la chaîne autour. Chaque requête acceptée coûte exactement cinq crédits mutualisés.
+
+```dotenv
+ENABLE_DEMO_FEATURES=true
+ENABLE_IMAGE_GENERATION_MOCK=true
+IMAGE_GENERATION_MOCK_FAILURES=0
+```
+
+Lancez `pnpm dev:all`, connectez-vous avec le compte démo et ouvrez `/fr/tasks/image-generation`. L’UI garde une clé idempotente et interroge l’état tenant-scoped.
+
+1. L’API vérifie origine, limite, auth, `tasks.image_generation` et quota mensuel.
+2. `(user_uuid, type, idempotency_key)` identifie la tâche ; une empreinte refuse un autre prompt avec la même clé.
+3. `task_image:<task uuid>` identifie la dépense de cinq crédits ; les rejeux concurrents retournent le débit existant.
+4. `task_image_generation:<task uuid>` déduplique le job et répare une panne entre tâche, dépense et distribution.
+5. Le worker appelle le fournisseur avec un UUID stable, écrit et vérifie un objet Garage/S3 privé, puis active le fichier.
+6. La lecture signe une URL courte après résolution du fichier dans l’organisation.
+
+```text
+pending_payment → queued → running → succeeded
+                           ↘ refunding → failed
+```
+
+Le fournisseur a cinq essais et le job huit, réservant trois essais à la compensation. L’échec terminal passe en `refunding`, écrit un remboursement déterministe, puis seulement en `failed`. Le rejeu ne double ni fournisseur ni remboursement.
+
+Utilisez `IMAGE_GENERATION_MOCK_FAILURES=5` pour tester l’échec. La base réelle prouve une dépense et un remboursement ; Playwright prouve rejeu, variation exacte de cinq crédits, worker, Garage et téléchargement signé.
+
+Remplacez seulement `src/services/ai/image.ts` par le vrai fournisseur et conservez idempotence, AbortSignal et contrats tâche, crédit, job, stockage et erreur.
+
+**Liens :** [Registre de crédits](/fr/docs/account-ledger), [Stockage privé](/fr/docs/storage-uploads), [Jobs durables](/fr/docs/jobs-and-readiness), [Tests et CI](/fr/docs/testing-and-ci).

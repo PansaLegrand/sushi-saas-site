@@ -6,10 +6,10 @@ keywords: [PostgreSQL, Drizzle, migraciones, base de datos]
 tags: [base de datos, operaciones]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> Verificado con el commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) del starter.
+> Verificado con el commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) del starter.
 
 Al terminar sabrás qué base usa cada entorno, cómo convertir una modificación del esquema en SQL revisable y cómo aplicarlo por separado del lanzamiento de la aplicación.
 
@@ -23,6 +23,7 @@ Tras cambiar el esquema:
 
 ```bash
 pnpm db:generate
+pnpm db:lint
 pnpm db:migrate
 pnpm test:db:setup
 pnpm test:db
@@ -37,6 +38,7 @@ Las migraciones nunca se ejecutan automáticamente al desplegar. Es la decisión
 ```bash
 pnpm db:check:prod
 pnpm db:migrate:prod
+pnpm db:integrity
 ```
 
 El ejecutor es no interactivo, usa un advisory lock de PostgreSQL y verifica checksums. Haz copia de seguridad y aplica cambios expand/contract para que las versiones actual y nueva funcionen durante despliegues separados.
@@ -47,14 +49,14 @@ El ejecutor es no interactivo, usa un advisory lock de PostgreSQL y verifica che
 - El dinero usa unidades menores enteras y moneda.
 - Las filas del tenant llevan `org_uuid` y toda consulta se limita a él.
 - Claves idempotentes y números de transacción tienen unicidad en base.
-- Se evita el acoplamiento general por claves foráneas; servicios y políticas de ciclo de vida controlan borrado e integridad.
+- Las identidades siguen siendo relaciones lógicas porque el borrado usa seudónimos irreversibles. Las relaciones de tarea con libro, job y archivo ya tienen claves foráneas; lifecycle controla el orden de borrado.
 - Reservas usa además una restricción de exclusión PostgreSQL contra intervalos solapados.
 
 ## Decisiones antes de producción
 
 - Elige si ejecuta migraciones un trabajo de CI o un operador; nunca cada instancia web.
 - Define copia y restauración según el valor de tus datos. El bloqueo del runner no sustituye una copia.
-- Mantén la estrategia ligera de claves foráneas o añade restricciones cuando hayas definido borrado y retención; ambas opciones deben conservar el aislamiento entre tenants.
+- Ejecuta `db:integrity` antes y después de cambios relacionales. El linter rechaza drops destructivos, renames inseguros, reescrituras sin límite e índices únicos bloqueantes salvo excepción documentada.
 - Prefiere migraciones expand/contract para despliegues sin parada. Un renombrado destructivo en un paso es más simple, pero acopla esquema y código y hace inseguro el rollback.
 
 Estás listo cuando `pnpm db:check:prod` muestra exactamente el conjunto pendiente esperado, la copia está actualizada, la migración funciona sobre una copia de staging y las versiones antigua y nueva pueden convivir durante el despliegue.

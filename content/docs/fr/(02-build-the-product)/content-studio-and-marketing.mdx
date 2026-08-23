@@ -1,0 +1,36 @@
+---
+title: Content Studio et email marketing
+icon: "PanelsTopLeft"
+description: Exploitez l’application Payload séparée, gardez les données clients dans le SaaS et lancez des campagnes fondées sur le consentement.
+keywords: [Payload CMS, content studio, email marketing, consentement, Resend]
+tags: [content, marketing, email]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> Vérifié avec le commit du starter [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+
+Content Studio est la troisième application du starter : un environnement Payload/Next.js déployé séparément pour pages, articles, briefs, médias et campagnes. Il ne partage ni l’authentification client ni la base SaaS.
+
+| Application | Port | Base | Responsabilité |
+| --- | ---: | --- | --- |
+| App client | 3000 | `DATABASE_URL` | comptes, organisations, facturation, consentement, audit de livraison |
+| Admin | 3001 | `DATABASE_URL` | vues opérateur et actions auditées |
+| Content Studio | 3002 | `CONTENT_DATABASE_URL` | documents, médias et brouillons de campagne |
+
+`PAYLOAD_SECRET` signe les sessions éditoriales et `CONTENT_STUDIO_URL` relie la console à la publication. Ne pointez jamais Payload vers la base SaaS et ne copiez pas abonnés ou clients dans Studio.
+
+`./scripts/setup.sh development` crée `sushi_content`, écrit le profil manquant et applique les migrations Payload. `pnpm dev:all` lance les trois applications et le worker.
+
+Pages et posts offrent cinq langues, brouillons, autosave, preview, revue, approbation, publication planifiée et historique. Seuls les blocs enregistrés sont acceptés. Après une modification de collection, lancez `studio:generate`, `studio:migrate:create`, `studio:migrate` et le check Studio ; ces migrations sont indépendantes de Drizzle.
+
+## Marketing sans CRM parallèle
+
+Studio possède la mise en page, le texte, la preview, l’approbation et le planning. Le SaaS possède les adresses, preuves de consentement, désinscription, suppression, audience, jobs durables, secrets et audit.
+
+Une campagne approuvée utilise une passerelle signée. Le SaaS sélectionne les abonnés actuellement consentants, crée un job dédupliqué par destinataire et revérifie le consentement juste avant Resend. Rejouer le lancement ne duplique pas l’envoi. L’annulation ne stoppe que le travail non remis au fournisseur.
+
+Partagez `CONTENT_MARKETING_SECRET`, gardez `MARKETING_UNSUBSCRIBE_SECRET` distinct et configurez `RESEND_WEBHOOK_SECRET` pour `/api/marketing/webhooks/resend`.
+
+**Prêt à lancer :** accès éditorial isolé, migrations indépendantes, approbation obligatoire, rejeu sans double envoi, désinscription effective avant le prochain appel et aucune adresse d’abonné dans Payload.

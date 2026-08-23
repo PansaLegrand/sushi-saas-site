@@ -6,10 +6,10 @@ keywords: [PostgreSQL, Drizzle, migrations, database]
 tags: [database, operations]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> Verified against starter commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb).
+> Verified against starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
 
 By the end of this page, you will know which database to point each environment at, how to turn a schema edit into reviewable SQL, and how to apply it separately from an application release.
 
@@ -23,6 +23,7 @@ After changing the schema:
 
 ```bash
 pnpm db:generate
+pnpm db:lint
 pnpm db:migrate
 pnpm test:db:setup
 pnpm test:db
@@ -37,6 +38,7 @@ Migrations never run automatically during application deployment. This is the sh
 ```bash
 pnpm db:check:prod
 pnpm db:migrate:prod
+pnpm db:integrity
 ```
 
 The production runner is non-interactive, takes a PostgreSQL advisory lock, and verifies migration checksums. Back up first and use expand/contract changes so the currently deployed code and the next version can both run while schema and application releases are separated.
@@ -47,14 +49,14 @@ The production runner is non-interactive, takes a PostgreSQL advisory lock, and 
 - Money uses integer minor units plus a currency code.
 - Tenant-owned rows carry `org_uuid`; every model query must scope by it.
 - Idempotency keys and transaction numbers have database uniqueness constraints.
-- The starter intentionally avoids broad foreign-key coupling; services and lifecycle policies therefore own deletion order and referential checks.
+- Identity references remain logical because account erasure uses irreversible subject tombstones. High-value task-to-ledger, job, and output-file relationships are now foreign-key constrained; lifecycle services still own deletion order.
 - Reservations also use a PostgreSQL exclusion constraint to prevent overlapping confirmed/held slots.
 
 ## Choices to Make Before Production
 
 - Choose who runs migrations: a CI release job or an operator. Do not run them from every web instance.
 - Choose a backup and restore policy appropriate to your data. The runner coordinates migrations; it does not replace backups.
-- Keep the starter's lighter foreign-key strategy, or add stricter constraints once you have defined deletion and retention behavior. Either choice must stay tenant-safe.
+- Run `db:integrity` before and after relationship changes. The migration linter rejects destructive drops, unsafe renames, unbounded rewrites, and blocking uniqueness unless a reviewable exception explains the rollout.
 - Prefer expand/contract migrations for zero-downtime releases. A destructive one-step rename is simpler, but it couples schema and code deployment and makes rollback unsafe.
 
 You are ready to deploy when `pnpm db:check:prod` reports the expected pending set, the backup is current, the migration works against a staging copy, and both old and new application versions can run during the rollout.

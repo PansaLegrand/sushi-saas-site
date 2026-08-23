@@ -2,26 +2,26 @@
 title: 非公開ファイルのアップロード
 icon: "UploadCloud"
 description: ポリシー、エンタイトルメント、容量上限、チェックサム、永続削除を備えた S3 互換の非公開アップロードを設定します。
-keywords: [S3, R2, MinIO, upload, storage]
+keywords: [S3, R2, Garage, MinIO, upload, storage]
 tags: [storage, セキュリティ]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> スターターのコミット [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) と同期済みです。
+> スターターのコミット [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) と同期済みです。
 
 アバター、文書、インポート、生成物を公開せず、すべてのバイトを Next.js サーバー経由にもしたくない場合に使います。完了後は、ログインしたユーザーが **アカウント → ファイル** でアップロード、ダウンロード、削除でき、別の組織からはアクセスできない状態になります。
 
 ## 製品に合うストレージ方針を選ぶ
 
-- AWS アカウントなしで S3 互換 API を早く使うなら **Cloudflare R2**、AWS 中心なら **AWS S3**、ローカルまたは自社運用なら **MinIO** が候補です。すべて同じアダプターを使い、環境変数だけで切り替えます。
+- Docker Compose は保守されている open-source **Garage** を local default として private bucket を作成します。本番では **Cloudflare R2** や **AWS S3** が一般的です。自社運用の `minio` も対応しますが、同梱 default ではありません。全 provider は同じ adapter を使います。
 - 混在ファイルは `general`、画像のみ（方針上限 10 MB）は `images`、文書は `documents`、ブラウザに SHA-256 を必須にするなら `verified` を選びます。
 - 実際の上限は、プラン、`STORAGE_MAX_UPLOAD_MB`、ポリシーのうち最も小さい値です。バケットは非公開のままにし、短時間だけ有効な署名付き URL で配信します。
 
 **本番準備完了の条件：** UI の一連の操作が成功し、CORS は運用するオリジンだけを許可し、直接の公開 URL では取得できず、組織をまたぐアクセスが拒否され、削除対象のオブジェクトを cron が最終的に消去します。
 
-`STORAGE_PROVIDER` を `s3`、`r2`、`minio` のいずれかにし、バケット、リージョン、エンドポイント、認証情報を設定します。オブジェクトは非公開で、ブラウザーは短時間だけ有効な署名付き URL のみを受け取ります。Web オリジンと PUT ヘッダーの CORS を設定し、外部サービスが要求しない ACL は使いません。
+`STORAGE_PROVIDER` を `garage`、`s3`、`r2`、`minio` から選び、bucket、region、endpoint、credentials を設定します。Object は private で、browser は短時間 signed URL だけを受け取ります。Image example も同じ private file lifecycle を使います。
 
 ## アップロードの契約
 

@@ -2,6 +2,7 @@
   "title": "Exemples optionnels",
   "defaultOpen": false,
   "pages": [
+    "image-generation-workflow",
     "text-to-video-tasks",
     "reservations-feature",
     "referrals"

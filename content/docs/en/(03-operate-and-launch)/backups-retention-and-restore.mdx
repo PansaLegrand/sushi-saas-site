@@ -1,0 +1,48 @@
+---
+title: Backups, Retention, and Restore Drills
+icon: "ArchiveRestore"
+description: Create verifiable PostgreSQL dumps, restore only into guarded scratch databases, and apply explicit retention without touching financial records.
+keywords: [PostgreSQL backup, restore drill, retention, RPO, RTO]
+tags: [backups, recovery, retention]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> Verified against starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+
+A backup is not proven until a different database restores it and passes the same migration check as the deployed application. The starter supplies guarded commands; your team still owns provider snapshots, schedule, encryption, storage region, RPO, RTO, and legal retention.
+
+## Create and verify a dump
+
+```bash
+pnpm db:backup
+pnpm db:backup -- --output-dir /secure/backup/path --label production
+```
+
+`BACKUP_DATABASE_URL` can select a direct or replica connection. The command writes a PostgreSQL custom-format dump, a SHA-256 manifest, restrictive file permissions, and an atomic final filename. Copy both files to encrypted, access-controlled storage; the ignored local directory is not a production backup destination.
+
+## Restore only into a scratch database
+
+Set `RESTORE_DATABASE_URL` to a disposable database whose name contains `restore`, `scratch`, or `drill`, then run:
+
+```bash
+pnpm db:restore:drill -- \
+  --backup .data/backups/example.dump \
+  --confirm sushi_restore_drill
+```
+
+The drill refuses development, test, Content Studio, and PostgreSQL maintenance databases. It verifies the manifest, restores the confirmed target, runs the strict migration checker, verifies application tables, and records the elapsed recovery time. It never creates or drops a database.
+
+## Retention is narrower than deletion
+
+Defaults are 14 days for finished jobs, 30 days for minimal marketing-provider receipts, 90 days for authentication events, and 365 days for admin audit logs. Jobs and provider receipts are pruned by maintenance automatically; auth and audit records require an explicit report/apply command.
+
+```bash
+pnpm retention:report
+pnpm retention:apply -- --confirm your_database --production
+```
+
+Financial ledgers, orders, subscriptions, product records, and user-authored content are outside this generic retention service. Take a verified backup before the first apply or a major policy reduction.
+
+**Ready to launch means:** recovery targets are written down, off-host copies exist, a restore drill meets RTO, migration verification passes on the restored copy, retention matches public policy, and an operator owns the next drill date.

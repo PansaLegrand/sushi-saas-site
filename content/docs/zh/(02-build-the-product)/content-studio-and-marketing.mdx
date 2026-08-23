@@ -1,0 +1,38 @@
+---
+title: 内容工作室与营销邮件
+icon: "PanelsTopLeft"
+description: 运行独立的 Payload 内容应用，将客户数据留在 SaaS 中，并安全发送基于同意的营销活动。
+keywords: [Payload CMS, 内容工作室, 营销邮件, 用户同意, Resend]
+tags: [content, marketing, email]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> 已根据 starter 提交 [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) 验证。
+
+Content Studio 是 starter 的第三个应用。它是独立部署的 Payload/Next.js 创作环境，用于页面、文章、内容简报、媒体和营销活动，不共享客户认证或 SaaS 数据库。
+
+## 明确部署边界
+
+| 应用 | 本地端口 | 数据库 | 负责内容 |
+| --- | ---: | --- | --- |
+| 客户应用 | 3000 | `DATABASE_URL` | 账户、组织、计费、同意和投递审计 |
+| 管理控制台 | 3001 | `DATABASE_URL` | 运营视图和带审计的操作 |
+| Content Studio | 3002 | `CONTENT_DATABASE_URL` | 编辑文档、媒体元数据和活动草稿 |
+
+`PAYLOAD_SECRET` 签署编辑会话，`CONTENT_STUDIO_URL` 让管理控制台链接到发布系统。不要让 Payload 使用 SaaS 数据库，也不要把订阅者或客户记录复制到 Studio。
+
+`./scripts/setup.sh development` 会创建 `sushi_content`、写入缺失的 Studio 环境配置并应用 Payload 迁移。`pnpm dev:all` 同时启动三个应用和持久 Worker。
+
+页面与文章支持五种语言、草稿、自动保存、预览、审阅、批准、定时发布和版本历史。内容使用已注册区块，不接受任意 HTML、CSS 或 JavaScript。修改 Payload collection 后运行 `studio:generate`、`studio:migrate:create`、`studio:migrate` 和 Studio check；这些迁移与 SaaS 的 Drizzle 历史独立。
+
+## 不创建影子 CRM 的营销系统
+
+Content Studio 负责布局、文案、预览、批准和计划；SaaS 负责真实邮箱、同意证据、退订与抑制、受众解析、持久投递任务、提供器凭据和审计。
+
+批准后的活动通过签名网关启动。SaaS 只选择当前已同意的订阅者，为每位收件人创建去重任务，并在调用 Resend 前再次检查同意。重复启动不会重复发送。取消只会停止尚未到达提供器的任务。
+
+共享 `CONTENT_MARKETING_SECRET`，但让 `MARKETING_UNSUBSCRIBE_SECRET` 保持独立，并为 `/api/marketing/webhooks/resend` 配置 `RESEND_WEBHOOK_SECRET`。
+
+**可以上线的标准：** 编辑者访问被隔离，两套迁移可独立部署，批准流程无法绕过，重复启动只发送一次，退订在下一次提供器调用前生效，并且 Payload 中没有订阅者地址。

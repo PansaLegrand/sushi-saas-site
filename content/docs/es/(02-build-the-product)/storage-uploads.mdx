@@ -2,26 +2,26 @@
 title: Subidas a almacenamiento privado
 icon: "UploadCloud"
 description: Configura subidas privadas S3 con políticas, entitlement, cuota, checksum y borrado duradero.
-keywords: [S3, R2, MinIO, subidas, almacenamiento]
+keywords: [S3, R2, Garage, MinIO, subidas, almacenamiento]
 tags: [almacenamiento, seguridad]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> Sincronizado con el commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) del starter.
+> Sincronizado con el commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) del starter.
 
 Usa esta función cuando tu producto necesite guardar avatares, documentos, importaciones o archivos generados sin hacerlos públicos ni enviar cada byte a través del servidor de Next.js. Al terminar, una persona autenticada debería poder subir, descargar y eliminar un archivo desde **Cuenta → Archivos**, sin que otra organización pueda acceder a él.
 
 ## Elige la política de almacenamiento adecuada
 
-- **Cloudflare R2** suele ser el camino más corto a una API compatible con S3 sin una cuenta de AWS. **AWS S3** encaja en una infraestructura de AWS y **MinIO** en entornos locales o autogestionados. Los tres usan el mismo adaptador; se cambia con variables de entorno.
+- Docker Compose usa **Garage** como opción local open source mantenida y crea el bucket privado. **Cloudflare R2** y **AWS S3** son opciones habituales de producción. `minio` sigue soportado para quien lo opera, pero ya no es el valor local incluido. Todos comparten adaptador.
 - Usa `general` para archivos mixtos, `images` para imágenes con un límite de política de 10 MB, `documents` para archivos ofimáticos y de texto, o `verified` cuando el navegador deba aportar un SHA-256.
 - El límite efectivo es el menor entre el plan, `STORAGE_MAX_UPLOAD_MB` y la política. Mantén el bucket privado; el modelo incluido entrega URLs firmadas de corta duración.
 
 **Está listo para producción cuando:** el flujo de la UI funciona completo, CORS solo admite tus orígenes, una URL pública directa falla, se rechaza el acceso entre organizaciones y cron termina eliminando el objeto de un archivo borrado.
 
-Define `STORAGE_PROVIDER` como `s3`, `r2` o `minio` y configura bucket, región, endpoint y credenciales. Los objetos son privados; el navegador recibe URLs firmadas breves, nunca credenciales. Configura CORS para el origen web y headers PUT; evita ACL salvo que el proveedor las exija.
+Define `STORAGE_PROVIDER` como `garage`, `s3`, `r2` o `minio` y configura bucket, región, endpoint y credenciales. Los objetos son privados y el navegador solo recibe URLs firmadas breves. El ejemplo de imagen usa el mismo ciclo de archivos privados.
 
 ## Contrato
 

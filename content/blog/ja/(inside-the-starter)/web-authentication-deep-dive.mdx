@@ -20,7 +20,7 @@ updatedAt: "2026-08-02T00:00:00.000Z"
 
 顧客アカウントでも二要素認証を利用できますが、顧客アプリでは任意です。独立した管理コンソールでは、`admin_ro` または `admin_rw` の権限に加えて、MFA が**必須**です。
 
-設定は [`7580470` の `src/lib/auth.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/7580470/src/lib/auth.ts) にあります。環境変数とコールバック URL は[認証と管理](/ja/docs/authentication-and-admin)を参照してください。
+設定は [`2a1a04a` の `src/lib/auth.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/lib/auth.ts) にあります。環境変数とコールバック URL は[認証と管理](/ja/docs/authentication-and-admin)を参照してください。
 
 ## 公開前に決めること
 
@@ -58,4 +58,4 @@ Turnstile は、認証情報を扱うエンドポイントとメール関連の�
 - 招待時の利用人数上限と、最後の所有者を守る処理を並行実行で試します。
 - 二つの管理者権限を初期設定し、管理用オリジンで MFA が強制されることを確認します。
 
-運用経路については[管理コンソールの設定](/ja/docs/admin-console-setup)へ進んでください。本ガイドはコミット `7580470` に基づきます。
+運用経路については[管理コンソールの設定](/ja/docs/admin-console-setup)へ進んでください。本ガイドはコミット `2a1a04a` に基づきます。

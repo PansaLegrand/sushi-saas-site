@@ -6,10 +6,10 @@ keywords: [管理ページ, 請求運用, モデレーション, 監査ログ]
 tags: [管理, 請求, モデレーション]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> スターターのコミット [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) と同期しています。
+> スターターのコミット [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) と同期しています。
 
 メニューではなく、運用担当者が知りたいことから始めます。「この請求はどの組織のものか」「クレジットが付かないのはなぜか」「このアカウントを停止すべきか」「この上限を誰が変更したか」。管理コンソールはアプリケーション側の証拠を集めますが、Stripe、アクセス解析、問い合わせ管理の代わりにはなりません。
 
@@ -62,3 +62,6 @@ updatedAt: "2026-08-02T00:00:00.000Z"
 保存済みの Stripe Webhook データを再処理するボタンは意図的に用意していません。原因を修正して Stripe の **Resend** を使ってください。また、アカウント停止を削除へ変換することもありません。ユーザーの依頼によるデータ出力と消去は、別のアカウントデータライフサイクルに従います。
 
 ローカル開発以外に公開する前に、[管理コンソールのセットアップとアクセス](/ja/docs/admin-console-setup)を確認してください。
+## 永続 job の復旧
+
+`/jobs` は payload JSON や dedupe key を出さず、status、attempt、due age、subject、安全な error を表示します。Write operator は監査 note 付きで idempotent failed job の retry または未 claim notification の cancel ができます。Running job は provider effect 済みの可能性があるため取消できません。Credit、storage、account lifecycle、campaign は所有 workflow から復旧します。

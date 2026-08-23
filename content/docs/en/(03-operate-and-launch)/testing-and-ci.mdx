@@ -1,0 +1,43 @@
+---
+title: Testing and CI Contracts
+icon: "TestTube2"
+description: Use the starter's test tiers, real infrastructure suite, Playwright flow, coverage ratchet, and build gates without weakening their guarantees.
+keywords: [Vitest, Playwright, CI, test database, coverage]
+tags: [testing, CI, reliability]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> Verified against starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+
+The test suite is organized by what it may mock. That rule matters more than the folder names: a mocked database test cannot prove a unique constraint, and a route test that mocks its auth guard cannot prove authentication happens before data access.
+
+| Tier | Purpose | May mock |
+| --- | --- | --- |
+| Unit | pure rules and architecture scans | nothing |
+| API route | HTTP status, envelope, auth ordering | services/models, never guards |
+| Service | orchestration, retries, costs, compensation | models and external SDKs |
+| Component | browser-visible behavior | `fetch` |
+| Database | constraints, locks, real timestamps | nothing |
+| End to end | signed-in browser through local infrastructure | nothing |
+
+Every route needs an auth-gate test proving the data function was not called before 401/403. Every credit or money mutation needs a replay test proving two identical requests produce one effect.
+
+## Commands
+
+```bash
+pnpm test:fast
+pnpm test:run
+pnpm test:cov
+pnpm test:db
+pnpm test:e2e
+```
+
+`test:fast` is the hermetic pre-commit pass. `test:run` executes every configured Vitest project; the database tier activates when `TEST_DATABASE_URL` is present. The database name must contain `test` because the harness truncates it. `test:cov` applies the coverage ratchet to services, models, API routes, shared server code, and admin data code.
+
+The Playwright suite uses a disposable stack on port 3100. It signs in through the visible Better Auth form and exercises tenant credits, direct Garage upload/delete, and the five-credit image workflow from idempotent replay through the durable worker to a signed private result. External targets require explicit credentials and `E2E_ALLOW_MUTATIONS=1` before destructive tests run.
+
+CI runs lint, migrations against PostgreSQL 16, Redis-backed tests, coverage, all application builds, and the browser suite. Do not lower a coverage threshold or replace a real-infrastructure test with a mock to turn a release green; change the product or add the missing test.
+
+**Ready to merge means:** the lowest tier that can prove each invariant contains the test, auth and replay checks exist where required, real infrastructure is green, and a production build succeeds.

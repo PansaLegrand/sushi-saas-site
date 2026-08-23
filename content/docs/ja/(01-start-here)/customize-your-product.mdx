@@ -6,7 +6,7 @@ keywords: [SaaS カスタマイズ, ブランド, 多言語, テーマ, 法務�
 tags: [セットアップ, プロダクト判断, カスタマイズ]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
 このページを終えると、スターターは**あなたのプロダクト**の名前、URL、言語、見た目で動き、各オプション機能について「維持・変更・削除」の判断が明確になります。個別画面を変更する前に決めてください。プロダクトのアイデンティティと範囲は、URL、メール、法務文書、解析、課金、管理コンソールに影響します。
@@ -15,8 +15,8 @@ updatedAt: "2026-08-02T00:00:00.000Z"
 
 | 領域 | 同梱時の動作 | あなたが決めること |
 | --- | --- | --- |
-| プロダクト名 | `NEXT_PUBLIC_APP_NAME` が未設定なら `Your SaaS`。`NEXT_PUBLIC_DOCS_URL` は任意 | 公開名と、内容を確認済みのドキュメント URL |
-| サポート | `SiteConfig.contactEmail` は `null` で、メールアドレスは表示されない | `src/config/site.ts` に設定するか、別の窓口が担うと明示する |
+| 製品 identity | `saas.config.json` が名前、slug、support、docs URL を追跡 | customizer を実行して diff を確認 |
+| サポート | Support email は追跡される製品値 | 公開前に設定するか別窓口を明示 |
 | 言語 | 英語、中国語、スペイン語、フランス語、日本語を利用可能。URL 接頭辞は必要な場合だけ付く | 既定の言語、提供する言語、ブラウザ言語の自動判定 |
 | ビジュアル | Web と管理画面で共有するビルド時プリセットは `studio` | 維持するか、コードで `glass`、`soft`、`editorial`、`brutalist` を選ぶ |
 | カラーモード | 顧客向けアプリは環境変数で `system` が既定 | `system`、`light`、`dark` を選ぶ。管理画面にはまだモード切替がない |
@@ -31,30 +31,25 @@ updatedAt: "2026-08-02T00:00:00.000Z"
 
 ## アイデンティティと言語を設定する
 
-まず `.env` の公開値を変更します。
+まず Git で追跡される customizer を実行します。
 
 ```bash
-NEXT_PUBLIC_APP_NAME=Acme Cloud
-NEXT_PUBLIC_DOCS_URL=https://docs.example.com
-NEXT_PUBLIC_DEFAULT_THEME=system
-NEXT_PUBLIC_DEFAULT_LOCALE=ja
-NEXT_PUBLIC_LOCALES=ja,en
-NEXT_PUBLIC_LOCALE_DETECTION=true
+pnpm customize
+
+pnpm customize -- --name "Acme Cloud" --slug acme-cloud --preset glass --locales ja,en --default-locale ja --support-email support@example.com --docs-url https://docs.example.com --yes
 ```
 
-デフォルト言語には接頭辞がなく、それ以外には付きます。この例では日本語が `/pricing`、英語が `/en/pricing` です。`NEXT_PUBLIC_LOCALE_DETECTION` はブラウザ設定から有効言語を選ぶかを制御します。`NEXT_PUBLIC_*` はクライアントビルドに埋め込まれるため、変更後は再ビルド・再デプロイが必要です。
-
-`NEXT_PUBLIC_DOCS_URL` は空でも構いません。外部ドキュメントを公開するなら、レビュー済みの本番 URL を設定します。サポート連絡先は意図的に環境変数ではありません。`src/config/site.ts` の `SiteConfig.contactEmail` に設定するか、別の窓口が責任を持つなら `null` のままにします。
+コマンドは `saas.config.json` を検証して atomic に書き、既存の ignored profile に公開値だけを同期します。Secret は変更しません。`--dry-run` は候補表示、`--no-env` は同期停止です。本番 gate は追跡 identity と矛盾する override を拒否します。
 
 ## ビジュアルプリセットを 1 つ選ぶ
 
-`src/config/style.ts` の型付き定数を変更します。
+Customizer で preset を選ぶか、追跡設定を編集します。
 
-```ts
-export const stylePreset: StylePreset = "glass";
+```json
+{ "appearance": { "preset": "glass" } }
 ```
 
-顧客向けアプリと管理コンソールは同じ値を使います。これはビルド時に決まるプロダクト設定で、ユーザーごとに実行時に選ぶものではありません。既定以外を採用する前に、両アプリの代表的なページ、フォーム、表、ダイアログ、空の状態、エラーを確認してください。顧客向けアプリはライト、ダーク、システム設定に対応しますが、管理画面にはまだテーマモードを提供する仕組みがありません。
+`src/config/style.ts` は `saas.config.json` から型付き値を導出します。Web と admin は同じ preset を使い、ユーザーごとの selector ではありません。
 
 ## 法的な身元情報を完成させる
 
@@ -89,9 +84,9 @@ pnpm build:admin
 
 ## ソーススナップショット
 
-スターターのコミット `7580470` で確認済みです。
+スターターのコミット `2a1a04a` で確認済みです。
 
-- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/site.ts)
-- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/i18n/locale.ts)
-- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/style.ts)
-- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/legal.ts)
+- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/site.ts)
+- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/i18n/locale.ts)
+- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/style.ts)
+- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/legal.ts)

@@ -6,10 +6,10 @@ keywords: [方案, 功能权限, 上限, 订阅, Stripe, SaaS 定价]
 tags: [方案, 计费, 权限]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> 已根据 starter 提交 [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) 验证。
+> 已根据 starter 提交 [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) 验证。
 
 替换演示定价时从这里开始。你需要决定每个方案允许哪些客户操作、限制哪些数量，以及付款失败或降级时发生什么。模板提供单一目录和单一执行边界，让这些决定始终一致。
 
@@ -36,10 +36,13 @@ const maximum = await limitOf(orgUuid, "storage.maxFileMb");
 | 单文件上限 | 5 MB | 25 MB | 200 MB |
 | 总存储 | 100 MB | 5,000 MB | 50,000 MB |
 | 文本生成视频 | 否 | 是 | 是 |
-| 每月任务 | 0 | 50 | 不限 |
+| 图像生成 | 是 | 是 | 是 |
+| 每月任务 | 10 | 50 | 不限 |
 | 每月包含积分 | 0 | 500 | 2,500 |
 
 `null` 表示不限。注册积分是一次性发放；Free 没有周期性积分任务。
+
+图像参考工作流对所有档位开放，因为固定的五积分成本由账本计量；Free 用户可使用一次性注册积分，同时仍经过统一权限边界。
 
 ## 有效方案解析
 

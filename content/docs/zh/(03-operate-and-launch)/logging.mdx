@@ -1,17 +1,21 @@
 ---
-title: 结构化日志
+title: 可观测性与结构化日志
 icon: "ScrollText"
-description: 使用可关联、已脱敏的结构化日志运维 Node 与 Edge runtime。
+description: 通过脱敏日志、OpenTelemetry trace、队列 readiness 与可操作告警关联 Web 和 Worker。
 keywords: [日志, Pino, 可观测性, request ID]
 tags: [日志, 运维]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> 已与启动模板提交 [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) 同步。
+> 已与启动模板提交 [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) 同步。
 
 请在第一次事故发生前使用本页，让客服和故障处理具备基本可观察性。Sushi SaaS 把 JSON 写到 stdout，但有意不替你选择日志存储供应商、保留期、仪表盘或告警产品。
+
+OpenTelemetry 是可选且与供应商无关的。设置 `OTEL_ENABLED=true`、每个进程独立的 `OTEL_SERVICE_NAME`，以及标准 OTLP endpoint/header。Next.js 请求、fetch 与 job 入队/执行 span 会被导出，span 内日志包含 `trace_id` 和 `span_id`；未启用时没有额外效果。
+
+`/api/ready` 返回不含 payload 的队列数量、失败/过期 Worker 和最老等待时间。失败任务或等待超过十分钟会标记 degraded，但不会自动下线客户流量；依赖故障仍返回 503。
 
 ## 做出三项运维选择
 

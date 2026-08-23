@@ -1,17 +1,21 @@
 ---
-title: 構造化ログ
+title: 可観測性と構造化ログ
 icon: "ScrollText"
-description: Node.js とエッジ環境で、相関情報を持ち機密情報を除去した構造化ログを使って運用します。
+description: Redacted log、OpenTelemetry trace、queue readiness、alert を web と worker 間で相関します。
 keywords: [logging, Pino, observability, request ID]
 tags: [logging, 運用]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> スターターのコミット [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) と同期済みです。
+> スターターのコミット [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) と同期済みです。
 
 最初の障害が起きる前に、サポートとインシデント対応ができるよう設定します。Sushi SaaS は JSON を標準出力へ書きますが、ログ保存サービス、保持期間、ダッシュボード、警告サービスは意図的に選んでいません。
+
+OpenTelemetry は optional で vendor-neutral です。`OTEL_ENABLED=true`、process ごとの `OTEL_SERVICE_NAME`、標準 OTLP endpoint/header を設定します。Request、fetch、job span が export され、span 内 log に `trace_id` と `span_id` が付きます。未設定なら no-op です。
+
+`/api/ready` は payload を含まない queue count、failed/stale jobs、oldest due age を返します。Failed または 10 分超の job は queue を degraded にしますが traffic は止めず、dependency failure は 503 です。
 
 ## 三つの運用判断をする
 

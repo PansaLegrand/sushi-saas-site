@@ -6,10 +6,10 @@ keywords: [trabajos en segundo plano, cron, cola, readiness, health check, Postg
 tags: [trabajos, operaciones, fiabilidad]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> Sincronizado con el commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) del starter.
+> Sincronizado con el commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) del starter.
 
 Usa esta página cuando un trabajo deba terminar aunque la petición del navegador ya haya respondido: enviar correo, conceder créditos, borrar un objeto o completar una solicitud de privacidad. El starter incluye una cola ligera sobre PostgreSQL, suficiente para que muchos equipos lancen sin operar una cola Redis ni un servicio worker independiente.
 
@@ -37,6 +37,17 @@ await enqueueJob("welcome_email", { email, name, userUuid }, {
 ```
 
 `dedupeKey` hace idempotente el alta. Los UUID de sujeto permiten cancelar o limpiar trabajos durante un proceso de privacidad. Los handlers también deben ser idempotentes.
+
+## Elige un runner predeterminado
+
+| Entorno | Recomendación |
+| --- | --- |
+| Local | `pnpm dev:all` inicia `pnpm jobs:work` |
+| VM/contenedor/Kubernetes | `pnpm jobs:work --production` |
+| Scheduler | `pnpm jobs:run --production` |
+| Vercel | `/api/cron/jobs` autenticado |
+
+La página admin `/jobs` muestra estado, intentos, antigüedad, sujeto y error seguro sin exponer payload JSON. `admin_rw` puede reintentar jobs idempotentes fallidos o cancelar notificaciones pendientes con nota auditada; créditos, storage, lifecycle y campañas se cancelan desde su workflow.
 
 ## Ejecución
 

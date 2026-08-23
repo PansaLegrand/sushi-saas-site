@@ -6,10 +6,10 @@ keywords: [admin pages, billing operations, moderation, audit log]
 tags: [admin, billing, moderation]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> Synced with starter commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb).
+> Synced with starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
 
 Use this page by starting from the operator’s question, not from the menu: “Which workspace owns this charge?”, “Why were credits not granted?”, “Should this account be suspended?”, or “Who changed this limit?” The console brings the application-side evidence together, but it does not replace Stripe, your analytics platform, or a support ticketing system.
 
@@ -62,3 +62,7 @@ All included write routes require `admin_rw`, validate same-origin requests, and
 The console intentionally has no button that replays a stored Stripe webhook payload. Use Stripe's Resend action after correcting the cause. It also does not turn suspension into deletion: user-requested export and erasure follow the separate account-data lifecycle.
 
 See [Admin Console Setup and Access](/docs/admin-console-setup) before exposing this application outside local development, and include its operator workflows in the [Deployment and Security](/docs/deployment-and-security) launch test.
+
+## Durable Job Recovery
+
+`/jobs` shows queue state, attempts, due age, subjects, and safe error details without exposing payload JSON or deduplication keys. Read/write operators can retry a failed idempotent job or cancel an unclaimed standalone notification, always with a required audit note. Running work cannot be canceled because a provider effect may already be in flight. Credits, storage deletion, account lifecycle, and campaign delivery must be recovered through their owning workflow so related state remains consistent.

@@ -6,10 +6,10 @@ keywords: [部署, 安全, Vercel, 生产]
 tags: [部署, 安全]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> 已与启动模板提交 [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) 同步。
+> 已与启动模板提交 [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) 同步。
 
 请在应用本地可用后，把本页作为采用者的最后检查清单。目标不仅是“部署成功”，而是得到一个能够认证、收费、运维、恢复和管理，且没有开发捷径的版本。
 
@@ -37,3 +37,5 @@ updatedAt: "2026-08-02T00:00:00.000Z"
 `/api/health` 用于存活，`/api/ready` 用于部署就绪；后者检查环境、数据库、迁移、Redis 与队列，队列降级即使不阻断请求也需告警。
 
 安全 header 包含生产 HSTS 和 report-only CSP 路径。先观察报告，再按分析、验证码、支付和存储 host 收紧策略。部署后 smoke-test 认证、组织隔离、结账/webhook、Cron、导出/删除与管理端 MFA。上线前阅读模板 `DEPLOYMENT.md`、`docs/security-headers.md` 和 `.env.example`。
+
+当前版本还提供 Web、Admin、Worker、Content Studio 的加固镜像，以及汇总配置、容器、迁移、完整性、保留、测试和构建的 `pnpm launch:check`。请继续阅读[容器与上线就绪](/zh/docs/containers-and-launch-readiness)并通过[备份与恢复演练](/zh/docs/backups-retention-and-restore)证明恢复能力。

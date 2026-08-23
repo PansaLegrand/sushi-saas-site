@@ -1,0 +1,41 @@
+---
+title: Contenedores y preparación de lanzamiento
+icon: "Container"
+description: Construye web, admin, worker y Content Studio, separa migraciones y ejecuta la auditoría completa de producción.
+keywords: [Docker, contenedores, despliegue, checklist, readiness]
+tags: [containers, deployment, launch]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> Verificado con el commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+
+El repositorio entrega cuatro imágenes independientes: web, consola admin, worker durable y Content Studio opcional. PostgreSQL, Redis y objetos siguen siendo servicios externos con su propia disponibilidad, cifrado y copias.
+
+| Proceso | Dockerfile | Puerto |
+| --- | --- | ---: |
+| Web | `Dockerfile.web` | 3000 |
+| Admin | `Dockerfile.admin` | 3001 |
+| Worker | `Dockerfile.worker` | ninguno |
+| Content Studio | `Dockerfile.studio` | 3002 |
+
+```bash
+pnpm customize
+./scripts/setup.sh production
+pnpm containers:check
+```
+
+Los valores públicos `NEXT_PUBLIC_*` son argumentos de build; credenciales de base, auth, Stripe, Resend y storage son solo runtime. Las imágenes finales usan Node fijado y usuario no root, filesystem de solo lectura cuando aplica, capacidades eliminadas y ningún tooling de desarrollo.
+
+Ninguna imagen migra al arrancar. Antes de promover:
+
+```bash
+pnpm db:migrate:prod
+pnpm db:check:prod
+pnpm launch:check
+```
+
+`launch:check` reúne configuración, entorno, contratos de contenedor, migraciones, integridad, retención, tests y builds. Usa skips solo si el mismo release registra el control equivalente.
+
+**Listo para lanzar:** imágenes de una revisión, migraciones aplicadas, readiness sano, worker y scheduler activos, restore dentro del objetivo, sin flags demo, MFA admin verificado y auditoría verde.

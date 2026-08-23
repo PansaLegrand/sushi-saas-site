@@ -2,26 +2,26 @@
 title: Private Storage Uploads
 icon: "UploadCloud"
 description: Configure private S3-compatible uploads with policy, entitlement, quota, checksum, and durable deletion controls.
-keywords: [S3, R2, MinIO, uploads, storage]
+keywords: [S3, R2, Garage, MinIO, uploads, storage]
 tags: [storage, security]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> Synced with starter commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb).
+> Synced with starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
 
 Use this when your product needs user files—avatars, documents, imports, or generated assets—without making them public or proxying every byte through the Next.js server. By the end, a signed-in user should be able to upload, download, and delete a file from **Account → Files**, while another organization cannot access it.
 
 ## Choose the storage policy that fits your product
 
-- **Cloudflare R2** is usually the shortest path if you want an S3-compatible service without an AWS account. **AWS S3** fits an AWS-native stack. **MinIO** is useful for local or self-hosted environments. All three use the same adapter; switching is environment configuration.
+- Docker Compose uses **Garage** as the maintained open-source local default and provisions a private bucket automatically. **Cloudflare R2** and **AWS S3** are common production choices. `minio` remains supported for teams that operate it, but it is no longer the bundled default. All providers use the same adapter.
 - Choose `general` for mixed files, `images` for image-only input with a 10 MB policy cap, `documents` for office/text files, or `verified` when the browser must provide a SHA-256 checksum.
 - The effective file limit is the smallest of the plan limit, `STORAGE_MAX_UPLOAD_MB`, and the selected policy. Keep the bucket private; “private” is the shipped delivery model, using short-lived signed URLs.
 
 **Ready to launch means:** the UI flow works end to end, CORS accepts only the origins you operate, a direct public object URL fails, cross-organization access is rejected, and cron eventually removes a deleted object.
 
-Set `STORAGE_PROVIDER` to `s3`, `r2`, or `minio`, then configure bucket, region, endpoint, and credentials. Objects stay private; browsers receive short-lived presigned URLs, never credentials. Configure bucket CORS for your web origin and required PUT headers, and do not enable ACLs unless the provider requires them.
+Set `STORAGE_PROVIDER` to `garage`, `s3`, `r2`, or `minio`, then configure bucket, region, endpoint, and credentials. Objects stay private; browsers receive short-lived presigned URLs, never credentials. The image-generation reference writes its output through the same private file lifecycle. Configure bucket CORS for your web origin and required PUT headers, and do not enable ACLs unless the provider requires them.
 
 ## Upload Contract
 

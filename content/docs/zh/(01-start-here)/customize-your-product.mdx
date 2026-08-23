@@ -6,7 +6,7 @@ keywords: [SaaS 定制, 品牌, 多语言, 主题, 法律配置, 功能取舍]
 tags: [配置, 产品决策, 定制]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
 完成本页后，启动模板将以**你的产品**的名称、URL、语言与视觉风格运行；每个可选系统也会有明确的保留、调整或移除结论。请在修改单个页面前完成这些决定，因为产品身份和边界会影响 URL、邮件、法律文本、分析、计费与管理控制台。
@@ -15,8 +15,8 @@ updatedAt: "2026-08-02T00:00:00.000Z"
 
 | 范围 | 默认行为 | 你的决定 |
 | --- | --- | --- |
-| 产品身份 | `NEXT_PUBLIC_APP_NAME` 缺省为 `Your SaaS`；`NEXT_PUBLIC_DOCS_URL` 可选 | 设置公开名称与已审核的文档地址 |
-| 支持方式 | `SiteConfig.contactEmail` 为 `null`，界面不显示支持邮箱 | 在 `src/config/site.ts` 中填写地址，或明确由其他渠道提供支持 |
+| 产品身份 | `saas.config.json` 跟踪名称、slug、支持方式和文档 URL | 运行 customizer 并审核跟踪差异 |
+| 支持方式 | 支持邮箱是明确的跟踪产品值 | 上线前设置，或明确由其他渠道承担 |
 | 语言 | 可用英语、中文、西班牙语、法语与日语；URL 按需添加语言前缀 | 选择默认语言、启用集合与浏览器语言检测 |
 | 视觉风格 | `studio` 是 Web 与管理端共享的构建时预设 | 保留它，或在代码中选择 `glass`、`soft`、`editorial`、`brutalist` |
 | 颜色模式 | 用户端通过环境变量默认使用 `system` | 选择 `system`、`light` 或 `dark`；管理端尚无模式切换器 |
@@ -31,30 +31,25 @@ updatedAt: "2026-08-02T00:00:00.000Z"
 
 ## 设置产品身份与语言行为
 
-先修改 `.env` 中的公开值：
+先运行可跟踪的产品 customizer：
 
 ```bash
-NEXT_PUBLIC_APP_NAME=Acme Cloud
-NEXT_PUBLIC_DOCS_URL=https://docs.example.com
-NEXT_PUBLIC_DEFAULT_THEME=system
-NEXT_PUBLIC_DEFAULT_LOCALE=zh
-NEXT_PUBLIC_LOCALES=zh,en
-NEXT_PUBLIC_LOCALE_DETECTION=true
+pnpm customize
+
+pnpm customize -- --name "Acme Cloud" --slug acme-cloud --preset glass --locales zh,en --default-locale zh --support-email support@example.com --docs-url https://docs.example.com --yes
 ```
 
-默认语言不带前缀，其他启用语言会带前缀。以上配置下，中文使用 `/pricing`，英语使用 `/en/pricing`。`NEXT_PUBLIC_LOCALE_DETECTION` 决定是否根据浏览器偏好选择已启用语言。`NEXT_PUBLIC_*` 会编译进客户端构建，修改后必须重新构建并部署。
-
-`NEXT_PUBLIC_DOCS_URL` 可以留空；如果发布外部文档，请填写已审核的生产地址。支持邮箱刻意不是环境变量：在 `src/config/site.ts` 中设置 `SiteConfig.contactEmail`，或者在其他渠道承担支持时保持 `null`。
+命令会验证并原子写入 `saas.config.json`，并只同步现有忽略环境文件中的公开身份值，不会触碰密钥。`--dry-run` 只输出候选内容，`--no-env` 不同步环境。生产门禁会拒绝与跟踪身份冲突的覆盖值。
 
 ## 选择一个视觉预设
 
-修改 `src/config/style.ts` 中有类型约束的常量：
+通过 customizer 选择 preset，或修改跟踪配置：
 
-```ts
-export const stylePreset: StylePreset = "glass";
+```json
+{ "appearance": { "preset": "glass" } }
 ```
 
-用户端与管理控制台都会使用同一个值。这是构建时产品选择，不是每位用户的运行时选择器。采用非默认预设前，请检查两个应用中的常用页面、表单、表格、对话框、空状态和错误状态。用户端支持亮色、暗色和跟随系统；管理端目前没有主题模式 provider。
+`src/config/style.ts` 从 `saas.config.json` 派生类型值，Web 与 Admin 使用同一 preset。这是构建时选择，不是用户级选择器。
 
 ## 完成法律身份配置
 
@@ -89,9 +84,9 @@ pnpm build:admin
 
 ## 源码快照
 
-已根据启动模板提交 `7580470` 验证：
+已根据启动模板提交 `2a1a04a` 验证：
 
-- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/site.ts)
-- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/i18n/locale.ts)
-- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/style.ts)
-- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb/src/config/legal.ts)
+- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/site.ts)
+- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/i18n/locale.ts)
+- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/style.ts)
+- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/legal.ts)

@@ -1,0 +1,36 @@
+---
+title: Content Studio とマーケティングメール
+icon: "PanelsTopLeft"
+description: 独立した Payload アプリを運用し、顧客データを SaaS 側に保ち、同意に基づくキャンペーンを安全に配信します。
+keywords: [Payload CMS, Content Studio, マーケティングメール, 同意, Resend]
+tags: [content, marketing, email]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> starter コミット [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) で確認済みです。
+
+Content Studio は starter の 3 番目のアプリです。ページ、記事、ブリーフ、メディア、キャンペーンを扱う独立 Payload/Next.js 環境で、顧客認証や SaaS データベースは共有しません。
+
+| アプリ | ポート | データベース | 所有する情報 |
+| --- | ---: | --- | --- |
+| 顧客アプリ | 3000 | `DATABASE_URL` | アカウント、組織、課金、同意、配信監査 |
+| Admin | 3001 | `DATABASE_URL` | 運用ビューと監査付き操作 |
+| Content Studio | 3002 | `CONTENT_DATABASE_URL` | 編集文書、メディア、キャンペーン草稿 |
+
+`PAYLOAD_SECRET` は編集者セッションを署名し、`CONTENT_STUDIO_URL` は管理画面から公開環境へリンクします。Payload を SaaS DB に向けたり、購読者・顧客を Studio へコピーしないでください。
+
+`./scripts/setup.sh development` は `sushi_content`、不足する環境ファイル、Payload migration を準備します。`pnpm dev:all` は 3 アプリと worker を起動します。
+
+ページと投稿は 5 言語、草稿、autosave、preview、レビュー、承認、予約公開、履歴に対応し、登録済みブロックだけを使用します。Collection 変更後は `studio:generate`、`studio:migrate:create`、`studio:migrate`、Studio check を実行します。Drizzle migration とは別管理です。
+
+## 影の CRM を作らないマーケティング
+
+Studio はレイアウト、文面、preview、承認、予定を所有します。SaaS はメールアドレス、同意証跡、解除・抑制、オーディエンス、永続 job、秘密情報、監査を所有します。
+
+承認済みキャンペーンは署名 gateway を使います。SaaS は現在同意している購読者だけを選び、宛先ごとに重複排除 job を作成し、Resend の直前に同意を再確認します。再実行しても二重送信しません。キャンセルは提供者に到達していない処理だけを止めます。
+
+`CONTENT_MARKETING_SECRET` を共有し、`MARKETING_UNSUBSCRIBE_SECRET` は分離し、`/api/marketing/webhooks/resend` 用に `RESEND_WEBHOOK_SECRET` を設定します。
+
+**リリース可能条件：** 編集アクセスが分離され、migration が独立し、承認を迂回できず、再実行が一度だけ送信し、解除が次の提供者呼び出し前に反映され、Payload に購読者アドレスがないこと。

@@ -53,8 +53,7 @@ should include a linked documentation change in this repository.
 
 ## Migration provenance
 
-- Starter documentation snapshot: `sushi-saas-template` commit
-  `c6ed873c6e066132b1cbe286607aa54d1e3107bd`
+- Starter documentation snapshot: `sushi-saas-template` commit `2a1a04a`
 - Editorial site snapshot: former `site` branch commit
   `175b5a712e08b5b57574e72838fcf78bd9324c44`
 

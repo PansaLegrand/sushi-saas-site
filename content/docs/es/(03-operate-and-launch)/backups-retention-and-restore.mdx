@@ -1,0 +1,38 @@
+---
+title: Copias, retención y simulacros de restauración
+icon: "ArchiveRestore"
+description: Crea dumps PostgreSQL verificables, restaura solo en bases temporales protegidas y aplica retención explícita.
+keywords: [backup PostgreSQL, restore drill, retención, RPO, RTO]
+tags: [backups, recovery, retention]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> Verificado con el commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+
+Una copia no está probada hasta restaurarla en otra base y superar el mismo control de migraciones. El starter aporta comandos protegidos; tu equipo decide snapshots, frecuencia, cifrado, región, RPO, RTO y retención legal.
+
+```bash
+pnpm db:backup
+pnpm db:backup -- --output-dir /secure/backup/path --label production
+```
+
+Se genera un dump custom de PostgreSQL, manifiesto SHA-256, permisos restrictivos y nombre atómico. Copia ambos a almacenamiento cifrado y controlado fuera del host.
+
+Apunta `RESTORE_DATABASE_URL` a una base desechable cuyo nombre contenga `restore`, `scratch` o `drill`:
+
+```bash
+pnpm db:restore:drill -- --backup .data/backups/example.dump --confirm sushi_restore_drill
+```
+
+El simulacro rechaza bases de desarrollo, test, Studio y mantenimiento. Verifica manifiesto, restaura, ejecuta el control estricto de migraciones, comprueba tablas y registra RTO. Nunca crea ni elimina una base.
+
+La retención por defecto es 14 días para jobs terminados, 30 para recibos mínimos de marketing, 90 para eventos de autenticación y 365 para auditoría admin. Libros financieros, pedidos, suscripciones, registros de producto y contenido quedan fuera.
+
+```bash
+pnpm retention:report
+pnpm retention:apply -- --confirm your_database --production
+```
+
+**Listo para lanzar:** objetivos escritos, copias externas, restauración dentro del RTO, migraciones verificadas en la copia, retención coherente con la política y responsable del siguiente simulacro.

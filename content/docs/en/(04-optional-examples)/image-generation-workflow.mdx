@@ -1,0 +1,54 @@
+---
+title: Five-Credit Image Generation Workflow
+icon: "Image"
+description: Trace the starter's complete asynchronous paid task through authentication, entitlements, idempotent credits, durable work, private storage, and failure compensation.
+keywords: [image generation, AI tasks, credits, durable jobs, idempotency]
+tags: [tasks, AI, credits, storage]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> Verified against starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+
+Image generation is the starter's minimal reference for a production-shaped paid workflow. The local provider returns a generated SVG rather than calling a commercial model; the important part is the chain around it. One accepted request costs exactly five pooled organization credits.
+
+## Run it locally
+
+Enable the development-only provider:
+
+```dotenv
+ENABLE_DEMO_FEATURES=true
+ENABLE_IMAGE_GENERATION_MOCK=true
+IMAGE_GENERATION_MOCK_FAILURES=0
+```
+
+Start `pnpm dev:all`, sign in with the seeded demo account, and open `/en/tasks/image-generation`. The UI submits one idempotency key and polls the tenant-scoped task endpoint until the worker reaches a terminal state.
+
+## The recoverable chain
+
+1. `POST /api/tasks/image-generation` checks same origin, rate limit, authentication, `tasks.image_generation`, and the shared monthly task limit.
+2. `(user_uuid, type, idempotency_key)` identifies one task. A SHA-256 request fingerprint rejects reusing that key with another prompt.
+3. `task_image:<task uuid>` identifies the five-credit spend. Concurrent request replays return the existing logical debit instead of spending again.
+4. `task_image_generation:<task uuid>` deduplicates the durable job. A crash between task, spend, and dispatch is repaired by replaying the request.
+5. The worker calls the provider with the stable task UUID, writes a deterministic private Garage/S3 object, verifies it, activates its file row, and marks the task succeeded.
+6. `GET /api/tasks/[uuid]` resolves the organization-scoped file and creates a short-lived signed URL. Bucket credentials and object keys never enter the public task contract.
+
+The task state machine is:
+
+```text
+pending_payment → queued → running → succeeded
+                           ↘ refunding → failed
+```
+
+Provider attempts stop after five; the job has eight attempts, leaving three attempts for compensation if the database is temporarily unavailable. A terminal provider failure moves the task to `refunding`, appends the deterministic ledger refund, and only then records `failed`. Replaying a refunding or terminal task never runs the provider or refund twice.
+
+Set `IMAGE_GENERATION_MOCK_FAILURES=5` to exercise the retry and compensation path. The real-database suite proves one spend and one refund after five failures; Playwright proves request replay, exact five-credit balance change, worker execution, Garage storage, and signed download.
+
+## Replace the provider, not the workflow
+
+Implement the real adapter in `src/services/ai/image.ts`. Honor the supplied idempotency key and abort signal, return bytes plus content type, and keep provider credentials and SDK types inside that adapter. Preserve task, credit, job, storage, and public error contracts.
+
+**Ready to launch means:** duplicate HTTP requests spend once, provider retries use one external identity, private output is tenant-scoped, a crash after upload repairs the task link, terminal failure refunds once, and operators can recover a buried compensation job.
+
+**Related:** [Organization Credit Ledger](/docs/account-ledger), [Private Storage Uploads](/docs/storage-uploads), [Durable Jobs and Readiness](/docs/jobs-and-readiness), and [Testing and CI Contracts](/docs/testing-and-ci).

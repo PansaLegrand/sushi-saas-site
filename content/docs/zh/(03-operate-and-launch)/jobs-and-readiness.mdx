@@ -6,10 +6,10 @@ keywords: [后台任务, cron, 队列, readiness, health check, PostgreSQL]
 tags: [任务, 运维, 可靠性]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> 已与 starter 提交 [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) 同步。
+> 已与 starter 提交 [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) 同步。
 
 当某项工作必须在浏览器请求结束后继续完成时，请使用本页，例如发送邮件、发放积分、删除对象或完成隐私请求。模板内置轻量的 PostgreSQL 持久队列，多数团队无需先运维 Redis 队列或独立 worker 服务即可上线。
 
@@ -37,6 +37,17 @@ await enqueueJob("welcome_email", { email, name, userUuid }, {
 ```
 
 `dedupeKey` 保证入队幂等。Subject UUID 让隐私流程能够取消或清理待处理任务。Handler 自身也必须幂等，因为 provider 可能已接受请求而 worker 尚未收到响应。
+
+## 选择一种默认 Runner
+
+| 环境 | 推荐方式 |
+| --- | --- |
+| 本地开发 | `pnpm dev:all` 启动 `pnpm jobs:work` |
+| VM/容器/Kubernetes | `pnpm jobs:work --production` |
+| 平台调度器 | `pnpm jobs:run --production` |
+| Vercel | 认证的 `/api/cron/jobs` |
+
+Admin 的 `/jobs` 页面显示状态、次数、等待时间、主体和安全错误信息，不暴露 payload JSON。`admin_rw` 可带审计说明重试失败的幂等任务或取消独立通知；积分、存储、生命周期和活动任务必须通过所属工作流取消。
 
 ## Runner 行为
 

@@ -6,12 +6,14 @@ keywords: [tasks, text to video, credits, idempotency]
 tags: [tasks, AI]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> Synced with starter commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb).
+> Synced with starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
 
 Use this page as a reference for building a metered AI feature, not as a ready-made video product. What ships is a local-only mock screen plus the hard parts around tenancy, entitlements, monthly limits, pooled credits, idempotency, failure state, and refunds. Production ignores the demo flags, so no real video generation is enabled by cloning the repository.
+
+For a new asynchronous paid feature, start with [Five-Credit Image Generation](/docs/image-generation-workflow). It is the current durable reference with recoverable task/spend/job identities, private output storage, bounded provider retries, and exactly-once terminal compensation. Text-to-video remains useful as the smaller synchronous adapter example.
 
 ## Decide what your real provider contract needs
 

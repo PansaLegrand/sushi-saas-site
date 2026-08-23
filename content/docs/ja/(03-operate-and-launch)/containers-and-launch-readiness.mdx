@@ -1,0 +1,41 @@
+---
+title: コンテナとローンチ準備
+icon: "Container"
+description: Web、admin、worker、Content Studio を build し、migration を分離して本番監査を実行します。
+keywords: [Docker, コンテナ, デプロイ, チェックリスト, readiness]
+tags: [containers, deployment, launch]
+author: "Sushi SaaS"
+publishedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
+---
+
+> コミット [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) で確認済みです。
+
+Repository は web、admin、durable worker、optional Content Studio の 4 つの独立 image を提供します。PostgreSQL、Redis、object storage は可用性、暗号化、backup を持つ外部 service です。
+
+| Process | Dockerfile | Port |
+| --- | --- | ---: |
+| Web | `Dockerfile.web` | 3000 |
+| Admin | `Dockerfile.admin` | 3001 |
+| Worker | `Dockerfile.worker` | なし |
+| Content Studio | `Dockerfile.studio` | 3002 |
+
+```bash
+pnpm customize
+./scripts/setup.sh production
+pnpm containers:check
+```
+
+公開 `NEXT_PUBLIC_*` は build args、DB、auth、Stripe、Resend、storage secret は runtime 専用です。Final image は固定 Node、non-root user、可能な限り read-only filesystem、削除された capability、開発 tooling なしで動きます。
+
+Image 起動時に migration は実行しません。Promotion 前に：
+
+```bash
+pnpm db:migrate:prod
+pnpm db:check:prod
+pnpm launch:check
+```
+
+`launch:check` は product config、production env、container contract、migration、data integrity、retention、tests、builds をまとめます。同じ release で同等の確認を記録するときだけ skip を使います。
+
+**リリース可能条件：** image が同一 revision、migration 済み、readiness healthy、worker/scheduler 稼働、restore が目標内、demo flag なし、admin MFA と launch audit が green。

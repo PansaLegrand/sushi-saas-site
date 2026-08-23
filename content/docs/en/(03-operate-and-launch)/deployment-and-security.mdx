@@ -6,10 +6,10 @@ keywords: [deployment, security, Vercel, production]
 tags: [deployment, security]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> Synced with starter commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb).
+> Synced with starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
 
 Use this as the final adopter checklist, after the app works locally. The goal is not merely a green deployment: it is a release you can authenticate, bill, operate, restore, and administer without development shortcuts.
 
@@ -37,3 +37,5 @@ Deploy the web app and `apps/admin` as separate services with separate origins. 
 Use `/api/health` for liveness and `/api/ready` for deployment readiness. The latter checks environment, database, migration state, Redis, and queue health; a degraded queue is an operational signal even if requests still serve.
 
 Security headers include production HSTS and a report-only CSP path. Observe CSP reports before enforcing a policy compatible with your analytics, captcha, payments, and storage hosts. After deploy, smoke-test auth, organization isolation, checkout/webhooks, cron jobs, exports/deletion, and admin MFA. Read `DEPLOYMENT.md`, `docs/security-headers.md`, and `.env.example` in the starter before launch.
+
+The current release also ships hardened images for web, admin, worker, and Content Studio, plus `pnpm launch:check` to compose configuration, containers, migrations, integrity, retention, tests, and builds. Use [Containers and Launch Readiness](/docs/containers-and-launch-readiness) and prove recovery with [Backups, Retention, and Restore Drills](/docs/backups-retention-and-restore).

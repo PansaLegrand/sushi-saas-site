@@ -1,17 +1,21 @@
 ---
-title: Journalisation structurée
+title: Observabilité et journalisation structurée
 icon: "ScrollText"
-description: Opérez Sushi SaaS avec des logs structurés, corrélés et masqués sous Node et edge.
+description: Corrélez logs masqués, traces OpenTelemetry, readiness de file et alertes entre web et workers.
 keywords: [logging, Pino, observabilité, request ID]
 tags: [logging, opérations]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> Synchronisé avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) du starter.
+> Synchronisé avec le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) du starter.
 
 Utilisez cette page pour rendre support et gestion d’incident possibles avant le premier incident. Sushi SaaS émet du JSON vers stdout ; il ne choisit volontairement ni fournisseur de stockage, ni rétention, ni tableau de bord, ni produit d’alerte à votre place.
+
+OpenTelemetry est optionnel et neutre. Configurez `OTEL_ENABLED=true`, un `OTEL_SERVICE_NAME` distinct par processus et les endpoint/headers OTLP standard. Les spans request, fetch et jobs sont exportés ; les logs dans un span portent `trace_id` et `span_id`. Sans activation, aucun effet.
+
+`/api/ready` expose des compteurs sans payload, jobs failed/stale et âge du plus ancien. Un travail failed ou vieux de dix minutes dégrade la file sans retirer le trafic ; une dépendance en panne renvoie toujours 503.
 
 ## Prendre trois décisions d’exploitation
 

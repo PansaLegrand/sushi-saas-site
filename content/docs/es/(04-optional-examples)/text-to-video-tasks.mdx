@@ -6,10 +6,10 @@ keywords: [tareas, texto a vídeo, créditos, idempotencia]
 tags: [tareas, IA]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> Sincronizado con el commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) del starter.
+> Sincronizado con el commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) del starter.
 
 Usa esta página como patrón para una función de IA medida, no como producto de vídeo listo. Se incluye una pantalla mock solo local y las piezas difíciles: tenancy, capacidades, límites mensuales, créditos compartidos, idempotencia, estados de fallo y reembolsos. Producción ignora las flags demo, por lo que clonar el repositorio no activa vídeo real.
 
@@ -30,3 +30,4 @@ El coste está en `src/config/tasks.ts`. Plus: 50 tareas por organización/mes y
 Con un proveedor largo, conserva invariantes pero ejecuta de forma asíncrona duradera, usa idempotencia externa, valida callbacks, guarda IDs y prueba duplicado, saldo insuficiente, timeout, replay y fallo de reembolso.
 
 **Antes de conectar un proveedor:** alinea [Planes y derechos](/es/docs/plans-and-entitlements), el [Libro mayor de créditos](/es/docs/account-ledger) y [Trabajos duraderos y readiness](/es/docs/jobs-and-readiness).
+Para una función de pago asíncrona nueva, empieza por [Generación de imagen por cinco créditos](/es/docs/image-generation-workflow). Es la referencia durable actual: identidades recuperables de tarea/gasto/job, salida privada, reintentos limitados y compensación terminal una sola vez. Texto a vídeo sigue siendo un ejemplo síncrono más pequeño.

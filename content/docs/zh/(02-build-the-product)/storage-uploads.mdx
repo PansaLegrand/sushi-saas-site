@@ -2,26 +2,26 @@
 title: 私有存储上传
 icon: "UploadCloud"
 description: 通过策略、套餐、配额、校验和与持久删除控制配置 S3 兼容私有上传。
-keywords: [S3, R2, MinIO, 上传, 存储]
+keywords: [S3, R2, Garage, MinIO, 上传, 存储]
 tags: [存储, 安全]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> 已与启动模板提交 [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) 同步。
+> 已与启动模板提交 [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) 同步。
 
 当产品需要保存头像、文档、导入文件或生成内容，又不希望文件公开、也不希望所有字节都经过 Next.js 服务器时，请使用此能力。完成本页后，已登录用户应能在**账户 → 文件**中上传、下载和删除文件，而其他组织无法访问。
 
 ## 选择适合产品的存储方案
 
-- 如果希望快速使用 S3 兼容服务且不依赖 AWS 账号，通常可选 **Cloudflare R2**；AWS 技术栈可选 **AWS S3**；本地或自托管环境可选 **MinIO**。三者使用同一适配器，仅通过环境变量切换。
+- Docker Compose 默认使用仍在维护的开源 **Garage**，并自动创建私有 bucket。生产环境常用 **Cloudflare R2** 或 **AWS S3**。自行运营的团队仍可使用 `minio`，但它不再是内置本地默认值。所有提供器共用同一适配器。
 - 混合文件选 `general`，仅图片选 `images`（策略上限 10 MB），办公/文本文件选 `documents`，必须由浏览器提供 SHA-256 时选 `verified`。
 - 最终大小上限取套餐、`STORAGE_MAX_UPLOAD_MB` 与策略上限中的最小值。bucket 应保持私有；模板默认通过短期签名 URL 交付。
 
 **可以上线的标准：** UI 全流程可用，CORS 只允许你运营的来源，对象公共 URL 无法读取，跨组织访问被拒绝，并且 Cron 最终会删除已删除文件对应的对象。
 
-将 `STORAGE_PROVIDER` 设为 `s3`、`r2` 或 `minio`，配置 bucket、region、endpoint 与凭据。对象保持私有，浏览器只获得短期预签名 URL。为 Web 来源和必要 PUT header 配置 CORS，除非供应商要求，否则不要启用 ACL。
+将 `STORAGE_PROVIDER` 设为 `garage`、`s3`、`r2` 或 `minio`，再配置 bucket、region、endpoint 与凭据。对象保持私有，浏览器只获得短期签名 URL。图像生成示例也使用同一私有文件生命周期。
 
 ## 上传契约
 

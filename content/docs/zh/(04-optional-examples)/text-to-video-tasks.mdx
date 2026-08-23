@@ -6,10 +6,10 @@ keywords: [任务, 文生视频, 积分, 幂等]
 tags: [任务, AI]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> 已与启动模板提交 [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) 同步。
+> 已与启动模板提交 [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) 同步。
 
 本页是构建按量计费 AI 功能的参考，不是可直接上线的视频产品。模板提供本地 mock 页面，以及租户隔离、套餐能力、月度上限、共享积分、幂等、失败状态与退款这些难点。生产环境忽略 demo 开关，因此克隆仓库不会启用真实视频生成。
 
@@ -30,3 +30,4 @@ updatedAt: "2026-08-02T00:00:00.000Z"
 真实长任务应保留这些不变量，但改为持久异步执行，使用 provider 幂等、验证 callback、保存外部 ID，并测试重复请求、余额不足、超时、callback replay 与退款失败。
 
 **相关内容：** 在[套餐与权益](/zh/docs/plans-and-entitlements)中设置权限与上限，用[积分账本](/zh/docs/account-ledger)记录消费与退款，并通过[持久任务](/zh/docs/jobs-and-readiness)执行长任务。
+构建新的异步付费功能时，请先阅读[五积分图像生成](/zh/docs/image-generation-workflow)。它是当前持久参考，包含可恢复的任务/消耗/Job 身份、私有输出、有限重试和仅一次终端补偿。文本生成视频仍可作为更小的同步 adapter 示例。

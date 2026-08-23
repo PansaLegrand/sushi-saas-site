@@ -6,10 +6,10 @@ keywords: [pages d’administration, opérations de facturation, modération, jo
 tags: [administration, facturation, modération]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> Synchronisé avec le commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb) du starter.
+> Synchronisé avec le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) du starter.
 
 Partez de la question de l’opérateur, pas du menu : « Quel workspace possède ce débit ? », « Pourquoi les crédits manquent-ils ? », « Faut-il suspendre ce compte ? » ou « Qui a changé cette limite ? ». La console rassemble les preuves côté application, mais ne remplace ni Stripe, ni analytics, ni un outil de support.
 
@@ -62,3 +62,6 @@ Toutes les routes d’écriture livrées exigent `admin_rw`, valident les requê
 La console n’offre volontairement aucun bouton pour rejouer une charge webhook Stripe enregistrée. Corrigez la cause, puis utilisez Resend dans Stripe. Elle ne transforme pas non plus une suspension en suppression : l’export et l’effacement demandés par un utilisateur suivent le cycle de vie distinct des données du compte.
 
 Consultez [Configuration et accès à la console](/fr/docs/admin-console-setup) et terminez la [Checklist de déploiement et sécurité](/fr/docs/deployment-and-security) avant d’exposer cette application hors du développement local.
+## Reprise des jobs durables
+
+`/jobs` montre état, tentatives, âge, sujets et erreurs sûres sans payload JSON ni clés. Un opérateur écriture peut rejouer un job idempotent failed ou annuler une notification pending non réclamée avec une note d’audit. Un job running ne peut être annulé car le fournisseur a peut-être agi. Crédits, stockage, lifecycle et campagnes se reprennent depuis leur workflow propriétaire.

@@ -6,10 +6,10 @@ keywords: [plans, entitlements, limits, subscriptions, Stripe, SaaS pricing]
 tags: [plans, billing, entitlements]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-08-24T00:00:00.000Z"
 ---
 
-> Verified against starter commit [`7580470`](https://github.com/PansaLegrand/sushi-saas-template/tree/758047029e51d8d67b1a85ecb9ee3ae8bab8bfbb).
+> Verified against starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
 
 Start here when replacing the demo pricing with your own. Your job is to decide which customer actions each plan allows, which quantities it limits, and what happens during payment trouble or downgrade. The starter supplies one catalog and one enforcement boundary so those decisions remain consistent.
 
@@ -19,6 +19,7 @@ No route, component, or domain service imports `src/config/plans.ts` or compares
 
 ```ts
 await requireEntitlement(orgUuid, "tasks.text_to_video");
+await requireEntitlement(orgUuid, "tasks.image_generation");
 await enforceLimit(orgUuid, "storage.totalMb", { current, adding });
 const maximum = await limitOf(orgUuid, "storage.maxFileMb");
 ```
@@ -36,10 +37,13 @@ These are working defaults, not a pricing recommendation. Rename the tiers, chan
 | Maximum file | 5 MB | 25 MB | 200 MB |
 | Total storage | 100 MB | 5,000 MB | 50,000 MB |
 | Text-to-video | No | Yes | Yes |
-| Tasks per month | 0 | 50 | Unlimited |
+| Image generation | Yes | Yes | Yes |
+| Tasks per month | 10 | 50 | Unlimited |
 | Included monthly credits | 0 | 500 | 2,500 |
 
 `null` means unlimited. Signup credits are a separate one-time grant; Free has no recurring allowance job.
+
+The reference image workflow is enabled for every tier because credits meter its fixed five-credit cost. This lets a Free account spend the one-time signup grant while still passing through the entitlement boundary.
 
 ## How the Effective Plan Is Resolved
 
