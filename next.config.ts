@@ -30,6 +30,9 @@ const MERGED_GUIDES = [
 ];
 
 const nextConfig = {
+  // Metadata comes from checked-in content and translations. Emit it in the
+  // initial head for every client instead of requiring streamed body insertion.
+  htmlLimitedBots: /.*/,
   experimental: {
     optimizePackageImports: ["lucide-react"]
   },

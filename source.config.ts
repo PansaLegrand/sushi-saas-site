@@ -9,6 +9,7 @@ const contentFrontmatter = frontmatterSchema.extend({
   publishedAt: z.string().optional(),
   updatedAt: z.string().optional(),
   image: z.string().optional(),
+  imageAlt: z.string().optional(),
   noindex: z.boolean().optional()
 });
 

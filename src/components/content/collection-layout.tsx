@@ -19,7 +19,7 @@ export async function CollectionLayout({
   const t = await getTranslations("nav");
 
   return (
-    <RootProvider i18n={contentUiI18n(lang)}>
+    <RootProvider i18n={contentUiI18n(lang)} search={{ enabled: false }}>
       <DocsLayout
         tree={source.pageTree[lang] ?? { name: "", children: [] }}
         i18n
