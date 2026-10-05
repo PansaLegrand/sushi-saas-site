@@ -7,8 +7,15 @@
   "nav": { "label": "メインナビゲーション", "start": "クイックスタート", "docs": "ドキュメント", "blog": "ガイド", "github": "GitHub", "language": "言語を選択" },
   "landing": {
     "eyebrow": "MIT ライセンス · 本番運用志向",
-    "heroLineOne": "基盤はできています。",
-    "heroLineTwo": "プロダクトを作ろう。",
+    "heroLineOne": "オープンソース Next.js",
+    "heroLineTwo": "SaaS スターター。",
+    "useCase": {
+      "eyebrow": "実際の製品事例",
+      "title": "DojoClip：AI メディア SaaS。",
+      "body": "DojoClip は SaaS 基盤の上に動画編集、画像、音楽、音声のワークフローを構築しています。スターターが提供する部分と、独自の制作体験を加える部分を確認できます。",
+      "action": "DojoClip の事例を読む",
+      "visit": "DojoClip を見る"
+    },
     "subtitle": "ガイド付きローカル設定から、Web アプリ、管理コンソール、Content Studio のデプロイまで。再実行に強い課金、非公開ストレージ、永続処理、可観測性、復元テストを一つにまとめています。",
     "primaryAction": "ローカルで動かす",
     "secondaryAction": "ソースを見る",

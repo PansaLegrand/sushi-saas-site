@@ -6,10 +6,10 @@ keywords: [Better Auth, authentification, administration, MFA]
 tags: [authentification, administration, sécurité]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Vérifié avec le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) du starter.
+> Vérifié avec le commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) du starter.
 
 Cette configuration donne aux clients inscription, vérification d’email, connexion, récupération, sessions et espace d’organisation. Le personnel de confiance utilise une console séparée qui exige à la fois un rôle administrateur plateforme et MFA.
 
@@ -41,3 +41,7 @@ Configurez `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_AUTH_BASE_URL` 
 Avant lancement, testez inscription, vérification, connexion, récupération, callback Google s’il est activé, révocation de session, MFA et les deux permissions admin. Le succès ne signifie pas seulement « la page charge » : une requête anonyme ne doit lire aucune donnée privée, `admin_ro` ne doit pas écrire et chaque mutation `admin_rw` doit apparaître dans l’audit. Suivez le guide dédié [Configuration et accès à la console](/fr/docs/admin-console-setup) pour le déploiement et l’arrivée des opérateurs.
 
 **Pour décider :** comparez le parcours livré aux options de session, OAuth et MFA dans [Comment fonctionne l’authentification Sushi SaaS](/fr/blogs/web-authentication-deep-dive).
+
+## Migrer l’authentification avant le déploiement
+
+Cette version utilise Better Auth 1.7.6. Appliquez d’abord la migration SaaS `0037_neat_excalibur.sql` : elle ajoute `verified`, `failed_verification_count` et `locked_until` à `two_factor`. Seules les inscriptions déjà confirmées (`users.two_factor_enabled=true`) sont marquées vérifiées ; un secret en attente n’est pas une confirmation. Vérifiez l’inscription MFA, le verrouillage après codes erronés et la connexion Admin en staging.

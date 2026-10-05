@@ -6,10 +6,10 @@ keywords: [Vitest, Playwright, CI, テスト DB, カバレッジ]
 tags: [testing, CI, reliability]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> コミット [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) で確認済みです。
+> コミット [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) で確認済みです。
 
 テストは「何を mock できるか」で分かれます。DB を mock したテストは unique constraint を証明できず、auth guard を mock した route test はデータ取得前の認証を証明できません。
 
@@ -29,9 +29,16 @@ pnpm test:fast
 pnpm test:run
 pnpm test:cov
 pnpm test:db
+pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
-Harness が table を truncate するため DB 名に `test` が必要です。Coverage は service、model、API、admin data を保護します。Playwright は login、tenant credit、Garage upload/delete、5-credit image task から worker と signed download まで検証します。
+`test:fast` は外部基盤を使わないコミット前の検証、`test:run` は設定された Vitest プロジェクトの実行です。`test:cov` はサービス、モデル、API ルート、共有サーバーコード、Admin データコードのカバレッジ下限を確認します。
+
+`TEST_DATABASE_URL` と `TEST_REDIS_URL` がどちらも未設定なら、Vitest はテスト収集前に基盤プロジェクトを除外します。PostgreSQL と Redis はそれぞれの URL で有効になり、Redis だけの実行では Better Auth や PostgreSQL を初期化しません。CI は両方の URL を要求し、基盤がなければ失敗します。テストは表を空にするため、PostgreSQL テスト DB 名には `test` が必要です。本番にテスト URL を設定しないでください。
+
+Playwright は login、tenant credit、Garage upload/delete、5-credit image task から worker と signed download まで検証します。
+
+外部 E2E の接続先には `E2E_BASE_URL`、`E2E_USER_EMAIL`、`E2E_USER_PASSWORD` が必要です。書き込みテストは使い捨ての環境を `E2E_ALLOW_MUTATIONS=1` で明示した場合だけ実行します。本番を接続先にしないでください。
 
 CI は lint、PostgreSQL 16 migration、Redis、coverage、全 build、browser flow を実行します。緑にするため threshold を下げたり、実インフラ test を mock に置き換えないでください。

@@ -1,0 +1,123 @@
+---
+title: Configuración de entorno para Next.js SaaS y Payload
+icon: "Settings"
+description: Crea perfiles de desarrollo y producción, genera secretos internos y conecta despliegues SaaS compartidos y recursos aislados de Content Studio.
+keywords: [variables de entorno Next.js, configuración SaaS producción, secretos Payload CMS, perfiles de entorno]
+tags: [configuración, despliegue, desarrollo]
+author: "Sushi SaaS"
+publishedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
+---
+
+La identidad del producto pertenece a `saas.config.json`, versionado y configurable con `pnpm customize`. Las URL de despliegue, credenciales y secretos pertenecen a perfiles ignorados por Git. Web, Admin y el worker SaaS comparten la configuración de aplicación; Content Studio tiene base y autenticación editorial propias.
+
+## Crear y validar perfiles
+
+Desde la raíz del starter:
+
+```bash
+pnpm customize
+pnpm env:setup:dev
+pnpm env:check:dev
+pnpm env:setup:prod
+pnpm env:check:prod
+pnpm config:check:prod
+```
+
+| Aplicación | Desarrollo | Producción | Inventario versionado |
+| --- | --- | --- | --- |
+| Web, Admin, worker SaaS | `.env.development.local` | `.env.production.local` | `.env.example` |
+| Studio opcional | `apps/content-studio/.env.development.local` | `apps/content-studio/.env.production.local` | `apps/content-studio/.env.example` |
+
+La preparación de desarrollo crea ambos archivos si faltan, genera secretos y conserva valores existentes, incluidos los heredados de `.env`/`.env.local`. `./scripts/setup.sh development` también instala dependencias, inicia servicios locales y aplica migraciones; `env:setup:dev` solo prepara configuración.
+
+El flujo de producción prepara el archivo SaaS y genera secretos independientes de auth/cron. No despliega ni migra. **El perfil de producción de Studio solo se crea si lo eliges en el flujo interactivo.** Una ejecución no interactiva no crea ese archivo ni recoge credenciales externas. Puedes copiar manualmente el ejemplo de Studio a su perfil de producción. El validador comprueba un perfil Studio existente, pero desplegar Studio sigue siendo opcional.
+
+Transfiere valores al gestor de secretos de cada plataforma; no confirmes los perfiles en Git. `NEXT_PUBLIC_*` se incorpora al build de Next.js: recompila cuando cambie.
+
+## Lo que exige el arranque de producción
+
+El validador SaaS común se aplica a web, Admin y worker productivo. Ocultar una pantalla o dejar una clave vacía no desactiva su requisito.
+
+| Área | Configuración obligatoria |
+| --- | --- |
+| Orígenes | `NEXT_PUBLIC_WEB_URL`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_AUTH_BASE_URL` |
+| Base/auth | `DATABASE_URL`, `BETTER_AUTH_SECRET` fuerte y `CRON_SECRET` fuerte e independiente |
+| Rate limit distribuido | `RATE_LIMIT_REDIS_URL`, `RATE_LIMIT_IP_SOURCE` indicando una cabecera sobrescrita por tu edge de confianza |
+| Cobros | `STRIPE_PRIVATE_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_BILLING_PORTAL_CONFIGURATION_ID` seguro y los cuatro `STRIPE_PRICE_{PLUS,MAX}_{MONTHLY,YEARLY}` |
+| Email | `RESEND_API_KEY`, `EMAIL_FROM` verificado |
+| Archivos privados | `STORAGE_BUCKET`, `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY`; región/endpoint según proveedor |
+| CAPTCHA, activo por defecto | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`; solo `NEXT_PUBLIC_CAPTCHA_ENABLED=false` explícito elimina ese gate |
+| Gateway marketing configurado | `CONTENT_MARKETING_SECRET`, `MARKETING_UNSUBSCRIBE_SECRET` distinto, `RESEND_WEBHOOK_SECRET` emitido por el proveedor |
+
+Usa Redis con TLS (`rediss://`) y objetos privados. Portal ID empieza por `bpc_`, Price recurrente por `price_`. Prices CNY, Google OAuth, Slack, trazas, analítica y revalidación del sitio son opcionales. Eliminar un dominio obligatorio exige cambiar juntos validación y consumidores. No exportes URLs de test/Redis de test ni credenciales de restore temporal a producción; desactiva demos y `AUTH_DEV_EMAIL_LINKS`.
+
+## Qué valores se comparten
+
+| Valor | Regla |
+| --- | --- |
+| Base SaaS | La misma base para web/Admin/worker; URL pública con pool, privada y directa pueden diferir |
+| `BETTER_AUTH_SECRET` | Valor exacto común entre despliegues SaaS; distinto de Payload y cron |
+| Recursos externos | Misma cuenta/catálogo Stripe, remitente Resend, bucket lógico y Redis; pueden variar credenciales con permisos suficientes |
+| SaaS `CRON_SECRET` | Coincidencia exacta entre web y su scheduler; Admin/worker también requieren un valor válido |
+| Auth web | `BETTER_AUTH_URL` y `NEXT_PUBLIC_AUTH_BASE_URL` apuntan al origen cliente |
+| Auth Admin | `NEXT_PUBLIC_ADMIN_WEB_URL`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_AUTH_BASE_URL` apuntan a Admin; `NEXT_PUBLIC_WEB_URL` sigue apuntando a cliente |
+| Turnstile | Site/secret del mismo widget; reutilizar solo si admite ambos hostnames |
+| Studio | Base, `PAYLOAD_SECRET`, bucket/credenciales y `CRON_SECRET` del scheduler propios |
+| `CONTENT_MARKETING_SECRET` | Mismo valor exacto en Studio y servicios SaaS participantes |
+| `MARKETING_UNSUBSCRIBE_SECRET` | Solo SaaS, distinto y estable para conservar enlaces ya enviados al rotar gateway |
+| `CONTENT_REVALIDATION_SECRET` | Solo Studio y receptor de tu propio sitio, distinto de marketing/auth |
+
+Al copiar variables web a un Admin nuevo, cambia explícitamente ambas URL de auth. Admin solo las infiere si la plataforma aún no las ha exportado. Las sesiones de editor Studio y operador SaaS son independientes.
+
+## Generar secretos internos con Bash
+
+Setup los genera automáticamente. Para configuración manual ejecuta cada línea por separado y copia el resultado al campo indicado. Genera un valor distinto por propósito y entorno; comparte el mismo resultado únicamente entre los participantes de la tabla.
+
+```bash
+openssl rand -base64 32 # BETTER_AUTH_SECRET
+openssl rand -hex 32    # SaaS CRON_SECRET
+openssl rand -hex 32    # PAYLOAD_SECRET
+openssl rand -hex 32    # Studio CRON_SECRET
+openssl rand -hex 32    # CONTENT_MARKETING_SECRET
+openssl rand -hex 32    # MARKETING_UNSUBSCRIBE_SECRET
+openssl rand -hex 32    # CONTENT_REVALIDATION_SECRET opcional
+```
+
+Dotenv contiene datos, no shell: no pongas `$(openssl ...)` como valor. Obtén credenciales de Stripe, Resend, Turnstile, storage y OAuth de sus proveedores. Los secretos webhook pertenecen al endpoint registrado y también los emite el proveedor.
+
+## Cargar producción antes de operar
+
+`env:check:prod` lee el perfil productivo. El worker SaaS, migraciones y CLI de integridad **no lo cargan automáticamente**. Con las variables ya exportadas por el host, elige el comando pertinente:
+
+```bash
+pnpm env:check:prod -- --process
+pnpm jobs:work --production
+pnpm db:check:prod
+pnpm db:migrate:prod
+pnpm db:integrity -- --production
+```
+
+El worker es continuo. Para un proceso operativo local carga el archivo explícitamente con `--env-file` de Node:
+
+```bash
+node --env-file=.env.production.local --import=tsx --conditions=react-server \
+  scripts/jobs-worker.ts --production
+NODE_ENV=production node --env-file=.env.production.local scripts/migrate.mjs --check
+NODE_ENV=production node --env-file=.env.production.local scripts/migrate.mjs
+node --env-file=.env.production.local --import=tsx --conditions=react-server \
+  scripts/check-data-integrity.ts --production
+```
+
+Usa un shell de release limpio: los valores exportados tienen prioridad. El runner de migraciones **solo lee `DATABASE_URL`**. Si necesitas conexión directa, pásala como `DATABASE_URL` a ese proceso; definir solo `MIGRATION_DATABASE_URL` no cambia la conexión. Este adaptador selecciona la directa cuando el perfil contiene ambas:
+
+```bash
+NODE_ENV=production node --env-file=.env.production.local --input-type=module -e \
+  'process.env.DATABASE_URL = process.env.MIGRATION_DATABASE_URL || process.env.DATABASE_URL; await import("./scripts/migrate.mjs");' -- --check
+```
+
+Quita el `-- --check` final solo para la aplicación de migración planificada aparte. Haz backup, usa expand/contract y exige checks finales de migración/integridad antes de promover código.
+
+**Continúa:** [Content Studio](/es/docs/content-studio-and-marketing), [Jobs y readiness](/es/docs/jobs-and-readiness), [Despliegue y seguridad](/es/docs/deployment-and-security).
+
+Fuente: [inventario](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/.env.example), [setup de perfiles](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/scripts/configure-env.mjs), [validador](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/lib/env.ts).

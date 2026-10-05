@@ -6,17 +6,17 @@ keywords: [background jobs, cron, queue, readiness, health check, PostgreSQL]
 tags: [jobs, operations, reliability]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Synced with starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+> Synced with starter commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
 
 Use this page when an action must finish even after the browser request ends—for example sending mail, granting credits, deleting an object, or completing a privacy request. The starter ships a small PostgreSQL-backed queue, so most teams can launch without operating Redis queues or a separate worker service.
 
 ## Decide how you will run and monitor background work
 
-- On Vercel, keep the authenticated cron drain. On a VM, container, or Kubernetes, run the shipped dedicated worker instead of inventing another queue loop.
-- Keep the PostgreSQL queue while throughput is modest. The portable runner and cron share the same claim, retry, timeout, maintenance, and observability services.
+- On Vercel, keep the authenticated cron drain. On a VM, container, or Kubernetes, run the shipped dedicated worker.
+- Keep the PostgreSQL queue while throughput is modest. The portable runner and cron share claim, retry, maintenance, and observability services. The worker exposes `JOB_WORKER_HANDLER_TIMEOUT_MS` and `JOB_WORKER_DRAIN_DEADLINE_MS`; their defaults are 20 and 40 seconds. A longer provider budget needs tested abort behavior and must remain below the five-minute lease. Moving to a worker does not require changing queue storage.
 - Treat `/api/health` as “the process answers” and `/api/ready` as “this release can receive production traffic.” They answer different operational questions.
 
 **Ready to launch means:** a test job is claimed, a forced failure retries and eventually surfaces, overlapping cron calls do not duplicate the effect, and your monitor alerts on readiness failures and a growing failed queue.

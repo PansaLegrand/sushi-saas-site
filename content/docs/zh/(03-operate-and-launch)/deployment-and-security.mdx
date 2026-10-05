@@ -6,10 +6,10 @@ keywords: [部署, 安全, Vercel, 生产]
 tags: [部署, 安全]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> 已与启动模板提交 [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) 同步。
+> 已与启动模板提交 [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) 同步。
 
 请在应用本地可用后，把本页作为采用者的最后检查清单。目标不仅是“部署成功”，而是得到一个能够认证、收费、运维、恢复和管理，且没有开发捷径的版本。
 
@@ -18,24 +18,30 @@ updatedAt: "2026-08-24T00:00:00.000Z"
 - Web 与管理控制台是两个独立构建，应使用不同来源；它们可以共享仓库、数据库、认证 secret 和版本 tag。
 - 文档以 Vercel 为例，因为 `vercel.json` 已配置 Cron；任何能提供 PostgreSQL、Redis、HTTPS、环境 secret 和认证调度器的 Node 平台都可使用。
 - Serverless 流量使用连接池 PostgreSQL URL；供应商有需要时，迁移使用直连 URL。先迁移再发布代码，迁移不会自动放进 build。
-- CSP 先用 report-only，观察 analytics、Turnstile、Stripe 与存储实际使用的 host，再决定何时 enforce。
+- CSP 先使用 report-only，观察分析、Turnstile、Stripe 和存储实际使用的 host，测试通过后再启用强制策略。
 
-**可以上线的标准：** 两个应用从同一版本构建；迁移已验证；`/api/ready` 健康；备份可恢复；Cron 与 Stripe webhook 完成真实测试；生产无 demo flag；只读/可写管理员权限符合预期。
+**可以上线的标准：** 两个应用从同一版本构建；迁移已验证；`/api/ready` 健康；备份可恢复；所选队列执行方式与 Stripe webhook 完成真实测试；生产无 demo flag；只读/可写管理员权限符合预期。
 
-将 Web 与 `apps/admin` 作为不同来源的独立服务部署。使用 Node `>=20.19.0 <23` 和 pnpm `10.22.0`，运行 `pnpm lint`、`pnpm test:cov`、`pnpm build`，再显式执行 `pnpm db:check:prod` 与 `pnpm db:migrate:prod`。迁移绝不是自动 build 步骤。
+将 Web 与 `apps/admin` 作为不同来源的独立服务部署。使用 Node `>=20.19.0 <23` 和 pnpm `10.22.0`，运行 `pnpm lint`、`pnpm test:cov`、`pnpm build`，再显式执行 `pnpm db:migrate:prod` 与 `pnpm db:check:prod`。迁移绝不是自动 build 步骤。
 
 ## 生产必备控制
 
-- 强 `BETTER_AUTH_SECRET`、正确 URL、生产 PostgreSQL，以及经过恢复演练的备份。
+- 强 `BETTER_AUTH_SECRET`、正确的公开与认证 URL、生产 PostgreSQL，以及经过恢复演练的备份。
 - Redis 分布式限流和明确可信的客户端 IP header/来源。
-- 认证流程 Turnstile；关闭 demo 与本地认证链接日志。
-- `CRON_SECRET`，并每五分钟调用 `/api/cron/jobs`（`vercel.json` 已含计划）。
-- 启用计费时使用 Stripe live key、已验证 webhook、安全 Portal 与 Price ID。
-- 启用存储时保持对象私有、最小权限凭据、正确 CORS 与短期签名 URL。
-- 验证邮件域，并按所在地审查数据保留和法律策略。
+- 启用验证码时配置生产 Turnstile 密钥；关闭演示功能与本地认证链接日志。
+- `CRON_SECRET` 与一种默认队列执行方式：每五分钟调用认证的 `/api/cron/jobs`、定时执行一次 `pnpm jobs:run --production`，或持续运行 `pnpm jobs:work --production`。`vercel.json` 配置的是 HTTP 调度。
+- 当前校验器要求 Stripe live key、已验证的 webhook、安全的 Billing Portal 配置和四个主 Price ID。
+- 私有 S3 兼容存储凭据、最小权限、正确 CORS 与短期签名 URL。
+- 已验证的邮件发送域，以及针对实际服务市场审查的数据保留和法律策略。
 
 `/api/health` 用于存活，`/api/ready` 用于部署就绪；后者检查环境、数据库、迁移、Redis 与队列，队列降级即使不阻断请求也需告警。
 
-安全 header 包含生产 HSTS 和 report-only CSP 路径。先观察报告，再按分析、验证码、支付和存储 host 收紧策略。部署后 smoke-test 认证、组织隔离、结账/webhook、Cron、导出/删除与管理端 MFA。上线前阅读模板 `DEPLOYMENT.md`、`docs/security-headers.md` 和 `.env.example`。
+安全 header 包含生产 HSTS 和 report-only CSP 路径。先观察报告，再按分析、验证码、支付和存储 host 收紧策略。部署后 smoke-test 认证、组织隔离、结账/webhook、队列执行、导出/删除与管理端 MFA。上线前阅读模板 `DEPLOYMENT.md`、`docs/security-headers.md` 和 `.env.example`。
 
 当前版本还提供 Web、Admin、Worker、Content Studio 的加固镜像，以及汇总配置、容器、迁移、完整性、保留、测试和构建的 `pnpm launch:check`。请继续阅读[容器与上线就绪](/zh/docs/containers-and-launch-readiness)并通过[备份与恢复演练](/zh/docs/backups-retention-and-restore)证明恢复能力。
+
+## 验证实际生产配置
+
+运行 `pnpm env:setup:prod` 准备 `.env.production.local`，再运行 `pnpm env:check:prod`。Web 与 Admin 都需要完整配置：PostgreSQL、Redis、认证与 Cron secret、公开与认证 URL、Resend 和发件地址、Stripe 私钥/Webhook secret、Portal 配置和四个 Price，以及私有存储凭据。这是共享生产校验器的要求，即使某个页面没有直接使用供应商也一样。留空凭据不会关闭计费或存储；移除能力必须明确修改校验与运行逻辑。
+
+Admin 的 `BETTER_AUTH_URL` 与 `NEXT_PUBLIC_AUTH_BASE_URL` 指向 Admin；`NEXT_PUBLIC_WEB_URL` 仍指向用户端。通过部署平台的 secret manager 向独立 Worker 与发布命令提供生产变量。[环境配置指南](/zh/docs/environment-configuration)列出了共享与加载规则。升级认证前先应用 `0037_neat_excalibur.sql`，升级 Studio 前单独应用 Payload 迁移。

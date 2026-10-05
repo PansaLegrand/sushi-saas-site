@@ -6,10 +6,10 @@ keywords: [Better Auth, autenticación, administración, MFA]
 tags: [autenticación, administración, seguridad]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Verificado con el commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) del starter.
+> Verificado con el commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) del starter.
 
 Esta configuración ofrece al cliente registro, email verificado, acceso, recuperación, sesiones y un espacio de organización. El personal de confianza usa una consola separada que exige a la vez un rol de plataforma y MFA.
 
@@ -41,3 +41,7 @@ Configura `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_AUTH_BASE_URL` y
 Antes de lanzar prueba alta, verificación, acceso, recuperación, callback Google si se usa, revocación de sesiones, MFA y ambos permisos admin. El éxito no es solo que cargue la página: una petición sin autenticar no debe leer datos privados, `admin_ro` no debe escribir y cada cambio de `admin_rw` debe aparecer en auditoría. Sigue la guía específica de [Configuración y acceso a la consola](/es/docs/admin-console-setup) para el despliegue y el alta de operadores.
 
 **Para decidir:** compara el recorrido incluido con las alternativas de sesión, OAuth y MFA en [Autenticación web dentro de Sushi SaaS](/es/blogs/web-authentication-deep-dive).
+
+## Migra la autenticación antes de desplegar el código
+
+Esta versión usa Better Auth 1.7.6. Aplica primero la migración SaaS `0037_neat_excalibur.sql`: añade `verified`, `failed_verification_count` y `locked_until` a `two_factor`. Solo las inscripciones ya confirmadas (`users.two_factor_enabled=true`) se marcan como verificadas; un secreto pendiente no es una confirmación. Comprueba inscripción MFA, bloqueo por códigos fallidos y acceso de Admin en staging.

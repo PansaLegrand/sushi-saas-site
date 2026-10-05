@@ -6,7 +6,7 @@ keywords: [SaaS カスタマイズ, ブランド, 多言語, テーマ, 法務�
 tags: [セットアップ, プロダクト判断, カスタマイズ]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
 このページを終えると、スターターは**あなたのプロダクト**の名前、URL、言語、見た目で動き、各オプション機能について「維持・変更・削除」の判断が明確になります。個別画面を変更する前に決めてください。プロダクトのアイデンティティと範囲は、URL、メール、法務文書、解析、課金、管理コンソールに影響します。
@@ -16,7 +16,7 @@ updatedAt: "2026-08-24T00:00:00.000Z"
 | 領域 | 同梱時の動作 | あなたが決めること |
 | --- | --- | --- |
 | 製品 identity | `saas.config.json` が名前、slug、support、docs URL を追跡 | customizer を実行して diff を確認 |
-| サポート | Support email は追跡される製品値 | 公開前に設定するか別窓口を明示 |
+| サポート | Support email は追跡される製品値 | 本番設定の検証で必須となる実際のサポートメールを設定 |
 | 言語 | 英語、中国語、スペイン語、フランス語、日本語を利用可能。URL 接頭辞は必要な場合だけ付く | 既定の言語、提供する言語、ブラウザ言語の自動判定 |
 | ビジュアル | Web と管理画面で共有するビルド時プリセットは `studio` | 維持するか、コードで `glass`、`soft`、`editorial`、`brutalist` を選ぶ |
 | カラーモード | 顧客向けアプリは環境変数で `system` が既定 | `system`、`light`、`dark` を選ぶ。管理画面にはまだモード切替がない |
@@ -53,7 +53,7 @@ Customizer で preset を選ぶか、追跡設定を編集します。
 
 ## 法的な身元情報を完成させる
 
-`src/config/legal.ts` の `LegalData` に、登記上の名称と住所、プライバシー・法務の連絡先、準拠法、発効日、実際のサブプロセッサーを設定します。角括弧の判断項目をすべて処理してください。必須項目が欠ける間は `LegalConfig.isConfigured` が false のままで、プライバシーと利用規約ページに未レビュー草稿の警告が表示されます。
+法的な身元情報は `saas.config.json` の `legal` に設定します。法人名、住所、プライバシー・法務の連絡先、準拠法、発効日が対象です。`src/config/legal.ts` はその値を読み込み、製品固有のポリシー本文と `LegalData.subProcessors` はこのファイルで編集します。必須項目が欠ける間は `LegalConfig.isConfigured` が false となり、法務ページに草稿の警告が表示されます。公開前に身元情報とポリシーの両方を確認してください。
 
 同梱文書は起草用の骨組みであり、法律相談や完成済みポリシーではありません。使わない事業者を削除し、個人データを受け取る事業者を追加し、保持期間とアカウント削除を一致させ、資格を持つ専門家のレビューを受けてください。
 
@@ -70,6 +70,8 @@ Customizer で preset を選ぶか、追跡設定を編集します。
 ## 機能開発前に検証する
 
 ```bash
+pnpm config:check
+pnpm config:check:prod
 pnpm lint
 pnpm test:run
 pnpm build:web
@@ -80,13 +82,13 @@ pnpm build:admin
 
 ## まだ完成していないもの
 
-ブランド設定ウィザード、実行時のプリセット選択、管理画面のダークモード、環境変数によるサポート先、レビュー済みの法務文書、採用するオプション機能の判断は含まれません。これらは導入するチームが決める設計です。
+`pnpm customize` により、Git で追跡するブランド・製品設定の手順を利用できます。実行時のプリセット選択、管理画面のダークモード、環境変数によるサポート先、法務レビュー、オプション機能の採用判断は導入チームが担当します。サポート先は `saas.config.json` の `product.supportEmail` に設定します。
 
 ## ソーススナップショット
 
-スターターのコミット `2a1a04a` で確認済みです。
+スターターのコミット `b16b416` で確認済みです。
 
-- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/site.ts)
-- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/i18n/locale.ts)
-- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/style.ts)
-- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/legal.ts)
+- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/config/site.ts)
+- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/i18n/locale.ts)
+- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/config/style.ts)
+- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/config/legal.ts)

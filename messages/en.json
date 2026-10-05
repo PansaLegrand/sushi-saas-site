@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "title": "Production-minded open-source Next.js SaaS starter",
+    "title": "Open-source Next.js SaaS starter",
     "description": "An open-source Next.js SaaS starter with guided setup, authentication, organizations, Stripe, credits, private storage, durable jobs, Content Studio, observability, and tested operations.",
     "keywords": ["Next.js SaaS starter", "open source SaaS", "Stripe billing", "Better Auth", "Drizzle ORM", "SaaS boilerplate"]
   },
@@ -14,8 +14,15 @@
   },
   "landing": {
     "eyebrow": "MIT licensed · Production-minded",
-    "heroLineOne": "The plumbing is done.",
-    "heroLineTwo": "Build the product.",
+    "heroLineOne": "An open-source Next.js",
+    "heroLineTwo": "SaaS starter.",
+    "useCase": {
+      "eyebrow": "A real product use case",
+      "title": "DojoClip: an AI media SaaS.",
+      "body": "DojoClip builds video editing, image, music, and voice workflows on a SaaS foundation. See which parts the starter supplies and where the product adds its own media experience.",
+      "action": "Read the DojoClip use case",
+      "visit": "Explore DojoClip"
+    },
     "subtitle": "Go from guided local setup to a deployable web app, admin console, and Content Studio—with replay-safe billing, private storage, durable work, observability, and restore-tested operations.",
     "primaryAction": "Run it locally",
     "secondaryAction": "Inspect the source",

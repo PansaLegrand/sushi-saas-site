@@ -6,10 +6,10 @@ keywords: [管理控制台, RBAC, MFA, 部署]
 tags: [管理, 安全, 运维]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> 与 starter 提交 [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) 同步。
+> 与 starter 提交 [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) 同步。
 
 当应用之外需要有人调查客户、账单或运维故障时，请使用本页。模板已提供管理控制台；你需要决定是否部署、谁可访问，以及专用来源应受到多严格的保护。
 
@@ -34,7 +34,7 @@ pnpm build:admin
 pnpm start:admin
 ```
 
-在 `.env` 中设置本地管理端域名：
+在 `.env.development.local` 中设置本地管理端域名：
 
 ```dotenv
 NEXT_PUBLIC_ADMIN_WEB_URL=http://localhost:3001
@@ -78,9 +78,11 @@ pnpm admin:promote operator@example.com --role admin_ro --provider google
 管理应用会加载 starter 共用的生产环境校验器，因此即使某个管理页面不直接使用某项服务，目前仍需配置完整的生产必需环境变量。先复制客户应用的生产环境变量，对照 `.env.example`，并遵循[部署与安全](/zh/docs/deployment-and-security)中的说明；然后调整管理应用专用值：
 
 - 沿用客户应用的 `DATABASE_URL` 和 `BETTER_AUTH_SECRET`；
-- 将 `NEXT_PUBLIC_ADMIN_WEB_URL` 设为管理端域名（除非显式覆盖，否则管理构建也会将它用于 Better Auth URL）；
+- 将 `NEXT_PUBLIC_ADMIN_WEB_URL`、`BETTER_AUTH_URL` 和 `NEXT_PUBLIC_AUTH_BASE_URL` 都设为 Admin 来源；`NEXT_PUBLIC_WEB_URL` 仍指向客户应用。显式部署变量优先于自动推导的 Admin 认证 URL；
 - 提供对管理端主机名有效的 Turnstile site/secret 密钥对；只有公开站点的 widget 配置允许该主机名时才复用原密钥；
 - 选择适合产品的 `ADMIN_MAX_CREDIT_GRANT` 上限（默认值为 `100000`）。
+
+部署当前认证适配器前，先应用 SaaS 迁移 `0037_neat_excalibur.sql`，并验证已确认的 MFA 注册与 Admin 登录。复制 Web 环境变量后，必须修改两个 Admin 认证 URL，不能让它们继续指向 Web；具体规则见[环境配置指南](/zh/docs/environment-configuration)。
 
 公开端与管理端必须使用不同域名。管理应用会发送 `noindex`、`nofollow`、`noarchive` 和 `no-store` 响应头，并采用严格的嵌入、来源和内容安全策略。这些响应头只能减少暴露面，不能代替授权；服务器布局和每个管理 API 仍会校验角色与 MFA。
 

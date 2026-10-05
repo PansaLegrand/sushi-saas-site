@@ -13,7 +13,7 @@ keywords:
 tags: [概览, 选型, 架构]
 author: "Sushi SaaS"
 publishedAt: "2025-10-02T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
 Sushi SaaS 是一个采用 MIT 许可、面向订阅制和按量计费产品的源码 starter。它不是托管平台，也不会根据表单自动生成应用。你需要克隆仓库、拥有并维护代码，再根据自己的用户调整其中的产品决策。
@@ -37,7 +37,7 @@ Sushi SaaS 是一个采用 MIT 许可、面向订阅制和按量计费产品的�
 - `apps/content-studio` 独立 Payload 创作和活动应用，拥有自己的数据库与编辑认证；
 - 可在 VM/容器旁运行或通过调度路径执行的持久 Worker。
 
-Web 与 Admin 共享 SaaS schema 和认证数据，Content Studio 绝不共享；客户身份、同意和投递审计留在 SaaS。公开网站是第四个独立仓库，使产品指导不与应用发布耦合。
+Web 与 Admin 共享 SaaS schema 和认证数据，Content Studio 绝不共享；客户身份、同意和投递审计留在 SaaS。启动模板的一个仓库包含三个应用与 Worker，公开文档网站位于第二个独立仓库，可分别发布内容和应用。
 
 ## 你会继承的决策
 
@@ -70,4 +70,4 @@ Starter 无法替你决定价格、退款政策、数据保留、法律条款、
 3. 阅读[什么情况下 Sushi SaaS 适合你](/zh/blogs/why-use-a-saas-template)，列出准备保留、修改和删除的默认决策。
 4. 在估算生产工作前阅读[部署与安全](/zh/docs/deployment-and-security)。
 
-源码依据：[Sushi SaaS starter commit `2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a)。
+源码依据：[Sushi SaaS starter commit `b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9)。

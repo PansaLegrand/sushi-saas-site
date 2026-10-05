@@ -6,7 +6,7 @@ keywords: [personnalisation SaaS, marque, langues, thème, configuration juridiq
 tags: [configuration, décisions produit, personnalisation]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
 À la fin de cette page, le starter portera le nom, les URL, les langues et le style de **votre produit**, et chaque système optionnel aura une décision explicite : conserver, adapter ou supprimer. Faites ces choix avant de modifier des écrans précis ; l'identité et le périmètre influencent les URL, les e-mails, les textes légaux, l'analytique, la facturation et la console d'administration.
@@ -16,7 +16,7 @@ updatedAt: "2026-08-24T00:00:00.000Z"
 | Domaine | Comportement livré | Votre décision |
 | --- | --- | --- |
 | Identité | `saas.config.json` suit nom, slug, assistance et URL de docs | Lancer le customizer et revoir le diff |
-| Assistance | L’email d’assistance est une valeur produit suivie | Le définir avant lancement ou choisir un autre canal |
+| Assistance | L’email d’assistance est une valeur produit suivie | Définir une adresse réelle avant lancement ; la validation de production l’exige |
 | Langues | Anglais, chinois, espagnol, français et japonais sont disponibles ; les préfixes sont `as-needed` | Choisir la langue par défaut, les langues actives et la détection du navigateur |
 | Style visuel | `studio` est le preset de compilation partagé par le web et l'admin | Le garder ou choisir en code `glass`, `soft`, `editorial` ou `brutalist` |
 | Mode de couleur | L'app client utilise `system` par défaut via l'environnement | Choisir `system`, `light` ou `dark` ; l'admin n'a pas encore de sélecteur de mode |
@@ -53,7 +53,7 @@ Choisissez le preset avec le customizer ou modifiez la configuration suivie :
 
 ## Finaliser l'identité légale
 
-Complétez `LegalData` dans `src/config/legal.ts` : raison sociale et adresse, contacts confidentialité et juridique, loi applicable, date d'effet et sous-traitants réellement utilisés. Traitez chaque texte entre crochets. Tant qu'un champ d'identité requis manque, `LegalConfig.isConfigured` reste false et les pages de confidentialité et conditions affichent un avertissement de brouillon non revu.
+Définissez l’identité juridique dans la section `legal` de `saas.config.json` : entité et adresse, contacts confidentialité et juridique, droit applicable et date d’effet. `src/config/legal.ts` lit ces valeurs ; modifiez ce fichier pour le texte des politiques propre au produit et `LegalData.subProcessors`. Tant que les champs obligatoires manquent, `LegalConfig.isConfigured` reste false et les pages affichent un avertissement de brouillon. Vérifiez l’identité et les politiques avant publication.
 
 Le texte livré est une trame de rédaction, pas un conseil juridique ni une politique terminée. Retirez les prestataires inutilisés, ajoutez ceux qui reçoivent des données personnelles, alignez la conservation sur l'effacement des comptes et faites valider le résultat par un professionnel qualifié.
 
@@ -70,6 +70,8 @@ Pour les systèmes conservés, poursuivez avec [Plans et droits](/fr/docs/plans-
 ## Vérifier avant les fonctions métier
 
 ```bash
+pnpm config:check
+pnpm config:check:prod
 pnpm lint
 pnpm test:run
 pnpm build:web
@@ -80,15 +82,15 @@ Vérifiez que la langue par défaut n'a pas de préfixe, que chaque autre langue
 
 ## Ce qui n'est pas terminé pour vous
 
-Le starter ne fournit ni configurateur de marque, ni sélecteur de preset à l'exécution, ni mode sombre admin, ni contact d'assistance par environnement, ni politique juridique validée, ni décision sur les systèmes optionnels de votre produit. Ces choix appartiennent volontairement à l'équipe qui l'adopte.
+`pnpm customize` fournit déjà le parcours de marque et de configuration versionné. Le choix du preset à l’exécution, le mode sombre admin, le contact d’assistance par environnement, la validation juridique et les systèmes optionnels restent à la charge de l’équipe. L’adresse d’assistance vient de `product.supportEmail` dans `saas.config.json`.
 
 Si vous activez mesure d’audience ou publicité, prenez cette décision avec [Analytique et consentement](/fr/docs/analytics-and-consent), pas comme une simple variable d’environnement isolée.
 
 ## Instantané des sources
 
-Vérifié avec le commit `2a1a04a` du starter :
+Vérifié avec le commit `b16b416` du starter :
 
-- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/site.ts)
-- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/i18n/locale.ts)
-- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/style.ts)
-- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/legal.ts)
+- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/config/site.ts)
+- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/i18n/locale.ts)
+- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/config/style.ts)
+- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/config/legal.ts)

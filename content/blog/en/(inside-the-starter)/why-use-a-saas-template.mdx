@@ -5,7 +5,7 @@ description: "Evaluate the starter by the decisions you can keep, the systems yo
 tags: [evaluation, architecture, open-source]
 author: "Sushi SaaS"
 publishedAt: "2025-10-07T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
 A starter saves time only when you want its decisions. Sushi SaaS is a source-code backbone for teams that need connected identity, tenancy, billing, usage, and operations—not a shortcut around understanding those systems.
@@ -50,16 +50,18 @@ The right answer when the core stack or ownership model differs. Using a starter
 
 ## Cost that remains after cloning
 
-You still own provider accounts, secrets, prices, tax and refund policy, legal copy, data retention, monitoring, accessibility, threat review, and incident response. Replace the image/video mock providers, decide whether Content Studio, marketing, reservations, and referrals belong in your product, and set real recovery targets. The starter supplies controls; it cannot make those business decisions.
+You still own provider accounts, secrets, prices, tax and refund policy, legal copy, data retention, monitoring, accessibility, threat review, and incident response. When replacing the image/video mocks, add explicit production admission and validate the real output types. Decide whether Content Studio, marketing, reservations, and referrals belong in your product, and set real recovery targets. The starter supplies controls; it cannot make those business decisions.
 
 “Production-minded” means the repository exposes these responsibilities and supplies technical controls; it does not certify your deployment.
 
 ## A one-hour fit check
 
-1. Run [Quick Start](/docs/quick-start) and open both applications.
+1. Run [Quick Start](/docs/quick-start) and open web, Admin, and optional Content Studio.
 2. Map your must-have capabilities to the repository's actual pages and services.
 3. Mark each major decision **keep**, **change**, or **remove**: stack, organizations, billing, credits, storage, jobs, locales, admin, and referrals.
 4. Trace one money or authorization flow and read its tests.
 5. Estimate the “change” column. If it dominates, choose a smaller starting point.
 
-Then read [How Sushi SaaS Is Structured](/blogs/anatomy-of-modern-saas) and [Deployment and Security](/docs/deployment-and-security). This assessment reflects [starter commit `2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+Then read [How Sushi SaaS Is Structured](/blogs/anatomy-of-modern-saas) and [Deployment and Security](/docs/deployment-and-security). This assessment reflects [starter commit `b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
+
+For a concrete AI product example, read the [DojoClip use case](/blogs/dojoclip-ai-saas-use-case).

@@ -11,6 +11,7 @@
     "dev": "fumadocs-mdx && next dev --turbopack",
     "dev:webpack": "fumadocs-mdx && next dev",
     "content:check": "node scripts/check-content.mjs",
+    "content:check:starter": "node scripts/check-starter-sync.mjs",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "fumadocs-mdx && tsc --noEmit",
     "test": "node --test tests/*.test.mjs",

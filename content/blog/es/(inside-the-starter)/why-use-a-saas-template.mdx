@@ -5,7 +5,7 @@ description: "Evalúa el starter por las decisiones que conservarás, los sistem
 tags: [evaluación, arquitectura, código-abierto]
 author: "Sushi SaaS"
 publishedAt: "2025-10-07T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
 Un starter ahorra tiempo solo si quieres sus decisiones. Sushi SaaS es una base de código para equipos que conectan identidad, tenancy, cobros, uso y operaciones; no evita comprender esos sistemas.
@@ -49,16 +49,18 @@ Correcto si cambia la pila o el modelo de propiedad. Un starter debe reducir dec
 
 ## Coste tras clonar
 
-Sigues siendo responsable de proveedores, secretos, precios, impuestos, reembolsos, textos legales, retención, monitorización, accesibilidad, amenazas e incidentes. Sustituye los mocks de imagen/vídeo, decide si Content Studio, marketing, reservas y referidos pertenecen al producto y fija objetivos reales de recuperación.
+Sigues siendo responsable de proveedores, secretos, precios, impuestos, reembolsos, textos legales, retención, monitorización, accesibilidad, amenazas e incidentes. Al sustituir los mocks de imagen/vídeo, configura admisión explícita en producción y valida los tipos de salida reales. Decide si Content Studio, marketing, reservas y referidos pertenecen al producto y fija objetivos reales de recuperación.
 
 “Orientado a producción” significa que el repositorio expone responsabilidades y controles; no certifica tu despliegue.
 
 ## Comprobación de una hora
 
-1. Ejecuta [Inicio rápido](/es/docs/quick-start) y abre ambas aplicaciones.
+1. Ejecuta [Inicio rápido](/es/docs/quick-start) y abre Web, Admin y Content Studio opcional.
 2. Mapea capacidades obligatorias a páginas y servicios reales.
 3. Marca **conservar**, **cambiar** o **retirar** para pila, organizaciones, cobros, créditos, storage, jobs, locales, admin y referidos.
 4. Traza un flujo de dinero o autorización y lee sus tests.
 5. Estima la columna “cambiar”; si domina, elige una base menor.
 
-Continúa con [Cómo está estructurado Sushi SaaS](/es/blogs/anatomy-of-modern-saas) y [Despliegue y seguridad](/es/docs/deployment-and-security). Evaluación basada en el [commit `2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+Continúa con [Cómo está estructurado Sushi SaaS](/es/blogs/anatomy-of-modern-saas) y [Despliegue y seguridad](/es/docs/deployment-and-security). Evaluación basada en el [commit `b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
+
+Consulta el [caso DojoClip](/es/blogs/dojoclip-ai-saas-use-case) para ver un ejemplo concreto de producto con IA.

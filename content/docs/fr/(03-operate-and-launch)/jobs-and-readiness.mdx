@@ -6,17 +6,17 @@ keywords: [tâches de fond, cron, file, readiness, health check, PostgreSQL]
 tags: [tâches, opérations, fiabilité]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Synchronisé avec le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) du starter.
+> Synchronisé avec le commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) du starter.
 
 Utilisez cette page lorsqu’un travail doit aboutir après la fin de la requête navigateur : envoyer un e-mail, attribuer des crédits, supprimer un objet ou traiter une demande de confidentialité. Le starter fournit une file légère sur PostgreSQL ; beaucoup d’équipes peuvent ainsi lancer sans exploiter une file Redis ni un service worker séparé.
 
 ## Décider comment exécuter et surveiller le travail
 
-- Sur Vercel, conservez le cron de cinq minutes inclus. Ailleurs, appelez le même endpoint authentifié depuis le planificateur de la plateforme.
-- Gardez la file PostgreSQL pour un volume modéré et des handlers de moins de 20 secondes. Ne passez à une file dédiée que pour une charge longue ou élevée, en conservant déduplication et idempotence.
+- Sur Vercel, utilisez le cron authentifié de cinq minutes ; sur VM, conteneur ou Kubernetes, utilisez le worker livré. Un planificateur peut aussi exécuter une fois `pnpm jobs:run --production`.
+- Gardez PostgreSQL tant que le volume reste modéré. Worker et cron partagent prise de bail, reprises, maintenance et observabilité. Le worker expose `JOB_WORKER_HANDLER_TIMEOUT_MS` et `JOB_WORKER_DRAIN_DEADLINE_MS`, avec des valeurs par défaut de 20 et 40 secondes. Un budget plus long exige de tester l’interruption et de rester sous le bail de cinq minutes. Utiliser le worker ne nécessite pas de changer le stockage de la file.
 - `/api/health` répond « le processus répond » ; `/api/ready` répond « cette version peut recevoir du trafic de production ». Ce sont deux signaux distincts.
 
 **Prêt pour la production signifie :** un job de test est traité, un échec forcé est retenté puis visible, deux crons simultanés ne doublent pas l’effet, et vos alertes détectent readiness en échec et la croissance des jobs failed.
@@ -25,7 +25,7 @@ Utilisez cette page lorsqu’un travail doit aboutir après la fin de la requêt
 
 Une instance serverless peut être gelée dès la réponse envoyée. Les actions qui doivent aboutir—emails, crédits, suppression d’objets, export et effacement de compte—sont écrites dans `jobs`, jamais laissées dans une promesse non attendue.
 
-Les types actuels couvrent emails, invitations, crédits d’inscription, Slack, stockage, réservations et cycle de vie de compte.
+Les types actuels couvrent emails, invitations, crédits d’inscription, Slack, stockage, réservations, cycle de vie de compte, livraison marketing et le flux image à cinq crédits.
 
 ## Mettre en file
 

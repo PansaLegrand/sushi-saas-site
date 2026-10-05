@@ -6,10 +6,10 @@ keywords: [tâches, texte vers vidéo, crédits, idempotence]
 tags: [tâches, IA]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Synchronisé avec le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) du starter.
+> Synchronisé avec le commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) du starter.
 
 Utilisez cette page comme modèle d’une fonction IA facturée à l’usage, pas comme un produit vidéo prêt à vendre. Le starter fournit un écran mock local et les éléments difficiles : tenancy, droits, limites mensuelles, crédits partagés, idempotence, échec et remboursement. La production ignore les flags de démonstration ; cloner le dépôt n’active donc aucune génération réelle.
 
@@ -21,7 +21,9 @@ Utilisez cette page comme modèle d’une fonction IA facturée à l’usage, pa
 
 **Prêt pour la production signifie :** aucun mock en production, un doublon crée une tâche et un débit, le solde insuffisant est expliqué, un échec crée un seul remboursement, les callbacks ne traversent pas les organisations et l’UI montre attente, exécution et échec.
 
-L’écran est un patron de développement opt-in, pas un fournisseur IA de production. Il faut activer démo et mock ; la production ignore ces flags. Remplacez seulement l’adaptateur `src/services/ai/video.ts`.
+L’écran est un patron de développement opt-in, pas un fournisseur IA de production. Il faut activer démo et mock ; la production ignore ces flags.
+
+Implémentez l’adaptateur réel dans `src/services/ai/video.ts`. Cela ne suffit pas à exposer la fonction en production : la page, la route API et le service vérifient aussi `isTextToVideoMockEnabled()`, toujours false en production. Remplacez ces contrôles d’admission de démonstration par une configuration explicite de la fonction de production, en conservant origine, authentification, droits, limites et comptabilité des crédits. Testez le parcours de production avec le mock désactivé.
 
 `POST /api/tasks/text-to-video` exige même origine, rate limit, auth, entitlement `tasks.text_to_video`, limite mensuelle partagée et crédits. Fournissez `Idempotency-Key` en header ou body. Le service insère une tâche d’organisation, dépense, garde la transaction racine, appelle le fournisseur et réussit ; en échec il marque la tâche et rembourse par une nouvelle ligne.
 

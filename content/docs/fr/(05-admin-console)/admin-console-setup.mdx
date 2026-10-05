@@ -6,10 +6,10 @@ keywords: [console d’administration, RBAC, MFA, déploiement]
 tags: [administration, sécurité, opérations]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Synchronisé avec le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) du starter.
+> Synchronisé avec le commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) du starter.
 
 Utilisez cette page lorsqu’une personne doit enquêter sur clients, facturation ou incidents en dehors de l’application. La console est déjà livrée ; vous devez décider de la déployer, qui y accède et à quel point protéger son origine dédiée.
 
@@ -34,7 +34,7 @@ pnpm build:admin
 pnpm start:admin
 ```
 
-Définissez l’origine locale de la console dans `.env` :
+Définissez l’origine locale de la console dans `.env.development.local` :
 
 ```dotenv
 NEXT_PUBLIC_ADMIN_WEB_URL=http://localhost:3001
@@ -78,9 +78,11 @@ Créez un second projet d’hébergement depuis le même dépôt et exécutez `p
 L’application d’administration importe le validateur partagé de l’environnement de production. Elle requiert donc actuellement l’ensemble complet des variables obligatoires de production, même lorsqu’une page d’administration n’utilise pas directement chaque fournisseur. Partez des variables de production de l’application cliente, comparez-les à `.env.example` et suivez [Déploiement et sécurité](/fr/docs/deployment-and-security). Ajustez ensuite les valeurs propres à l’administration :
 
 - conservez les mêmes `DATABASE_URL` et `BETTER_AUTH_SECRET` que l’application cliente ;
-- configurez `NEXT_PUBLIC_ADMIN_WEB_URL` sur l’origine d’administration (le build l’utilise aussi pour les URL Better Auth sauf surcharge explicite) ;
+- configurez `NEXT_PUBLIC_ADMIN_WEB_URL`, `BETTER_AUTH_URL` et `NEXT_PUBLIC_AUTH_BASE_URL` sur l’origine d’Admin ; gardez `NEXT_PUBLIC_WEB_URL` sur l’app cliente. Les variables explicites du déploiement priment sur les URL d’authentification déduites ;
 - fournissez une paire de clés Turnstile valide pour le nom d’hôte d’administration ; ne réutilisez les clés du site public que si leur configuration autorise ce nom d’hôte ;
 - choisissez une limite `ADMIN_MAX_CREDIT_GRANT` adaptée au produit (la valeur par défaut est `100000`).
+
+Avant de déployer l’adaptateur d’authentification actuel, appliquez la migration SaaS `0037_neat_excalibur.sql` et vérifiez une inscription MFA confirmée et la connexion Admin. Après copie des variables Web, modifiez les deux URL d’authentification d’Admin afin qu’elles ne pointent pas vers Web ; consultez le [guide d’environnement](/fr/docs/environment-configuration).
 
 Gardez des origines distinctes pour le web et l’administration. L’application d’administration envoie les en-têtes `noindex`, `nofollow`, `noarchive` et `no-store`, ainsi que des politiques restrictives d’intégration, de référent et de sécurité du contenu. Ces en-têtes réduisent l’exposition, mais ne remplacent pas l’autorisation : le layout serveur et chaque API d’administration contrôlent le rôle et la MFA.
 

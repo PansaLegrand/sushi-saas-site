@@ -6,10 +6,10 @@ keywords: [organizations, teams, tenancy, RBAC, invitations, seat limits]
 tags: [organizations, authorization, tenancy]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Verified against starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+> Verified against starter commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
 
 Use this page to answer a product question before a coding question: does your SaaS sell to one person, to a shared workspace, or to several workspaces per person? Sushi SaaS ships the common “team of one that can grow” model. Every customer starts in a personal organization, and all billable resources belong to that organization.
 
@@ -38,7 +38,9 @@ Roles form a hierarchy: `owner` ⊃ `admin` ⊃ `member`.
 | Read organization data, create/delete files, spend credits | ✓ | ✓ | ✓ |
 | Invite, remove, and change member roles |  | ✓ | ✓ |
 | Update the organization |  | ✓ | ✓ |
-| Manage billing or delete the organization |  |  | ✓ |
+| Manage billing |  |  | ✓ |
+
+Organization deletion is not a shipped customer workflow. Better Auth's generic deletion is disabled with `disableOrganizationDeletion: true`; the `org:delete` capability does not itself provide an endpoint. Account erasure follows the separate lifecycle service. Add a tested organization lifecycle before exposing an organization-delete action.
 
 Call `getOrgContext(request, optionalSlug)` to resolve the current user, organization UUID, and role. Call `can(ctx, action, resource)` for role authorization. Never accept `org_uuid` from a request body.
 

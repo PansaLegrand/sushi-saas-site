@@ -6,17 +6,17 @@ keywords: [trabajos en segundo plano, cron, cola, readiness, health check, Postg
 tags: [trabajos, operaciones, fiabilidad]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Sincronizado con el commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) del starter.
+> Sincronizado con el commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) del starter.
 
 Usa esta página cuando un trabajo deba terminar aunque la petición del navegador ya haya respondido: enviar correo, conceder créditos, borrar un objeto o completar una solicitud de privacidad. El starter incluye una cola ligera sobre PostgreSQL, suficiente para que muchos equipos lancen sin operar una cola Redis ni un servicio worker independiente.
 
 ## Decide cómo ejecutar y vigilar el trabajo en segundo plano
 
-- En Vercel conserva el cron incluido de cinco minutos. En otro proveedor, llama al mismo endpoint autenticado desde su programador.
-- Mantén la cola PostgreSQL mientras el volumen sea moderado y cada trabajo quepa en el presupuesto de 20 segundos. Migra cargas largas o de alto rendimiento solo cuando lo exijan, conservando deduplicación e idempotencia.
+- En Vercel usa el cron autenticado de cinco minutos; en VM, contenedores o Kubernetes usa el worker incluido. Un programador también puede ejecutar `pnpm jobs:run --production` una sola vez.
+- Mantén PostgreSQL mientras el volumen sea moderado. Worker y cron comparten reclamación, reintentos, mantenimiento y observabilidad. El worker permite configurar `JOB_WORKER_HANDLER_TIMEOUT_MS` y `JOB_WORKER_DRAIN_DEADLINE_MS`, con valores predeterminados de 20 y 40 segundos. Un presupuesto mayor exige probar la cancelación y mantenerse por debajo del lease de cinco minutos. Usar el worker no requiere cambiar el almacenamiento de la cola.
 - `/api/health` responde “el proceso contesta”; `/api/ready` responde “esta versión puede recibir tráfico de producción”. No son intercambiables.
 
 **Está listo para producción cuando:** un trabajo de prueba se procesa; un fallo forzado reintenta y se hace visible; dos ejecuciones cron solapadas no duplican el efecto; y tus alertas detectan readiness fallido y una cola de fallos creciente.
@@ -25,7 +25,7 @@ Usa esta página cuando un trabajo deba terminar aunque la petición del navegad
 
 Una instancia serverless puede congelarse al devolver la respuesta. El trabajo que debe completarse—emails, créditos, borrado de objetos, exportación y eliminación de cuentas—se escribe en `jobs`, no en promesas sin esperar.
 
-Los tipos actuales cubren emails, invitaciones, créditos de alta, Slack, eliminación de almacenamiento, reservas y ciclo de vida de cuenta.
+Los tipos actuales cubren emails, invitaciones, créditos de alta, Slack, eliminación de almacenamiento, reservas, ciclo de vida de cuenta, entrega de campañas de marketing y el flujo de imagen por cinco créditos.
 
 ## Encolar
 

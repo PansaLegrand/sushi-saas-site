@@ -39,6 +39,7 @@ test("localized docs expose the same ordered adoption journey", () => {
 test("guides use a stable decision-first tree order", () => {
   const expected = [
     "why-use-a-saas-template",
+    "dojoclip-ai-saas-use-case",
     "anatomy-of-modern-saas",
     "five-credit-task-tests-the-whole-saas",
     "web-authentication-deep-dive",

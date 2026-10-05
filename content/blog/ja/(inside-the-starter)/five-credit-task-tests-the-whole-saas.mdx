@@ -5,10 +5,10 @@ description: "単純な画像 provider で identity、credit、job、storage、�
 tags: [architecture, tasks, credits, reliability]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> コミット [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) に基づきます。
+> コミット [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) に基づきます。
 
 多くの demo は button が API を呼ぶことだけを証明します。Browser replay、write 間の crash、provider accept 後の timeout、object success 後の DB failure、refund を一時記録できない場合は証明しません。
 
@@ -29,7 +29,7 @@ Provider は 5 attempts、job は 8 です。追加 3 回は refund 時の Postg
 
 Mock は cost、credential、non-determinism を避けます。E2E は request replay、正確な 5-credit debit、worker、signed Garage object を確認し、DB test は terminal failure で 1 spend/1 refund を証明します。
 
-`src/services/ai/image.ts` だけを置き換え、key、AbortSignal、bytes/type、error を保ちます。他の task、credit、job、storage、UI、recovery は model を知りません。
+実際の生成サービスは `src/services/ai/image.ts` に実装し、冪等キー、AbortSignal、公開エラーの契約を保ちます。本番への適用には、ページ、API、タスクサービスで明示的な受付条件も必要です。既存のデモ条件は本番で常に閉じています。現在の出力型は SVG と生成元 `mock` に限定されるため、実際の形式とファイル情報を定義して検証してください。その適用後も、クレジット、永続実行、非公開ストレージ、状態取得、復旧の契約はモデルから独立させられます。
 
 これが production-minded の意味です。Clone の認証ではなく、高価な failure question を visible/testable にします。
 

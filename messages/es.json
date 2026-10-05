@@ -1,14 +1,21 @@
 {
   "metadata": {
-    "title": "Starter SaaS de código abierto para Next.js, listo para producción",
+    "title": "Plantilla SaaS Next.js de código abierto",
     "description": "Un starter SaaS Next.js open source con configuración guiada, autenticación, organizaciones, Stripe, créditos, almacenamiento privado, trabajos durables, Content Studio, observabilidad y operaciones probadas.",
     "keywords": ["starter SaaS Next.js", "SaaS open source", "facturación Stripe", "Better Auth", "Drizzle ORM", "plantilla SaaS"]
   },
   "nav": { "label": "Navegación principal", "start": "Inicio rápido", "docs": "Documentación", "blog": "Guías", "github": "GitHub", "language": "Elegir idioma" },
   "landing": {
     "eyebrow": "Licencia MIT · Pensado para producción",
-    "heroLineOne": "La infraestructura está lista.",
-    "heroLineTwo": "Construye el producto.",
+    "heroLineOne": "Una plantilla SaaS Next.js",
+    "heroLineTwo": "de código abierto.",
+    "useCase": {
+      "eyebrow": "Un producto real",
+      "title": "DojoClip: un SaaS de medios con IA.",
+      "body": "DojoClip construye edición de vídeo y flujos de imagen, música y voz sobre una base SaaS. Conoce qué aporta el starter y qué añade el producto a su experiencia creativa.",
+      "action": "Leer el caso DojoClip",
+      "visit": "Explorar DojoClip"
+    },
     "subtitle": "Pasa de una configuración local guiada a una aplicación web, consola admin y Content Studio desplegables, con facturación segura ante reintentos, almacenamiento privado, trabajo durable, observabilidad y restauraciones probadas.",
     "primaryAction": "Ejecutarlo en local",
     "secondaryAction": "Ver el código",

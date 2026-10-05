@@ -13,7 +13,7 @@ keywords:
 tags: [overview, evaluation, architecture]
 author: "Sushi SaaS"
 publishedAt: "2025-10-02T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
 Sushi SaaS is an MIT-licensed source-code starter for subscription and usage-based products. It is not a hosted platform and it does not generate an application from a form. You clone the repository, own the resulting code, and adapt its product decisions to your users.
@@ -37,7 +37,7 @@ The repository contains three independently deployable applications plus a porta
 - `apps/content-studio`, a separate Payload authoring and campaign application with its own database and editor authentication;
 - a dedicated durable worker that can run beside containers/VMs or through the bounded scheduler path.
 
-Web and admin share the SaaS PostgreSQL schema and authentication data. Content Studio never does: customer identity, consent, and delivery audit remain in the SaaS. The public website is a fourth, detached repository so product guidance can evolve without coupling application releases to publishing.
+Web and admin share the SaaS PostgreSQL schema and authentication data. Content Studio never does: customer identity, consent, and delivery audit remain in the SaaS. The starter repository contains three applications and a worker. The public documentation website lives in a second, detached repository so publishing and application releases can evolve independently.
 
 ## Decisions you inherit
 
@@ -70,4 +70,4 @@ The starter cannot choose your prices, refund policy, data retention, legal term
 3. Read [When Sushi SaaS Is a Good Fit](/blogs/why-use-a-saas-template) and list the shipped decisions you would keep, change, or remove.
 4. Review [Deployment and Security](/docs/deployment-and-security) before estimating production work.
 
-Source: [Sushi SaaS starter at commit `2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+Source: [Sushi SaaS starter at commit `b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).

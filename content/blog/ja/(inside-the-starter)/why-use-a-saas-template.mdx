@@ -5,7 +5,7 @@ description: "維持する判断、運用するシステム、導入後も必要
 tags: [評価, アーキテクチャ, オープンソース]
 author: "Sushi SaaS"
 publishedAt: "2025-10-07T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
 スターターが時間を節約できるのは、そこに組み込まれた判断を採用したい場合だけです。Sushi SaaS は、ユーザー ID、テナント設計、課金、利用量、運用をつなぐソースコードの土台です。これらを理解せずに済ませる仕組みではありません。
@@ -50,16 +50,18 @@ updatedAt: "2026-08-24T00:00:00.000Z"
 
 ## クローン後も残る作業
 
-Provider、secret、価格、税、refund policy、法務、保持、監視、accessibility、threat review、incident response は自分で担います。Image/video mock を置き換え、Content Studio、marketing、予約、紹介を含めるか決め、実際の recovery target を設定してください。
+外部サービスのアカウント、秘密情報、価格、税務、返金方針、法務、データ保持、監視、アクセシビリティ、脅威の検討、事故対応は自分で担います。画像・動画の模擬処理を実際の生成サービスに替える際は、明示的な本番受付条件と出力形式の検証も実装してください。Content Studio、マーケティング、予約、紹介を製品に含めるかを決め、実際の復旧目標を設定します。
 
 「本番運用を意識している」とは、責任を明示して技術的な制御を提供するという意味であり、デプロイすれば安全だという保証ではありません。
 
 ## 1時間で適合性を確認する
 
-1. [クイックスタート](/ja/docs/quick-start)を実行し、二つのアプリケーションを開きます。
+1. [クイックスタート](/ja/docs/quick-start)を実行し、Web、Admin、必要であれば Content Studio を開きます。
 2. 必須機能を、実在するページとサービスに対応付けます。
 3. 技術スタック、組織、課金、クレジット、ストレージ、ジョブ、対応言語、管理機能、紹介機能を**維持・変更・削除**に分類します。
 4. 金銭または認可に関わる処理を一つ追い、そのテストを読みます。
 5. 「変更」が多ければ、より小さな出発点を選びます。
 
-続けて [Sushi SaaS の構造](/ja/blogs/anatomy-of-modern-saas)と[デプロイとセキュリティ](/ja/docs/deployment-and-security)を読んでください。本評価は[スターターのコミット `2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) に基づきます。
+続けて [Sushi SaaS の構造](/ja/blogs/anatomy-of-modern-saas)と[デプロイとセキュリティ](/ja/docs/deployment-and-security)を読んでください。本評価は[スターターのコミット `b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) に基づきます。
+
+具体的な AI 製品の例は [DojoClip の事例](/ja/blogs/dojoclip-ai-saas-use-case)をご覧ください。

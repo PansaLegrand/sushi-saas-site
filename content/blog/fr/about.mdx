@@ -13,7 +13,7 @@ keywords:
 tags: [présentation, évaluation, architecture]
 author: "Sushi SaaS"
 publishedAt: "2025-10-02T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
 Sushi SaaS est un starter open source sous licence MIT pour les produits par abonnement ou à l’usage. Ce n’est ni une plateforme hébergée, ni un générateur d’application par formulaire. Vous clonez le dépôt, devenez responsable du code obtenu et adaptez ses choix produit à vos utilisateurs.
@@ -37,7 +37,7 @@ Le dépôt contient trois applications déployables et un worker portable :
 - `apps/content-studio`, application Payload avec base et auth éditoriale propres ;
 - un worker durable pour VM/conteneurs ou scheduler.
 
-Web et admin partagent schéma et auth SaaS ; Content Studio jamais. Identité, consentement et audit de livraison restent dans le SaaS. Le site public est un quatrième dépôt indépendant.
+Web et admin partagent schéma et auth SaaS ; Content Studio jamais. Identité, consentement et audit de livraison restent dans le SaaS. Le starter réunit trois applications et un worker dans un dépôt. Le site public vit dans un autre dépôt indépendant ; publication et applications peuvent ainsi avoir des cycles de livraison séparés.
 
 ## Les décisions héritées
 
@@ -70,4 +70,4 @@ Le starter ne choisit pas vos prix, remboursements, rétention, textes légaux, 
 3. Lisez [Quand Sushi SaaS est un bon choix](/fr/blogs/why-use-a-saas-template) et listez les décisions à garder, modifier ou supprimer.
 4. Consultez [Déploiement et sécurité](/fr/docs/deployment-and-security) avant d’estimer la mise en production.
 
-Source : [starter Sushi SaaS au commit `2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+Source : [starter Sushi SaaS au commit `b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).

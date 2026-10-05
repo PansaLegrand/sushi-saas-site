@@ -1,0 +1,123 @@
+---
+title: Next.js SaaS 与 Payload 的环境配置
+icon: "Settings"
+description: 创建开发与生产配置、生成内部密钥，并正确连接共享的 SaaS 服务和独立的内容工作室。
+keywords: [Next.js 环境变量, SaaS 生产配置, Payload CMS 密钥, 环境配置]
+tags: [配置, 部署, 开发]
+author: "Sushi SaaS"
+publishedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
+---
+
+产品名称、语言、样式和法律主体写入受 Git 管理的 `saas.config.json`，使用 `pnpm customize` 修改。部署地址、提供商凭据和内部密钥写入被 Git 忽略的环境文件。Web、管理控制台和 SaaS Worker 使用应用配置；可选的 Payload Content Studio 使用独立数据库和编辑者认证。
+
+## 创建并检查环境文件
+
+从 starter 仓库根目录运行：
+
+```bash
+pnpm customize
+pnpm env:setup:dev
+pnpm env:check:dev
+pnpm env:setup:prod
+pnpm env:check:prod
+pnpm config:check:prod
+```
+
+| 应用 | 开发配置 | 生产配置 | 受版本管理的变量清单 |
+| --- | --- | --- | --- |
+| Web、Admin、SaaS Worker | `.env.development.local` | `.env.production.local` | `.env.example` |
+| 可选 Studio | `apps/content-studio/.env.development.local` | `apps/content-studio/.env.production.local` | `apps/content-studio/.env.example` |
+
+开发配置命令创建两个缺失的环境文件、生成密钥，并保留已有值，也可继承旧 `.env`/`.env.local`。`./scripts/setup.sh development` 还会安装依赖、启动本地基础设施并应用本地迁移；`env:setup:dev` 仅准备配置。
+
+生产命令准备 SaaS 文件，分别生成认证与 cron 密钥，不执行部署或迁移。**只有在交互流程中选择启用 Studio，才会创建 Studio 生产配置。** 非交互流程不创建该文件，也不收集提供商凭据。手动配置时，将 Studio 示例复制到其生产配置文件，再填写真实值。检查命令会验证已存在的 Studio 文件，但 Studio 仍是可选部署。
+
+把真实值传入各平台的密钥管理系统，不要提交环境文件。`NEXT_PUBLIC_*` 在 Next.js 构建时写入浏览器代码，修改后需要重新构建。
+
+## 生产启动实际要求的变量
+
+共享校验器适用于 Web、Admin 和生产 Worker。隐藏页面或留空凭据不会关闭这些要求。
+
+| 用途 | 必需配置 |
+| --- | --- |
+| 应用地址 | `NEXT_PUBLIC_WEB_URL`、`BETTER_AUTH_URL`、`NEXT_PUBLIC_AUTH_BASE_URL` |
+| 数据库与认证 | `DATABASE_URL`、强 `BETTER_AUTH_SECRET`、独立的强 `CRON_SECRET` |
+| 分布式限流 | `RATE_LIMIT_REDIS_URL`、`RATE_LIMIT_IP_SOURCE`；后者必须指定受信任边缘层覆写的 IP 请求头 |
+| 计费 | `STRIPE_PRIVATE_KEY`、`STRIPE_WEBHOOK_SECRET`、安全的 `STRIPE_BILLING_PORTAL_CONFIGURATION_ID`、四个 `STRIPE_PRICE_{PLUS,MAX}_{MONTHLY,YEARLY}` |
+| 邮件 | `RESEND_API_KEY`、已验证的 `EMAIL_FROM` |
+| 私有文件 | `STORAGE_BUCKET`、`STORAGE_ACCESS_KEY`、`STORAGE_SECRET_KEY`，以及提供商需要的 region 和 endpoint |
+| 默认启用的验证码 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`、`TURNSTILE_SECRET_KEY`；显式设置 `NEXT_PUBLIC_CAPTCHA_ENABLED=false` 才会关闭该门槛 |
+| 已配置的营销网关 | `CONTENT_MARKETING_SECRET`、不同的 `MARKETING_UNSUBSCRIBE_SECRET`、提供商签发的 `RESEND_WEBHOOK_SECRET` |
+
+使用 TLS Redis（`rediss://`）和私有对象存储。Portal ID 以 `bpc_` 开头，循环订阅 Price ID 以 `price_` 开头。人民币 Prices、Google OAuth、Slack、追踪、分析和网站缓存刷新是可选项。移除必需业务时，同步修改校验和运行时调用。生产部署不提供测试数据库、测试 Redis 或恢复演练凭据；关闭 demo 开关和 `AUTH_DEV_EMAIL_LINKS`。
+
+## 哪些值必须共享
+
+| 值 | 共享规则 |
+| --- | --- |
+| SaaS 数据库 | Web/Admin/Worker 使用同一个业务数据库；连接池、内网和直连 URL 可以不同 |
+| `BETTER_AUTH_SECRET` | SaaS 各部署值完全一致；不用于 Payload 或 cron |
+| 提供商资源 | 同一个 Stripe 账户与产品目录、Resend 发件人、业务私有 bucket 和 Redis；权限足够时可以使用不同凭据 |
+| SaaS `CRON_SECRET` | Web 与调用它的调度器完全一致；Admin/Worker 的共享校验器也要求有效值 |
+| Web 认证地址 | `BETTER_AUTH_URL` 和 `NEXT_PUBLIC_AUTH_BASE_URL` 指向客户应用 |
+| Admin 认证地址 | `NEXT_PUBLIC_ADMIN_WEB_URL`、`BETTER_AUTH_URL`、`NEXT_PUBLIC_AUTH_BASE_URL` 指向 Admin；`NEXT_PUBLIC_WEB_URL` 仍指向客户应用 |
+| Turnstile | site key 和 secret key 属于同一个 widget；只在 widget 允许两个域名时复用 |
+| Studio | 独立数据库、`PAYLOAD_SECRET`、bucket/凭据以及 Studio 调度器的 `CRON_SECRET` |
+| `CONTENT_MARKETING_SECRET` | Studio 与参与营销处理的 SaaS 服务完全一致 |
+| `MARKETING_UNSUBSCRIBE_SECRET` | 仅 SaaS 使用，独立且稳定，避免网关轮换使已发送的退订链接失效 |
+| `CONTENT_REVALIDATION_SECRET` | 仅 Studio 和自己网站的接收端共享，与认证/营销密钥不同 |
+
+复制 Web 变量到新 Admin 项目时，显式修改两个认证 URL。平台已导出这些值时，Admin 不会重新推导地址。Studio 编辑者会话与 SaaS 运营会话相互独立。
+
+## 用 Bash 生成内部密钥
+
+配置命令会自动生成密钥。手动操作时逐条运行，把输出填入对应字段；每个用途和环境使用新的随机值，再按表格复制给需要共享的服务。
+
+```bash
+openssl rand -base64 32 # BETTER_AUTH_SECRET
+openssl rand -hex 32    # SaaS CRON_SECRET
+openssl rand -hex 32    # PAYLOAD_SECRET
+openssl rand -hex 32    # Studio CRON_SECRET
+openssl rand -hex 32    # CONTENT_MARKETING_SECRET
+openssl rand -hex 32    # MARKETING_UNSUBSCRIBE_SECRET
+openssl rand -hex 32    # 可选 CONTENT_REVALIDATION_SECRET
+```
+
+Dotenv 文件保存数据，不执行 shell；不要把 `$(openssl ...)` 填入变量值。Stripe、Resend、Turnstile、对象存储和 OAuth 凭据由提供商签发。Webhook 签名密钥属于你注册的具体 endpoint，也不能用这些随机命令替代。
+
+## 运维命令必须显式载入生产值
+
+`env:check:prod` 会读取生产文件；SaaS Worker、迁移和完整性脚本**不会自动读取该文件**。平台已导出生产变量时，按用途选择命令：
+
+```bash
+pnpm env:check:prod -- --process
+pnpm jobs:work --production
+pnpm db:check:prod
+pnpm db:migrate:prod
+pnpm db:integrity -- --production
+```
+
+Worker 会持续运行。本地运维进程使用 Node 的 `--env-file` 明确选择文件：
+
+```bash
+node --env-file=.env.production.local --import=tsx --conditions=react-server \
+  scripts/jobs-worker.ts --production
+NODE_ENV=production node --env-file=.env.production.local scripts/migrate.mjs --check
+NODE_ENV=production node --env-file=.env.production.local scripts/migrate.mjs
+node --env-file=.env.production.local --import=tsx --conditions=react-server \
+  scripts/check-data-integrity.ts --production
+```
+
+使用干净的发布 shell，已导出的变量优先。迁移脚本**只读取 `DATABASE_URL`**。提供商要求直连时，将直连 URL 作为迁移进程的 `DATABASE_URL`；只设置 `MIGRATION_DATABASE_URL` 不会改变连接。以下适配命令可从包含两种 URL 的配置中选择直连：
+
+```bash
+NODE_ENV=production node --env-file=.env.production.local --input-type=module -e \
+  'process.env.DATABASE_URL = process.env.MIGRATION_DATABASE_URL || process.env.DATABASE_URL; await import("./scripts/migrate.mjs");' -- --check
+```
+
+只有执行独立计划的迁移时才删除末尾 `-- --check`。先备份，使用 expand/contract 迁移，并在发布代码前通过最终迁移和完整性检查。
+
+**继续阅读：** [内容工作室](/zh/docs/content-studio-and-marketing)、[任务与就绪检查](/zh/docs/jobs-and-readiness)、[部署与安全](/zh/docs/deployment-and-security)。
+
+来源：[变量清单](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/.env.example)、[配置脚本](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/scripts/configure-env.mjs)、[运行时校验](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/lib/env.ts)。

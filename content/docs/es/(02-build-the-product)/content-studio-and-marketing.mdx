@@ -1,36 +1,146 @@
 ---
-title: Content Studio y email de marketing
+title: Configurar Payload Content Studio y email marketing
 icon: "PanelsTopLeft"
-description: Ejecuta la aplicación Payload separada, conserva los datos de clientes en el SaaS y lanza campañas con consentimiento.
-keywords: [Payload CMS, content studio, email marketing, consentimiento, Resend]
-tags: [content, marketing, email]
+description: Configura el CMS Payload independiente, crea el primer editor en privado, procesa jobs y entrega campañas revisadas mediante el gateway SaaS.
+keywords: [Payload CMS Next.js SaaS, configurar Content Studio, email marketing, Resend, automatización de contenido]
+tags: [contenido, marketing, email, despliegue]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Verificado con el commit del starter [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+Content Studio es la tercera aplicación opcional del starter. Usa Payload/Next.js para páginas, posts, briefs, medios y borradores de campaña. Web y Admin comparten datos/auth SaaS; Studio posee **base, sesiones editoriales, migraciones y cola propias**. El sitio de documentación independiente no consume este CMS automáticamente.
 
-Content Studio es la tercera aplicación del starter: un entorno Payload/Next.js desplegado aparte para páginas, artículos, briefs, medios y campañas. No comparte autenticación de clientes ni base de datos con el SaaS.
+## Iniciar y crear el primer editor
 
-| Aplicación | Puerto | Base de datos | Responsabilidad |
-| --- | ---: | --- | --- |
-| App cliente | 3000 | `DATABASE_URL` | cuentas, organizaciones, cobros, consentimientos, auditoría |
-| Admin | 3001 | `DATABASE_URL` | vistas operativas y acciones auditadas |
-| Content Studio | 3002 | `CONTENT_DATABASE_URL` | documentos, medios y borradores de campaña |
+Desde la raíz del starter:
 
-`PAYLOAD_SECRET` firma sesiones editoriales y `CONTENT_STUDIO_URL` enlaza la consola con publicación. Nunca apuntes Payload a la base SaaS ni copies suscriptores o clientes al Studio.
+```bash
+./scripts/setup.sh development
+pnpm dev:doctor
+pnpm dev:all
+```
 
-`./scripts/setup.sh development` crea `sushi_content`, escribe el perfil que falta y aplica migraciones de Payload. `pnpm dev:all` inicia las tres aplicaciones y el worker.
+Setup escribe `apps/content-studio/.env.development.local`, crea `sushi_content` y aplica migraciones Payload sin reemplazar valores existentes. Después puedes iniciar solo authoring con `pnpm dev:studio` y abrir `http://localhost:3002/admin`.
 
-Páginas y posts admiten cinco idiomas, borradores, autosave, preview, revisión, aprobación, publicación programada e historial. Solo se aceptan bloques registrados. Tras cambiar una collection, ejecuta `studio:generate`, `studio:migrate:create`, `studio:migrate` y el check del Studio; sus migraciones son independientes de Drizzle.
+**La primera cuenta en una base Studio vacía se convierte en administrador.** El código actual permite crearla sin una sesión editorial previa. Mantén el despliegue accesible solo a operadores de confianza hasta terminar ese paso; no publiques un Studio vacío. No se incluye CLI `bootstrap:admin`. Después, crear usuarios exige un administrador y las cuentas nuevas reciben `writer` por defecto.
 
-## Marketing sin un CRM paralelo
+Los roles son `writer`, `seo-manager`, `reviewer`, `publisher`, `admin`; son independientes de `admin_ro`/`admin_rw` SaaS. El enlace Publishing de Admin no concede acceso editorial.
 
-Studio posee diseño, copy, preview, aprobación y calendario. El SaaS posee direcciones, evidencia de consentimiento, baja y supresión, audiencia, jobs durables, credenciales y auditoría.
+## Preparar producción separada
 
-Una campaña aprobada usa un gateway firmado. El SaaS selecciona solo suscriptores consentidos, crea un job deduplicado por destinatario y vuelve a comprobar consentimiento justo antes de Resend. Repetir el lanzamiento no duplica envíos. Cancelar solo detiene trabajo que aún no llegó al proveedor.
+Ejecuta `pnpm env:setup:prod` interactivamente y acepta configurar Studio. Solo esa elección crea `apps/content-studio/.env.production.local`; el modo no interactivo prepara únicamente SaaS. También puedes copiar el `.env.example` de Studio a su perfil productivo y completarlo a mano.
 
-Comparte `CONTENT_MARKETING_SECRET`, mantén separado `MARKETING_UNSUBSCRIBE_SECRET` y configura `RESEND_WEBHOOK_SECRET` para `/api/marketing/webhooks/resend`.
+| Variable | Significado |
+| --- | --- |
+| `CONTENT_DATABASE_URL` | Base Payload separada, nunca la base SaaS |
+| `PAYLOAD_SECRET` | Secreto editorial independiente de 32 bytes |
+| `CONTENT_STUDIO_URL` | Origen Studio, también proporcionado a Admin para su enlace |
+| `CONTENT_CORS_ORIGINS` | Orígenes browser exactos, incluido el origen del propio editor |
+| `SAAS_MARKETING_API_URL` | Origen SaaS que acepta marketing firmado |
+| `CONTENT_MARKETING_SECRET` | Valor exacto compartido con SaaS |
+| `CRON_SECRET` | Secreto scheduler Studio, distinto de cron/auth SaaS |
+| `CONTENT_STORAGE_*` | Almacenamiento privado y durable de medios |
 
-**Listo para lanzar:** acceso editorial aislado, migraciones independientes, aprobación obligatoria, lanzamiento repetido con un solo envío, baja efectiva antes del siguiente proveedor y ninguna dirección de suscriptor en Payload.
+El código usa **la misma allowlist para CORS y CSRF**. Incluye el propio origen Studio y solo frontends fiables que necesiten API desde browser. En local, por ejemplo, `http://localhost:3002,http://localhost:3000`; reemplaza todos los localhost en producción.
+
+```dotenv
+CONTENT_STUDIO_URL=https://studio.example.com
+CONTENT_CORS_ORIGINS=https://studio.example.com,https://www.example.com
+SAAS_MARKETING_API_URL=https://app.example.com
+CONTENT_STORAGE_BUCKET=product-content
+CONTENT_STORAGE_REGION=auto
+CONTENT_STORAGE_ENDPOINT=https://ACCOUNT_ID.r2.cloudflarestorage.com
+CONTENT_STORAGE_ACCESS_KEY=
+CONTENT_STORAGE_SECRET_KEY=
+CONTENT_STORAGE_FORCE_PATH_STYLE=true
+```
+
+Rellena base y credenciales en privado. El plugin solo se activa con **bucket, región, access key y secret key completos**. Disco local es fallback de desarrollo; serverless/contenedores de solo lectura necesitan objetos durables. Usa bucket Studio privado dedicado y credenciales limitadas; ajusta región, endpoint y path-style al proveedor.
+
+```bash
+openssl rand -hex 32 # PAYLOAD_SECRET
+openssl rand -hex 32 # Studio CRON_SECRET
+openssl rand -hex 32 # CONTENT_MARKETING_SECRET; mismo valor en SaaS y Studio
+openssl rand -hex 32 # MARKETING_UNSUBSCRIBE_SECRET; solo SaaS, otro valor
+pnpm env:check:prod
+```
+
+El check valida un perfil Studio existente, incluida base separada y secreto marketing coincidente. No prueba login CSRF, conectividad storage ni primer administrador. La [Configuración de entorno](/es/docs/environment-configuration) explica los requisitos completos SaaS y la carga explícita por proceso.
+
+## Migrar antes de desplegar
+
+Con valores productivos Studio disponibles en el proceso de release:
+
+```bash
+NODE_ENV=production pnpm studio:migrate
+pnpm build:studio
+NODE_ENV=production pnpm start:studio
+```
+
+El CLI Payload lee el perfil productivo Next de Studio con `NODE_ENV=production`; las variables exportadas tienen prioridad. Los contenedores no migran al arrancar. Tras cambiar colecciones, genera y confirma tipos, import map y migración independiente:
+
+```bash
+pnpm studio:generate
+pnpm studio:migrate:create
+pnpm studio:migrate
+pnpm --dir apps/content-studio check
+```
+
+Para Payload **3.90.2**, aplica `20261005_024231_payload_security_fields` antes de promover Studio. Añade campos nullable para limitación de reset de contraseña y keys de medios; no mueve objetos existentes. Captura las API keys de Service Accounts al generarlas: lecturas posteriores ya no las revelan. Recrea publicaciones/despublicaciones programadas pendientes tras actualizar, porque la referencia de usuario ahora incluye su colección de autenticación.
+
+## Borrador, revisión, publicación y automatización
+
+Páginas/posts admiten cinco idiomas, borrador, autosave, preview, revisión, aprobación, publicación programada e historial. Los bloques registrados incluyen hero, rich text, callout, FAQ, CTA y herramientas conocidas; el contenido no instala HTML, CSS, JavaScript ni herramientas ejecutables arbitrarios. Revisa idioma, copy, SEO y preview, y deja que publisher/admin apruebe y publique la versión prevista.
+
+Tu sitio debe consumir Payload publicado o `/api/content/v1/published`; Studio no sustituye el loader MDX de este sitio. Crea un Service Account con mínimos scopes, como `content:draft:create` y `content:read`; separa `content:publish`. Guarda la key mostrada una vez en el gestor de secretos de automatización.
+
+Payload exige `Authorization: service-accounts API-Key <key>`. Con `CONTENT_API_KEY` exportada privadamente, crea un borrador:
+
+```bash
+curl --fail-with-body https://studio.example.com/api/content/v1/drafts \
+  -H "Authorization: service-accounts API-Key $CONTENT_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -H 'Idempotency-Key: first-product-update-v1' \
+  --data '{"collection":"posts","locale":"es","slug":"first-product-update","title":"Primera actualización","summary":"Qué cambió y por qué ayuda.","blocks":[{"type":"richText","markdown":"Una actualización útil para clientes."}]}'
+```
+
+Reintenta la misma operación con key/body iguales; usa otra key para trabajo nuevo. Reutilizar key con otro payload se rechaza. La API también lee/reemplaza borradores, envía revisión, publica con scope separado y gestiona briefs/imports. El import devuelve job ID; consulta `/api/content/v1/jobs/:id` con su scope. Encolado no significa publicado.
+
+## Procesar la cola Payload
+
+SaaS `pnpm jobs:work` **no procesa la cola Payload**. El timer Studio actual procesa hasta cinco jobs `content` cada minuto mientras vive el proceso. En serverless configura scheduler; no dependas de ese timer.
+
+Con variables Studio productivas cargadas, programa cada minuto:
+
+```bash
+NODE_ENV=production pnpm --dir apps/content-studio jobs:run --all-queues --handle-schedules
+```
+
+O programa el runner HTTP autenticado, con todas las colas y publicaciones programadas:
+
+```bash
+curl --fail-with-body \
+  -H "Authorization: Bearer $STUDIO_CRON_SECRET" \
+  'https://studio.example.com/api/payload-jobs/run?allQueues=true&limit=5'
+```
+
+`STUDIO_CRON_SECRET` es la variable privada del scheduler que contiene el `CRON_SECRET` exacto de Studio, no una nueva configuración app ni el secreto SaaS. Prueba import y publicación vencida completos; supervisa errores/retrasos.
+
+## Marketing mediante SaaS
+
+Studio posee layout, copy, preview, aprobación y calendario. SaaS posee direcciones, consentimiento, bajas/supresión, audiencia, secretos Resend, jobs y auditoría. Automatiza con scopes `marketing:*` y actions revisadas; una actualización genérica de collection no inicia entrega.
+
+Comparte exactamente `CONTENT_MARKETING_SECRET`. En SaaS configura `MARKETING_UNSUBSCRIBE_SECRET` distinto y estable, `RESEND_API_KEY`, `EMAIL_FROM` y `RESEND_WEBHOOK_SECRET` del proveedor. Registra `https://app.example.com/api/marketing/webhooks/resend` para entrega, bounce, complaint, failure y suppression. Obtén el secreto de ese endpoint desde Resend; no lo generes con OpenSSL.
+
+Crea template con dirección postal física, compón campaña, preview/valida, comprueba conteo consentido, envía test, aprueba/publica la versión exacta y lanza. SaaS deduplica y vuelve a comprobar consentimiento antes de Resend, añade pie postal/baja y headers one-click. Repetir lanzamiento no duplica. Cancela pendientes desde la campaña; un mensaje aceptado no se recupera. Refresca estado y demuestra que una baja bloquea el siguiente envío.
+
+## Revalidación de tu sitio
+
+`PUBLIC_SITE_REVALIDATE_URL` opcional apunta a tu receptor. Genera otro `CONTENT_REVALIDATION_SECRET`, compartido solo con ese handler. Studio firma `timestamp.rawBody` mediante HMAC-SHA256 y envía `x-content-timestamp` y `x-content-signature`. Tu sitio implementa verificación, frescura y caché; sushisaas.com no tiene receptor automático.
+
+**Evidencia de lanzamiento:** primer admin creado en privado, bases aisladas, login CSRF del origen editor, medios durables, dos historiales migrados, replay crea un borrador, imports/publicaciones ejecutados y consentimiento/duplicado/baja probados con destinatario desechable.
+
+**Relacionado:** [Entorno](/es/docs/environment-configuration), [Email transaccional](/es/docs/email-service), [Jobs y readiness](/es/docs/jobs-and-readiness), [Despliegue](/es/docs/deployment-and-security).
+
+Fuente: [contrato Studio](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/docs/content-platform.md), [config Payload](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/apps/content-studio/src/payload.config.ts), [primer usuario](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/apps/content-studio/src/collections/users.ts), [marketing](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/docs/marketing-email.md).

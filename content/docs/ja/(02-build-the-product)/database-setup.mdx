@@ -6,10 +6,10 @@ keywords: [PostgreSQL, Drizzle, migration, データベース]
 tags: [データベース, 運用]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> スターターのコミット [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) で検証済みです。
+> スターターのコミット [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) で検証済みです。
 
 このページを終えると、各環境で使う DB、スキーマ変更をレビュー可能な SQL にする方法、アプリのリリースとは分けて適用する方法が分かります。
 
@@ -36,9 +36,9 @@ pnpm test:db
 アプリのデプロイ時にマイグレーションは自動実行されません。DB とアプリを別々に監視し、再試行し、リリースできるようにする既定の安全策です。
 
 ```bash
-pnpm db:check:prod
 pnpm db:migrate:prod
-pnpm db:integrity
+pnpm db:check:prod
+pnpm db:integrity -- --production
 ```
 
 本番用の実行処理は、非対話で PostgreSQL のアドバイザリーロックを取得し、チェックサムを検証します。先にバックアップを取り、スキーマとアプリを別々にリリースしても新旧コードの両方が動く、追加してから削除する段階的な変更にします。
@@ -59,6 +59,12 @@ pnpm db:integrity
 - Relation 変更前後に `db:integrity` を実行します。Migration linter は破壊的 drop、危険な rename、無制限 rewrite、blocking unique index を説明なしでは拒否します。
 - 無停止を目指す場合は、追加してから削除する段階的な変更を優先します。破壊的な一段階の名前変更は簡単ですが、スキーマとコードのリリースを結合し、ロールバックを危険にします。
 
-`pnpm db:check:prod` が予想どおりの未適用一覧を示し、バックアップが最新で、ステージング環境の複製で検証済みであり、展開中に旧・新両方のアプリ版が動くなら、本番マイグレーションの準備は完了です。
+バックアップの復元を確認し、ステージングの複製で移行を検証し、未適用・不一致の履歴がない状態で `pnpm db:check:prod` が成功してからコードを公開します。展開中は新旧両方のコードが動くことも確認してください。
 
 本番データの契約を変える前に、スターターの `docs/database.md` と `DEPLOYMENT.md` を読んでください。コードの置き場所は[アーキテクチャとエラー契約](/ja/docs/architecture-and-errors)、認証用 ID と公開 ID の区別は[顧客認証](/ja/docs/authentication-and-admin)で確認できます。
+
+## 新しい認証コードの前にマイグレーションを適用する
+
+現在の版は Better Auth 1.7.6 を使用します。デプロイ前に SaaS マイグレーション `0037_neat_excalibur.sql` を適用し、`two_factor` に `verified`、`failed_verification_count`、`locked_until` を追加します。確認済みの登録（`users.two_factor_enabled=true`）だけが verified になり、未確認の secret は確認済みとは扱いません。ステージング環境で MFA 登録、誤ったコードによるロック、Admin ログインを確認してください。
+
+`db:check:prod` は全マイグレーション適用済みでチェックサム一致時のみ成功します。未適用・不一致があれば公開を止めます。`db:integrity` は関係、無効値、NULL の条件、孤立行を読み取り専用で確認します。リリースコマンドに本番 DB 変数を明示的に渡してください。

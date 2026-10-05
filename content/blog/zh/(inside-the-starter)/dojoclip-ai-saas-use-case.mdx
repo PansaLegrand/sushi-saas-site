@@ -1,0 +1,51 @@
+---
+title: "使用 Next.js 构建 AI SaaS：DojoClip 案例"
+icon: "Clapperboard"
+description: "从 DojoClip 的 AI 媒体产品出发，了解 Next.js SaaS 如何组合认证、Stripe 计费、用量积分、私有媒体与后台任务。"
+tags: [AI SaaS, Next.js, DojoClip]
+author: "Sushi SaaS"
+publishedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
+---
+
+[DojoClip](https://dojoclip.com/) 是使用 Sushi SaaS 构建的 AI 媒体产品，提供视频编辑、图像生成、音乐和语音工作流。它说明了 AI 应用既需要有用的创作体验，也需要围绕客户、支付、用量和文件建立可靠基础。
+
+本页把这一产品案例与启动模板的公开契约对应起来，不披露 DojoClip 的私有部署、业务指标或全部内部实现。媒体工具属于产品自己的扩展；克隆 Sushi SaaS 并不会获得 DojoClip 编辑器或商业模型服务。
+
+## 模型周围还需要什么
+
+| 产品需求 | Sushi SaaS 提供 | 产品需要补充 |
+| --- | --- | --- |
+| 登录与团队归属 | Better Auth、组织、邀请、角色 | 注册引导与协作体验 |
+| 订阅与用量计费 | Stripe 生命周期、权益、组织积分账本 | 价格、用量规则、供应商成本策略 |
+| 异步生成 | PostgreSQL 任务、去重、重试、补偿模式 | 真实供应商适配器、明确生产准入、进度界面 |
+| 私有媒体 | S3 兼容上传、校验和、限定范围的签名访问、删除 | 经验证的输出格式与媒体编辑行为 |
+| 上线后的运维 | 独立 Admin、就绪探针、日志、备份恢复命令 | 监控目标、支持流程、发布负责人 |
+
+供应商任务可能比浏览器请求更久，回调可能重复，失败的生成可能需要退还费用。即使模型供应商暂时不可用，外围系统也应能解释和恢复自己的状态。
+
+## 先贯通一个付费工作流
+
+在接入商业模型前，运行[五积分图像示例](/zh/docs/image-generation-workflow)，跟踪认证、确定性的积分扣款、持久任务、私有结果和终止失败后的单次补偿。
+
+内置示例输出 mock SVG，并在页面、API 和服务三层禁止生产调用。真实产品必须在这些边界引入经审核的生产准入，调整输出契约以支持经验证的媒体类型，再实现供应商适配器。单独更换 API key 或适配器不会启用该功能。
+
+增加媒体业务时保留[积分账本](/zh/docs/account-ledger)、[私有存储](/zh/docs/storage-uploads)和[任务契约](/zh/docs/jobs-and-readiness)，让示例发展成崩溃后仍可恢复的产品流程。
+
+## 创作体验由产品自己构建
+
+视频时间线、音乐控制、图像编辑、资产浏览和语音选择都属于产品功能，应围绕用户工作流在应用分层中实现。Content Studio 用于文章和营销内容，是独立的作者工具，并不是客户使用的媒体编辑器。
+
+用[产品配置](/zh/docs/customize-your-product)管理身份、语言与风格，用[环境配置](/zh/docs/environment-configuration)管理供应商账户和共享部署值。凭据保留在服务端，客户媒体保留在私有存储。
+
+## 推荐的采用路径
+
+1. 运行[完整本地栈](/zh/docs/quick-start)，选择适合产品的能力。
+2. 配置产品身份、Stripe Price、邮件与私有存储。
+3. 跟踪付费示例，再增加一个具有重放和失败恢复的真实流程。
+4. 同时验证用户体验与运营恢复能力。
+5. 按[部署与安全](/zh/docs/deployment-and-security)完成检查后再公开真实功能。
+
+访问 [DojoClip](https://dojoclip.com/) 查看公开媒体产品，使用本站的实现指南构建和运营自己的应用。
+
+> Sushi SaaS: [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9). DojoClip: [公开产品](https://dojoclip.com/).

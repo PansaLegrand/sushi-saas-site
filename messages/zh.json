@@ -7,8 +7,15 @@
   "nav": { "label": "主导航", "start": "快速开始", "docs": "文档", "blog": "指南", "github": "GitHub", "language": "选择语言" },
   "landing": {
     "eyebrow": "MIT 协议 · 面向生产",
-    "heroLineOne": "基础设施已经就绪。",
-    "heroLineTwo": "专注构建产品。",
+    "heroLineOne": "开源 Next.js",
+    "heroLineTwo": "SaaS 启动模板。",
+    "useCase": {
+      "eyebrow": "真实产品案例",
+      "title": "DojoClip：AI 媒体 SaaS。",
+      "body": "DojoClip 在 SaaS 基础之上构建视频编辑、图像、音乐与语音工作流。看看启动模板提供哪些基础能力，以及产品如何发展出自己的媒体体验。",
+      "action": "阅读 DojoClip 案例",
+      "visit": "体验 DojoClip"
+    },
     "subtitle": "从引导式本地设置到可部署的 Web 应用、管理后台与内容工作室，并内置可安全重放的计费、私有存储、持久任务、可观测性和恢复演练。",
     "primaryAction": "在本地运行",
     "secondaryAction": "查看源码",

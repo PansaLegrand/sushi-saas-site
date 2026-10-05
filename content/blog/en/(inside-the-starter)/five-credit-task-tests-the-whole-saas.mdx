@@ -5,10 +5,10 @@ description: "See why Sushi SaaS uses a deliberately simple image provider to pr
 tags: [architecture, tasks, credits, reliability]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Based on starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+> Based on starter commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
 
 Most starter demos prove that a button can call an API. They do not prove what happens when the browser retries, a process dies between writes, the provider accepts work before timing out, object storage succeeds before the database does, or a refund temporarily cannot be recorded.
 
@@ -49,7 +49,7 @@ The E2E test creates the same request twice, confirms one task and an exact five
 
 ## Replace the narrowest part
 
-An adopter swaps `src/services/ai/image.ts` for the real provider while keeping the supplied idempotency key, abort signal, byte/content-type output, and public error boundary. Task, credits, durable execution, private storage, UI polling, and operational recovery do not need to know which model generated the bytes.
+The real provider belongs in `src/services/ai/image.ts`, preserving the supplied idempotency key, abort signal, and public error boundary. Production adoption also needs explicit admission configuration at the page, API, and task-service boundaries: their demo gates always close in production. The current output type is restricted to SVG and provider `mock`, so define and validate the real output format and file metadata. With those boundaries adapted, the credit, durable-execution, private-storage, polling, and recovery contracts can remain independent of the model.
 
 This is what “production-minded” should mean in a starter: not that a clone is certified for every product, but that the expensive failure questions are visible, executable, and hard to bypass accidentally.
 

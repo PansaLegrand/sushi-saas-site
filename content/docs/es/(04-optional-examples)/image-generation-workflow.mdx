@@ -6,10 +6,10 @@ keywords: [generación de imágenes, tareas AI, créditos, jobs, idempotencia]
 tags: [tasks, AI, credits, storage]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Verificado con el commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+> Verificado con el commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
 
 La generación de imagen es el ejemplo mínimo de un flujo de pago con forma de producción. El proveedor local genera SVG y no llama a un modelo comercial; el valor es la cadena que lo rodea. Cada solicitud aceptada cuesta exactamente cinco créditos comunes de la organización.
 
@@ -37,6 +37,10 @@ El proveedor dispone de cinco intentos y el job de ocho, reservando tres para co
 
 Usa `IMAGE_GENERATION_MOCK_FAILURES=5` para probar el fallo. Tests de base prueban un gasto y un reembolso; Playwright prueba replay, cambio exacto de cinco créditos, worker, Garage y descarga firmada.
 
-Sustituye solo `src/services/ai/image.ts` por el proveedor real y conserva idempotencia, AbortSignal y contratos de tarea, crédito, job, storage y error.
+Implementa el proveedor real en `src/services/ai/image.ts` y conserva la clave idempotente, AbortSignal y los contratos de tarea, crédito, job, almacenamiento y error. Las credenciales y los tipos del SDK permanecen dentro del adaptador.
+
+Cambiar el adaptador no activa por sí solo la generación en producción. La página, la ruta API y el servicio de tareas comprueban `isImageGenerationMockEnabled()`, que siempre es false en producción. Sustituye esas comprobaciones de admisión demo por una configuración explícita de la función de producción, conservando las verificaciones de origen, autenticación, derechos, cuotas y créditos.
+
+El tipo `GeneratedImage` actual solo permite `image/svg+xml`, la extensión `svg` y el proveedor `mock`. Define y valida los tipos de salida, extensiones, identidad del proveedor y metadatos de archivo permitidos antes de aceptar sus bytes. Prueba la admisión en producción junto con reintentos, entrega privada y compensación.
 
 **Relacionado:** [Libro de créditos](/es/docs/account-ledger), [Storage privado](/es/docs/storage-uploads), [Jobs durables](/es/docs/jobs-and-readiness) y [Pruebas y CI](/es/docs/testing-and-ci).

@@ -1,36 +1,146 @@
 ---
-title: Content Studio とマーケティングメール
+title: Payload Content Studio とマーケティングメールの設定
 icon: "PanelsTopLeft"
-description: 独立した Payload アプリを運用し、顧客データを SaaS 側に保ち、同意に基づくキャンペーンを安全に配信します。
-keywords: [Payload CMS, Content Studio, マーケティングメール, 同意, Resend]
-tags: [content, marketing, email]
+description: 独立した Payload CMS、最初の管理者、コンテンツジョブ、SaaS ゲートウェイを使う承認済みメール配信を設定します。
+keywords: [Payload CMS Next.js SaaS, Content Studio 設定, マーケティングメール, Resend, コンテンツ自動化]
+tags: [コンテンツ, マーケティング, メール, デプロイ]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> starter コミット [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) で確認済みです。
+Content Studio はスターターの任意の第 3 アプリです。Payload/Next.js でページ、記事、brief、メディア、キャンペーン草稿を管理します。Web と Admin は SaaS データ・認証を共有しますが、Studio は**独自 DB、編集セッション、マイグレーション、キュー**を持ちます。別リポジトリの文書サイトが自動でこの CMS を読むわけではありません。
 
-Content Studio は starter の 3 番目のアプリです。ページ、記事、ブリーフ、メディア、キャンペーンを扱う独立 Payload/Next.js 環境で、顧客認証や SaaS データベースは共有しません。
+## 起動して最初の編集者を作る
 
-| アプリ | ポート | データベース | 所有する情報 |
-| --- | ---: | --- | --- |
-| 顧客アプリ | 3000 | `DATABASE_URL` | アカウント、組織、課金、同意、配信監査 |
-| Admin | 3001 | `DATABASE_URL` | 運用ビューと監査付き操作 |
-| Content Studio | 3002 | `CONTENT_DATABASE_URL` | 編集文書、メディア、キャンペーン草稿 |
+スターターのルートで実行します。
 
-`PAYLOAD_SECRET` は編集者セッションを署名し、`CONTENT_STUDIO_URL` は管理画面から公開環境へリンクします。Payload を SaaS DB に向けたり、購読者・顧客を Studio へコピーしないでください。
+```bash
+./scripts/setup.sh development
+pnpm dev:doctor
+pnpm dev:all
+```
 
-`./scripts/setup.sh development` は `sushi_content`、不足する環境ファイル、Payload migration を準備します。`pnpm dev:all` は 3 アプリと worker を起動します。
+セットアップは `apps/content-studio/.env.development.local` と `sushi_content` を作り、既存値を保持して Payload マイグレーションを適用します。以後は `pnpm dev:studio` で編集アプリだけを起動し、`http://localhost:3002/admin` を開けます。
 
-ページと投稿は 5 言語、草稿、autosave、preview、レビュー、承認、予約公開、履歴に対応し、登録済みブロックだけを使用します。Collection 変更後は `studio:generate`、`studio:migrate:create`、`studio:migrate`、Studio check を実行します。Drizzle migration とは別管理です。
+**空の Studio DB に作られた最初のアカウントは管理者になります。** 現行コードは既存編集セッションなしでその作成を許可します。作成が終わるまで信頼する運用者だけがアクセスできるようにし、空の Studio を公開しないでください。`bootstrap:admin` CLI は提供されていません。その後のユーザー作成は管理者が行い、新規ユーザーは既定で `writer` です。
 
-## 影の CRM を作らないマーケティング
+編集ロールは `writer`、`seo-manager`、`reviewer`、`publisher`、`admin`。SaaS の `admin_ro`/`admin_rw` とは独立し、Admin の公開用リンクは編集権限を与えません。
 
-Studio はレイアウト、文面、preview、承認、予定を所有します。SaaS はメールアドレス、同意証跡、解除・抑制、オーディエンス、永続 job、秘密情報、監査を所有します。
+## 独立した本番アプリを設定
 
-承認済みキャンペーンは署名 gateway を使います。SaaS は現在同意している購読者だけを選び、宛先ごとに重複排除 job を作成し、Resend の直前に同意を再確認します。再実行しても二重送信しません。キャンセルは提供者に到達していない処理だけを止めます。
+対話形式で `pnpm env:setup:prod` を実行し、Studio を選びます。この選択でのみ `apps/content-studio/.env.production.local` が作られます。非対話形式は SaaS 本番ファイルだけを準備します。Studio の `.env.example` をコピーして手動入力する方法もあります。
 
-`CONTENT_MARKETING_SECRET` を共有し、`MARKETING_UNSUBSCRIBE_SECRET` は分離し、`/api/marketing/webhooks/resend` 用に `RESEND_WEBHOOK_SECRET` を設定します。
+| 設定 | 意味 |
+| --- | --- |
+| `CONTENT_DATABASE_URL` | SaaS と別の Payload DB |
+| `PAYLOAD_SECRET` | 独立した 32 バイトの編集セッション用シークレット |
+| `CONTENT_STUDIO_URL` | Studio origin。Admin のリンク用にも渡す |
+| `CONTENT_CORS_ORIGINS` | Studio 編集者自身の origin を含む許可ブラウザー origin |
+| `SAAS_MARKETING_API_URL` | 署名済み配信リクエストを受ける SaaS origin |
+| `CONTENT_MARKETING_SECRET` | SaaS と完全に同じゲートウェイシークレット |
+| `CRON_SECRET` | SaaS cron・認証と別の Studio スケジューラー用シークレット |
+| `CONTENT_STORAGE_*` | 本番メディアの永続・非公開ストレージ |
 
-**リリース可能条件：** 編集アクセスが分離され、migration が独立し、承認を迂回できず、再実行が一度だけ送信し、解除が次の提供者呼び出し前に反映され、Payload に購読者アドレスがないこと。
+現行設定は **CORS と CSRF に同じ許可リスト**を使います。Studio 自身と、ブラウザー API が必要な信頼するフロントエンドだけを含めます。ローカル例は `http://localhost:3002,http://localhost:3000`。本番ではすべての localhost を置き換えます。
+
+```dotenv
+CONTENT_STUDIO_URL=https://studio.example.com
+CONTENT_CORS_ORIGINS=https://studio.example.com,https://www.example.com
+SAAS_MARKETING_API_URL=https://app.example.com
+CONTENT_STORAGE_BUCKET=product-content
+CONTENT_STORAGE_REGION=auto
+CONTENT_STORAGE_ENDPOINT=https://ACCOUNT_ID.r2.cloudflarestorage.com
+CONTENT_STORAGE_ACCESS_KEY=
+CONTENT_STORAGE_SECRET_KEY=
+CONTENT_STORAGE_FORCE_PATH_STYLE=true
+```
+
+DB と認証情報は非公開で入力します。プラグインが有効になるのは **bucket、region、access key、secret key の 4 値が揃った場合だけ**です。ローカルディスクは開発用の代替であり、serverless・読み取り専用コンテナには永続オブジェクトストレージが必要です。Studio 専用の非公開 bucket と権限を限定した認証情報を使い、region・endpoint・path-style をプロバイダーに合わせます。
+
+```bash
+openssl rand -hex 32 # PAYLOAD_SECRET
+openssl rand -hex 32 # Studio CRON_SECRET
+openssl rand -hex 32 # CONTENT_MARKETING_SECRET。同じ値を SaaS と Studio へ
+openssl rand -hex 32 # MARKETING_UNSUBSCRIBE_SECRET。SaaS のみ、別の値
+pnpm env:check:prod
+```
+
+検証は既存の Studio 本番ファイル、独立 DB、共通マーケティングシークレットを確認しますが、CSRF ログイン、ストレージ接続、初期管理者作成は証明しません。[環境設定](/ja/docs/environment-configuration)で SaaS の全要件と明示的なプロセス読み込みを確認してください。
+
+## デプロイ前にマイグレーション
+
+Studio の本番値をリリースプロセスへ渡します。
+
+```bash
+NODE_ENV=production pnpm studio:migrate
+pnpm build:studio
+NODE_ENV=production pnpm start:studio
+```
+
+Payload CLI は `NODE_ENV=production` で Studio の Next 形式本番ファイルを読み、export 済み値を優先します。コンテナ起動時にマイグレーションは行いません。collection を変更したら、型、import map、独立した Payload マイグレーションを生成してコミットします。
+
+```bash
+pnpm studio:generate
+pnpm studio:migrate:create
+pnpm studio:migrate
+pnpm --dir apps/content-studio check
+```
+
+Payload **3.90.2** の昇格前に `20261005_024231_payload_security_fields` を適用します。パスワード再設定の制限とメディア key 用の nullable フィールドを追加し、既存アップロードを移動しません。Service Account API key は生成時だけ表示されるため、その場で保存します。更新後は未実行の予約公開・公開解除を作り直します。ユーザー参照に認証 collection が含まれるようになったためです。
+
+## 草稿、レビュー、公開、自動化
+
+ページ・記事は 5 言語、草稿、自動保存、プレビュー、レビュー、承認、予約公開、履歴を持ちます。hero、rich text、callout、FAQ、CTA、既知ツールの登録済みブロックを使い、任意 HTML・CSS・JavaScript・実行ツールを文書から追加できません。言語、本文、SEO、プレビューを確認し、publisher/admin が対象バージョンを承認・公開します。
+
+製品サイトは公開済み Payload または `/api/content/v1/published` を読む必要があります。Studio はこの文書サイトの MDX ローダーを置き換えません。Service Account には `content:draft:create`、`content:read` など最小 scope を付け、`content:publish` を分けます。1 回だけ表示される API key を自動化ホストのシークレット管理へ保存します。
+
+認証形式は `Authorization: service-accounts API-Key <key>` です。`CONTENT_API_KEY` を非公開で export したら草稿を作れます。
+
+```bash
+curl --fail-with-body https://studio.example.com/api/content/v1/drafts \
+  -H "Authorization: service-accounts API-Key $CONTENT_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -H 'Idempotency-Key: first-product-update-v1' \
+  --data '{"collection":"posts","locale":"ja","slug":"first-product-update","title":"最初の製品更新","summary":"変更点とその価値を説明します。","blocks":[{"type":"richText","markdown":"顧客に役立つ更新のお知らせです。"}]}'
+```
+
+同じ操作の再試行は key と本文を同じにし、新しい操作には別の key を使います。違う本文で key を再利用すると拒否されます。API は草稿の取得・置換、レビュー提出、別 scope の公開、brief、一括 import も扱います。import は job ID を返し、対応 scope で `/api/content/v1/jobs/:id` を確認できます。キュー投入は公開完了を意味しません。
+
+## Payload キューを別途実行
+
+SaaS `pnpm jobs:work` は **Payload キューを処理しません**。Studio の現行 timer はプロセスが生存している間、毎分最大 5 個の `content` ジョブを処理します。Serverless では timer に依存せずスケジューラーを設定します。
+
+Studio 本番値を読み込んだプロセスで毎分実行します。
+
+```bash
+NODE_ENV=production pnpm --dir apps/content-studio jobs:run --all-queues --handle-schedules
+```
+
+または全キューと予約公開を含む認証付き HTTP runner をスケジュールします。
+
+```bash
+curl --fail-with-body \
+  -H "Authorization: Bearer $STUDIO_CRON_SECRET" \
+  'https://studio.example.com/api/payload-jobs/run?allQueues=true&limit=5'
+```
+
+`STUDIO_CRON_SECRET` は Studio の `CRON_SECRET` をそのまま保持するスケジューラー側の非公開変数です。新しいアプリ設定や SaaS cron key ではありません。import と期限到来した公開を 1 件ずつ完了させ、失敗・遅延を監視します。
+
+## SaaS 経由でマーケティングを配信
+
+Studio はレイアウト、本文、プレビュー、承認、予定を所有します。SaaS はアドレス、同意、解除・抑止、受信者解決、Resend 認証情報、ジョブ、監査を所有します。自動化は `marketing:*` scope とレビュー付き action endpoint を使い、通常の collection 更新では送信しません。
+
+`CONTENT_MARKETING_SECRET` を完全一致で共有します。SaaS には独立して安定した `MARKETING_UNSUBSCRIBE_SECRET`、`RESEND_API_KEY`、`EMAIL_FROM`、プロバイダー発行 `RESEND_WEBHOOK_SECRET` を設定します。`https://app.example.com/api/marketing/webhooks/resend` を登録し、配信、bounce、苦情、失敗、抑止イベントを受けます。署名シークレットはその endpoint の Resend 設定から取得し、OpenSSL で作りません。
+
+実際の郵便住所を含むテンプレートを作り、キャンペーンを編集、プレビュー・検証、同意済み人数確認、テスト送信、正確な版の承認・公開を経て開始します。SaaS は重複を排除し、Resend 呼び出し前に同意を再確認して住所・解除リンク・one-click ヘッダーを付けます。再開始で重複配信しません。保留分はキャンペーン経由で取り消し、受理済みメールは回収できません。状態を更新し、解除が次の送信を止めることを確認します。
+
+## 自分のサイトの再検証を接続
+
+任意の `PUBLIC_SITE_REVALIDATE_URL` は自分の受信 endpoint を示します。別の `CONTENT_REVALIDATION_SECRET` を生成し、その handler と Studio だけで共有します。Studio は `timestamp.rawBody` を HMAC-SHA256 で署名し、`x-content-timestamp`、`x-content-signature` を送ります。製品サイトで署名、時刻の鮮度、キャッシュ無効化を実装します。sushisaas.com に自動受信処理はありません。
+
+**公開前の証拠：** 管理者を非公開で初期作成し、DB を分離。編集 origin の CSRF ログインと永続アップロードを確認。両マイグレーション履歴が最新で、API 再試行は 1 草稿、import・予約公開が完了し、破棄可能な受信者で同意・重複・解除の確認に通ること。
+
+**関連：** [環境設定](/ja/docs/environment-configuration)、[トランザクションメール](/ja/docs/email-service)、[ジョブと readiness](/ja/docs/jobs-and-readiness)、[デプロイ](/ja/docs/deployment-and-security)。
+
+出典：[Studio 契約](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/docs/content-platform.md)、[Payload 設定](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/apps/content-studio/src/payload.config.ts)、[最初のユーザー](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/apps/content-studio/src/collections/users.ts)、[マーケティング](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/docs/marketing-email.md)。

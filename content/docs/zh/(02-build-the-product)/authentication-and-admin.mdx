@@ -6,10 +6,10 @@ keywords: [Better Auth, 身份验证, 管理端, MFA]
 tags: [身份验证, 管理端, 安全]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> 已根据启动模板提交 [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) 验证。
+> 已根据启动模板提交 [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) 验证。
 
 完成配置后，客户可以注册、验证邮箱、登录、找回密码并进入组织工作区；可信员工则通过同时要求平台管理员角色和 MFA 的独立控制台工作。
 
@@ -41,3 +41,7 @@ Sushi SaaS 使用 Better Auth 提供邮箱密码和双因素认证。Google OAut
 上线前测试注册、验证、登录、找回、启用时的 Google 回调、会话撤销、MFA 注册以及两种管理权限。成功不只是“页面能打开”：未认证请求不得读取私有数据，`admin_ro` 不得写入，而每次 `admin_rw` 修改都应出现在审计记录中。部署和操作员配置请遵循专门的[管理控制台配置与访问](/zh/docs/admin-console-setup)指南。
 
 **相关内容：** 更改身份供应商、会话、组织角色或 MFA 政策前，请阅读 [Sushi SaaS 的认证机制](/zh/blogs/web-authentication-deep-dive)。
+
+## 升级认证时先迁移数据库
+
+当前版本使用 Better Auth 1.7.6。部署前先应用 SaaS 迁移 `0037_neat_excalibur.sql`，为 `two_factor` 增加 `verified`、`failed_verification_count` 与 `locked_until`。迁移只将已确认启用（`users.two_factor_enabled=true`）的记录标记为 verified；存在待确认 secret 并不代表已完成认证。迁移后在测试环境验证 MFA 注册、错误验证码锁定和 Admin 登录。

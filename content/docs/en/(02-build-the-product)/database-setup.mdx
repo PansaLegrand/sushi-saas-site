@@ -6,10 +6,10 @@ keywords: [PostgreSQL, Drizzle, migrations, database]
 tags: [database, operations]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Verified against starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+> Verified against starter commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
 
 By the end of this page, you will know which database to point each environment at, how to turn a schema edit into reviewable SQL, and how to apply it separately from an application release.
 
@@ -36,9 +36,9 @@ Commit the generated SQL and `meta/_journal.json` with the code. Do not edit an 
 Migrations never run automatically during application deployment. This is the shipped safety choice: database and app releases can be observed, retried, and rolled out independently.
 
 ```bash
-pnpm db:check:prod
 pnpm db:migrate:prod
-pnpm db:integrity
+pnpm db:check:prod
+pnpm db:integrity -- --production
 ```
 
 The production runner is non-interactive, takes a PostgreSQL advisory lock, and verifies migration checksums. Back up first and use expand/contract changes so the currently deployed code and the next version can both run while schema and application releases are separated.
@@ -59,8 +59,14 @@ The production runner is non-interactive, takes a PostgreSQL advisory lock, and 
 - Run `db:integrity` before and after relationship changes. The migration linter rejects destructive drops, unsafe renames, unbounded rewrites, and blocking uniqueness unless a reviewable exception explains the rollout.
 - Prefer expand/contract migrations for zero-downtime releases. A destructive one-step rename is simpler, but it couples schema and code deployment and makes rollback unsafe.
 
-You are ready to deploy when `pnpm db:check:prod` reports the expected pending set, the backup is current, the migration works against a staging copy, and both old and new application versions can run during the rollout.
+Promote application code only after the backup is verified, the migration has passed on a staging copy, `pnpm db:check:prod` succeeds with no pending or drifted history, and the old and new code can coexist during the rollout.
 
 Read `docs/database.md` and `DEPLOYMENT.md` in the starter before changing production data contracts.
 
 **Related:** Review [Architecture and Error Contracts](/docs/architecture-and-errors) for data-layer boundaries and [Authentication and Admin](/docs/authentication-and-admin) for the identities those records belong to.
+
+## Upgrade authentication before deploying new code
+
+The current release uses Better Auth 1.7.6. Apply SaaS migration `0037_neat_excalibur.sql` before deploying it: the `two_factor` table gains `verified`, `failed_verification_count`, and `locked_until`. The migration marks only already-confirmed enrollments (`users.two_factor_enabled=true`) as verified; pending secrets are not confirmation. Verify MFA enrollment, failed-code lockout, and Admin login on staging after the schema change.
+
+`db:check:prod` passes only when all expected migrations are applied and their checksums match. Pending or mismatched history blocks promotion. `db:integrity` is read-only and checks relationships, invalid values and nullability as well as orphaned rows. Supply production database variables explicitly to release commands.

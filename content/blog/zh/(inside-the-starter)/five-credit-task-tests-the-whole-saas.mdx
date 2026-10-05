@@ -5,10 +5,10 @@ description: "了解一个简单图像提供器如何证明身份、积分、持
 tags: [architecture, tasks, credits, reliability]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> 基于 starter 提交 [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a)。
+> 基于 starter 提交 [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9)。
 
 多数 starter 演示只能证明按钮可以调用 API，却没有证明浏览器重试、进程在两个写入之间退出、提供器已接受但响应超时、对象已保存但数据库失败，或退款暂时无法写入时会发生什么。
 
@@ -37,7 +37,7 @@ Sushi SaaS 用一个刻意简单的图像任务测试这些接缝。图像本身
 
 E2E 会重复创建同一请求、确认一个任务和精确五积分消费、运行真实 Worker、读取组织任务与签名对象。独立数据库测试强制最终失败并证明重放后只有一次消费和一次退款。
 
-采用者只需替换 `src/services/ai/image.ts`，保留幂等键、AbortSignal、字节/类型输出与公开错误边界。任务、积分、Worker、私有存储、UI 与运营恢复无需知道模型是谁。
+真实提供器位于 `src/services/ai/image.ts`，并保留幂等键、AbortSignal 和公开错误边界。生产接入还需要在页面、API 和任务服务中配置明确的准入条件，因为演示开关在生产始终关闭。当前输出类型只允许 SVG 和提供器 `mock`，所以也要定义并校验真实输出格式与文件元数据。完成这些适配后，积分、持久执行、私有存储、轮询和恢复契约仍可独立于模型。
 
 这就是 starter 中“面向生产”的含义：不是宣称 clone 可直接认证，而是让昂贵的失败问题可见、可执行且难以意外绕过。
 

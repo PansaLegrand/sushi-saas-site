@@ -5,9 +5,11 @@ import { pathToFileURL } from "node:url";
 export const LOCALES = ["en", "zh", "es", "fr", "ja"];
 export const COLLECTIONS = ["docs", "blog"];
 export const SITE_ORIGIN = "https://www.sushisaas.com";
-export const STARTER_REPOSITORY =
-  "https://github.com/PansaLegrand/sushi-saas-template";
-export const STARTER_COMMIT = "2a1a04a";
+const starterSource = JSON.parse(
+  readFileSync(new URL("../docs/starter-source.json", import.meta.url), "utf8")
+);
+export const STARTER_REPOSITORY = starterSource.repository;
+export const STARTER_COMMIT = starterSource.commit;
 
 const LEGACY_DOC_SLUGS = new Set([
   "quick-start",

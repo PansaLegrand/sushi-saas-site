@@ -3,6 +3,10 @@
 The independent public website and documentation repository for
 [Sushi SaaS](https://github.com/PansaLegrand/sushi-saas-template).
 
+Official website and documentation: [sushisaas.com](https://www.sushisaas.com/).
+The [DojoClip use case](https://www.sushisaas.com/blogs/dojoclip-ai-saas-use-case)
+connects a real AI media product to the starter's application contracts.
+
 This repository is intentionally separate from the starter application. It
 contains a multilingual landing page, implementation guides, engineering
 articles, legal pages, and SEO routes. It contains no database, authentication,
@@ -50,6 +54,40 @@ The application source remains in
 Co-versioned contributor and operational documents stay with that codebase;
 public tutorials live here. A starter change that affects setup or behavior
 should include a linked documentation change in this repository.
+
+The latest source review is recorded in
+[`docs/starter-source.json`](docs/starter-source.json). Public source links pin
+that immutable revision; they do not follow a moving `main` branch. Before a
+starter release changes setup, providers, migrations, or ownership:
+
+```bash
+pnpm content:check:starter -- --starter-dir ../sushi-saas-template
+```
+
+This optional cross-repository check flags tracked starter changes since the
+review, verifies every pinned source path, and reads no real environment files.
+README-only changes do not invalidate a runtime source review. Review affected
+pages in all five locales before updating the manifest and source links;
+`pnpm content:check` then requires that reviewed revision in every page.
+
+The complete October 5, 2026 review is recorded in
+[`docs/reviews/`](docs/reviews/): all 170 original localized pages were read,
+configuration and upgrade instructions were reconciled with source, and the
+live website's crawl/metadata were checked. Only materially changed pages have
+new modification dates. The environment guide and DojoClip case add ten
+localized pages.
+
+To verify built HTML for crawlers as well as TypeScript:
+
+```bash
+pnpm build
+pnpm start --port 3004
+# In another terminal:
+SEO_TEST_BASE_URL=http://localhost:3004 pnpm test
+```
+
+Search performance priorities and post-release measurements are in
+[`docs/reviews/2026-10-05-search-content-plan.md`](docs/reviews/2026-10-05-search-content-plan.md).
 
 ## Migration provenance
 

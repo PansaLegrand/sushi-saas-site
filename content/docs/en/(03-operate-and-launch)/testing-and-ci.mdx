@@ -6,10 +6,10 @@ keywords: [Vitest, Playwright, CI, test database, coverage]
 tags: [testing, CI, reliability]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Verified against starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+> Verified against starter commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
 
 The test suite is organized by what it may mock. That rule matters more than the folder names: a mocked database test cannot prove a unique constraint, and a route test that mocks its auth guard cannot prove authentication happens before data access.
 
@@ -31,10 +31,13 @@ pnpm test:fast
 pnpm test:run
 pnpm test:cov
 pnpm test:db
+pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
-`test:fast` is the hermetic pre-commit pass. `test:run` executes every configured Vitest project; the database tier activates when `TEST_DATABASE_URL` is present. The database name must contain `test` because the harness truncates it. `test:cov` applies the coverage ratchet to services, models, API routes, shared server code, and admin data code.
+`test:fast` is the hermetic pre-commit pass. `test:run` executes the configured Vitest projects. `test:cov` applies the coverage ratchet to services, models, API routes, shared server code, and Admin data code.
+
+Without either `TEST_DATABASE_URL` or `TEST_REDIS_URL`, Vitest omits the infrastructure project before collection. PostgreSQL and Redis tests opt in independently; a Redis-only run does not initialize Better Auth or PostgreSQL. CI requires both URLs and fails when infrastructure is absent. The PostgreSQL test database name must contain `test` because the harness truncates its tables. Keep test URLs out of production deployment settings.
 
 The Playwright suite uses a disposable stack on port 3100. It signs in through the visible Better Auth form and exercises tenant credits, direct Garage upload/delete, and the five-credit image workflow from idempotent replay through the durable worker to a signed private result. External targets require explicit credentials and `E2E_ALLOW_MUTATIONS=1` before destructive tests run.
 

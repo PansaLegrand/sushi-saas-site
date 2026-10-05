@@ -6,10 +6,10 @@ keywords: [Better Auth, 認証, 管理, MFA]
 tags: [認証, 管理, セキュリティ]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> スターターのコミット [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) で検証済みです。
+> スターターのコミット [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) で検証済みです。
 
 この設定により、顧客は新規登録、メールアドレスの確認、ログイン、パスワードの復旧、セッション、組織の切り替えを利用できます。信頼する運用担当者は、プラットフォーム管理者の権限と MFA の両方を要求する独立したコンソールを使います。
 
@@ -39,3 +39,7 @@ Sushi SaaS は Better Auth を使い、メールアドレスとパスワード�
 `pnpm dev:admin` は 3001 番ポートで起動します。`apps/admin` は独自のオリジンと認証 URL を持つ別アプリとしてデプロイします。`pnpm admin:promote` で権限を付与し、`admin_ro` は閲覧、`admin_rw` は変更が可能です。MFA は必須で、書き込み操作は監査記録に残ります。組織内の役割をプラットフォーム管理者の権限に流用しません。
 
 公開前に、登録、メール確認、ログイン、パスワード復旧、有効にした場合の Google コールバック、セッション失効、MFA、二つの管理者権限をテストしてください。成功とは単にページが開くことではありません。未認証のリクエストが非公開データを読めず、`admin_ro` が書き込めず、`admin_rw` によるすべての変更が監査履歴に残る必要があります。認証方式を選んだ理由と変更時の注意点は、[Sushi SaaS の認証の仕組み](/ja/blogs/web-authentication-deep-dive)で確認できます。デプロイと運用担当者の導入は、専用の[管理コンソールのセットアップとアクセス](/ja/docs/admin-console-setup)に従ってください。
+
+## 新しい認証コードの前にマイグレーションを適用する
+
+現在の版は Better Auth 1.7.6 を使用します。デプロイ前に SaaS マイグレーション `0037_neat_excalibur.sql` を適用し、`two_factor` に `verified`、`failed_verification_count`、`locked_until` を追加します。確認済みの登録（`users.two_factor_enabled=true`）だけが verified になり、未確認の secret は確認済みとは扱いません。ステージング環境で MFA 登録、誤ったコードによるロック、Admin ログインを確認してください。

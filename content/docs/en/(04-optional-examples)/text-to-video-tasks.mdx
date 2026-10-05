@@ -6,10 +6,10 @@ keywords: [tasks, text to video, credits, idempotency]
 tags: [tasks, AI]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Synced with starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+> Synced with starter commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
 
 Use this page as a reference for building a metered AI feature, not as a ready-made video product. What ships is a local-only mock screen plus the hard parts around tenancy, entitlements, monthly limits, pooled credits, idempotency, failure state, and refunds. Production ignores the demo flags, so no real video generation is enabled by cloning the repository.
 
@@ -23,7 +23,9 @@ For a new asynchronous paid feature, start with [Five-Credit Image Generation](/
 
 **Ready to launch means:** the mock is absent from production, duplicate requests create one task and one spend, insufficient credits are explained, provider failure creates one refund, callbacks cannot cross organizations, and the UI communicates queued/running/failed states.
 
-The text-to-video screen is an opt-in development pattern, not a production AI provider. It is unavailable unless demo features and the text-to-video mock are enabled; demo flags are ignored in production. Replace only `src/services/ai/video.ts` with your provider adapter.
+The text-to-video screen is an opt-in development pattern, not a production AI provider. It is unavailable unless demo features and the text-to-video mock are enabled; demo flags are ignored in production.
+
+Implement the real adapter in `src/services/ai/video.ts`. Replacing it alone does not expose the feature in production: the page, API route, and task service also check `isTextToVideoMockEnabled()`, which is always false there. Replace those demo admission checks with an explicit production feature configuration while retaining same-origin, authentication, entitlements, limits, and credit accounting. Test the production path with the mock disabled.
 
 `POST /api/tasks/text-to-video` requires same origin, rate limit, authentication, the organization `tasks.text_to_video` entitlement, the shared monthly task limit, and sufficient pooled credits. Supply `Idempotency-Key` in the header or body. The service inserts one organization-scoped task, spends credits, records the root ledger transaction, calls the provider, and marks success. Provider failure marks the task failed and appends a credit refund.
 

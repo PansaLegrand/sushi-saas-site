@@ -7,8 +7,15 @@
   "nav": { "label": "Navigation principale", "start": "Démarrage rapide", "docs": "Documentation", "blog": "Guides", "github": "GitHub", "language": "Choisir la langue" },
   "landing": {
     "eyebrow": "Licence MIT · Pensé pour la production",
-    "heroLineOne": "L’infrastructure est prête.",
-    "heroLineTwo": "Construisez le produit.",
+    "heroLineOne": "Un starter SaaS Next.js",
+    "heroLineTwo": "open source.",
+    "useCase": {
+      "eyebrow": "Un produit réel",
+      "title": "DojoClip : un SaaS média avec IA.",
+      "body": "DojoClip construit des parcours vidéo, image, musique et voix sur une base SaaS. Découvrez ce que fournit le starter et ce que le produit ajoute à l’expérience créative.",
+      "action": "Lire le cas DojoClip",
+      "visit": "Découvrir DojoClip"
+    },
     "subtitle": "Passez d’une configuration locale guidée à une application web, une console admin et un Content Studio déployables, avec facturation rejouable, stockage privé, tâches durables, observabilité et restaurations testées.",
     "primaryAction": "Lancer en local",
     "secondaryAction": "Voir le code",

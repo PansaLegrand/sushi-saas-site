@@ -6,7 +6,7 @@ keywords: [SaaS customization, branding, locales, theme, legal setup, feature de
 tags: [setup, product decisions, customization]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
 By the end of this page, the starter will look and route like **your** product, and you will have an explicit keep, configure, or remove decision for every optional system. Do this before changing individual screens: identity and product boundaries affect URLs, emails, legal copy, analytics, billing, and the admin console.
@@ -16,7 +16,7 @@ By the end of this page, the starter will look and route like **your** product, 
 | Area | Shipped behavior | Your decision |
 | --- | --- | --- |
 | Product identity | `saas.config.json` tracks the neutral name, slug, support, and docs URL | Run the customizer and review the tracked diff |
-| Support | Support email is an explicit tracked product value | Set it before launch, or deliberately leave the public support promise elsewhere |
+| Support | Support email is an explicit tracked product value | Set a real support email before production; the configuration gate requires it |
 | Languages | English, Chinese, Spanish, French, and Japanese are available; URL prefixes are `as-needed` | Choose the default, enabled set, and browser-locale detection |
 | Visual language | `studio` is the build-time preset shared by the web and admin apps | Keep it or choose `glass`, `soft`, `editorial`, or `brutalist` in code |
 | Color mode | The customer app defaults to `system` through an environment variable | Choose `system`, `light`, or `dark`; the admin app does not yet have a theme-mode switch |
@@ -61,7 +61,7 @@ Choose the preset through `pnpm customize` or edit the tracked value:
 
 ## Finish the legal identity
 
-Fill `LegalData` in `src/config/legal.ts`: registered entity name and address, privacy and legal contacts, governing law, effective date, and the actual sub-processors you use. Work through every bracketed policy placeholder. Until all required identity fields exist, `LegalConfig.isConfigured` remains false and the privacy and terms pages show an unreviewed-draft notice.
+Set the legal identity in the `legal` section of `saas.config.json`: registered entity and address, privacy/legal contacts, governing law, and effective date. `src/config/legal.ts` reads those values; edit that file only for product-specific policy text and `LegalData.subProcessors`. Until the required identity fields exist, `LegalConfig.isConfigured` remains false and the legal pages show a draft notice. Review both the identity and policy before launch.
 
 The included text is a drafting skeleton, not legal advice or a finished policy. Remove providers you do not use, add providers that receive personal data, reconcile retention promises with account erasure, and have qualified counsel review the result.
 
@@ -90,13 +90,13 @@ Then verify the default locale is unprefixed, each enabled non-default locale re
 
 ## What is not finished for you
 
-The starter does not include a brand configurator, runtime preset picker, admin dark-mode provider, environment-driven support address, reviewed legal policy, or a decision about which optional systems belong in your product. Those are adopter decisions by design.
+`pnpm customize` supplies the tracked brand/configuration workflow. Runtime preset selection, an admin dark-mode provider, environment-driven support email, a reviewed legal policy, and the choice of optional product systems remain adopter work. Support email comes from `product.supportEmail` in `saas.config.json`.
 
 ## Source snapshot
 
-Verified against starter commit `2a1a04a`:
+Verified against starter commit `b16b416`:
 
-- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/site.ts)
-- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/i18n/locale.ts)
-- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/style.ts)
-- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/legal.ts)
+- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/config/site.ts)
+- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/i18n/locale.ts)
+- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/config/style.ts)
+- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/config/legal.ts)

@@ -5,7 +5,7 @@ description: "根据准备保留的默认决策、愿意运营的系统，以及
 tags: [选型, 架构, 开源]
 author: "Sushi SaaS"
 publishedAt: "2025-10-07T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
 只有当你愿意接受 starter 的决策时，它才会节省时间。Sushi SaaS 是为需要把身份、租户、计费、用量和运营连接起来的团队准备的源码骨架，并不能让你绕过对这些系统的理解。
@@ -50,16 +50,18 @@ updatedAt: "2026-08-24T00:00:00.000Z"
 
 ## 克隆后仍存在的成本
 
-你仍需负责 provider 账户、secret、价格、税务与退款政策、法律文案、数据保留、监控、无障碍、威胁评估和事故响应。请替换图像/视频 mock provider，并决定 Content Studio、营销、预约和推荐是否属于产品，同时设定真实恢复目标。
+你仍需负责 provider 账户、secret、价格、税务与退款政策、法律文案、数据保留、监控、无障碍、威胁评估和事故响应。替换图像/视频 mock 时，还要配置明确的生产准入条件并校验真实输出类型；再决定 Content Studio、营销、预约和推荐是否属于产品，同时设定真实恢复目标。
 
 “面向生产”表示仓库明确暴露这些责任并提供技术控制，不表示你的部署已获得认证。
 
 ## 一小时适配检查
 
-1. 运行[快速开始](/zh/docs/quick-start)，打开两个应用。
+1. 运行[快速开始](/zh/docs/quick-start)，打开 Web、Admin 和可选的 Content Studio。
 2. 把必须能力映射到仓库中的真实页面与 service。
 3. 给每项主要决策标记**保留**、**修改**或**删除**：技术栈、组织、计费、积分、存储、任务、语言、管理后台与推荐。
 4. 跟踪一条资金或授权流程，并阅读对应测试。
 5. 估算“修改”列；如果它占多数，应选择更小的起点。
 
-然后阅读 [Sushi SaaS 的代码结构](/zh/blogs/anatomy-of-modern-saas)与[部署与安全](/zh/docs/deployment-and-security)。本文基于 [starter commit `2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a)。
+然后阅读 [Sushi SaaS 的代码结构](/zh/blogs/anatomy-of-modern-saas)与[部署与安全](/zh/docs/deployment-and-security)。本文基于 [starter commit `b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9)。
+
+如果想看具体的 AI 产品案例，请阅读 [DojoClip 案例](/zh/blogs/dojoclip-ai-saas-use-case)。

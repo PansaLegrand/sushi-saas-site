@@ -5,10 +5,10 @@ description: "Un fournisseur image simple révèle les liens difficiles entre id
 tags: [architecture, tasks, credits, reliability]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Basé sur le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+> Basé sur le commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
 
 Beaucoup de démos prouvent seulement qu’un bouton appelle une API. Elles ne prouvent pas le rejeu navigateur, une panne entre écritures, un fournisseur qui accepte avant timeout, un objet stocké avant l’échec DB ou un remboursement temporairement impossible.
 
@@ -29,7 +29,7 @@ Le fournisseur a cinq tentatives, le job huit. Les trois restantes compensent un
 
 Le mock évite coût, secrets et non-déterminisme. E2E rejoue la requête, confirme exactement cinq crédits, exécute le worker et lit l’objet Garage signé. Un test DB force l’échec terminal et prouve un débit/un refund.
 
-Remplacez seulement `src/services/ai/image.ts` en conservant clé, AbortSignal, bytes/type et erreurs. Tâche, crédits, jobs, stockage, UI et reprise ignorent le modèle utilisé.
+Le fournisseur réel appartient à `src/services/ai/image.ts`, en conservant clé idempotente, AbortSignal et erreurs publiques. L’adoption en production exige aussi une admission explicite dans la page, l’API et le service : leurs contrôles de démonstration sont toujours fermés en production. Le type de sortie actuel se limite au SVG et au fournisseur `mock` ; définissez et validez donc le format réel et les métadonnées du fichier. Une fois ces frontières adaptées, les contrats de crédits, exécution durable, stockage privé, interrogation et reprise peuvent rester indépendants du modèle.
 
 Voilà le sens de « pensé pour la production » : rendre les pannes coûteuses visibles et testables, pas certifier automatiquement un clone.
 

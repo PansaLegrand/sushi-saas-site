@@ -1,0 +1,51 @@
+---
+title: "Crear un SaaS de IA con Next.js: el caso DojoClip"
+icon: "Clapperboard"
+description: "Usa DojoClip como ejemplo de un SaaS de medios con IA y relaciona autenticación, Stripe, créditos, archivos privados y trabajos en segundo plano con tu producto Next.js."
+tags: [AI SaaS, Next.js, DojoClip]
+author: "Sushi SaaS"
+publishedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
+---
+
+[DojoClip](https://dojoclip.com/) es un SaaS de medios con IA construido con Sushi SaaS. Su producto público reúne edición de vídeo y flujos de imágenes, música y voz. Un producto de IA necesita una experiencia creativa útil y una base que gestione clientes, pagos, consumo y archivos.
+
+Este caso relaciona el producto con los contratos públicos del starter; no describe su despliegue privado, resultados comerciales ni toda su implementación. Los medios son extensiones propias: clonar Sushi SaaS no instala el editor DojoClip ni proveedores comerciales.
+
+## Lo que necesita el producto alrededor del modelo
+
+| Necesidad | Sushi SaaS aporta | Tu producto añade |
+| --- | --- | --- |
+| Acceso y equipos | Better Auth, organizaciones, invitaciones, roles | Incorporación y colaboración |
+| Suscripción y consumo | Stripe, capacidades, libro de créditos por organización | Precios, reglas de consumo y costes de proveedor |
+| Generación asíncrona | Jobs PostgreSQL, deduplicación, reintentos, compensación | Adaptador real, admisión explícita en producción, progreso |
+| Medios privados | Subidas S3, checksums, acceso firmado y borrado | Formatos validados y experiencia de edición |
+| Operación | Admin separado, readiness, logs, copias y restauración | Objetivos de monitorización, soporte y responsables |
+
+Un trabajo puede durar más que la petición del navegador, una devolución de llamada puede repetirse y una generación fallida puede necesitar un reembolso. El sistema debe poder explicar y recuperar su estado incluso sin el proveedor.
+
+## Empieza con un flujo de pago
+
+Ejecuta el [ejemplo de imagen de cinco créditos](/es/docs/image-generation-workflow) antes de integrar un modelo comercial. Sigue autorización, débito determinista, trabajo persistente, resultado privado y compensación una sola vez.
+
+El ejemplo devuelve un SVG simulado y bloquea producción en página, API y servicio. Debes introducir admisión de producción revisada en esos puntos, adaptar el contrato a formatos validados e implementar el proveedor. Cambiar solo una clave o un adaptador no activa la función.
+
+Conserva los contratos de [créditos](/es/docs/account-ledger), [almacenamiento](/es/docs/storage-uploads) y [jobs](/es/docs/jobs-and-readiness) al añadir tu lógica de medios.
+
+## Diseña tu propia experiencia
+
+Una línea de tiempo, controles musicales, edición de imágenes, exploración de recursos y selección de voz son trabajo de producto. Content Studio publica contenido editorial y campañas; es una app de autoría independiente, no el editor de medios del cliente.
+
+Usa [personalización](/es/docs/customize-your-product) para identidad, idiomas y apariencia, y [configuración de entorno](/es/docs/environment-configuration) para proveedores y valores compartidos. Guarda credenciales en el servidor y medios de clientes en almacenamiento privado.
+
+## Ruta de adopción
+
+1. Ejecuta la [pila local completa](/es/docs/quick-start) y selecciona capacidades.
+2. Configura identidad, Prices de Stripe, email y almacenamiento.
+3. Traza el ejemplo y añade un flujo real con reintentos y recuperación.
+4. Valida experiencia del cliente y recuperación operativa juntas.
+5. Completa [despliegue y seguridad](/es/docs/deployment-and-security) antes de abrir la función.
+
+Visita [DojoClip](https://dojoclip.com/) para ver el producto público y utiliza estas guías para construir tu aplicación.
+
+> Sushi SaaS: [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9). DojoClip: [producto público](https://dojoclip.com/).

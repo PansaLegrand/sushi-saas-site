@@ -4,6 +4,7 @@
   "pages": [
     "quick-start",
     "customize-your-product",
+    "environment-configuration",
     "architecture-and-errors"
   ]
 }

@@ -6,17 +6,17 @@ keywords: [后台任务, cron, 队列, readiness, health check, PostgreSQL]
 tags: [任务, 运维, 可靠性]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> 已与 starter 提交 [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) 同步。
+> 已与 starter 提交 [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) 同步。
 
 当某项工作必须在浏览器请求结束后继续完成时，请使用本页，例如发送邮件、发放积分、删除对象或完成隐私请求。模板内置轻量的 PostgreSQL 持久队列，多数团队无需先运维 Redis 队列或独立 worker 服务即可上线。
 
 ## 决定如何运行和监控后台工作
 
-- 在 Vercel 上保留内置的五分钟 Cron；在其他平台上，用该平台的调度器调用同一个受认证端点。
-- 中低吞吐、且单个任务可在 20 秒内完成时可继续使用 PostgreSQL 队列。只有长任务或高吞吐确实需要时才换专用队列，并保留去重与 handler 幂等。
+- Vercel 使用受认证的五分钟 Cron drain；VM、容器或 Kubernetes 使用已提供的独立 Worker。平台调度器也可运行一次性 `pnpm jobs:run --production`。
+- 中低吞吐时保留 PostgreSQL 队列。Worker 与 Cron 共用领取、重试、维护和可观测性服务。Worker 的 `JOB_WORKER_HANDLER_TIMEOUT_MS` 与 `JOB_WORKER_DRAIN_DEADLINE_MS` 默认分别为 20 秒和 40 秒；延长提供器预算时需验证中止行为，且必须低于五分钟租约。使用 Worker 不需要更换队列存储。
 - `/api/health` 回答“进程能否响应”，`/api/ready` 回答“该版本是否可以接收生产流量”，不要混用。
 
 **可以上线的标准：** 测试任务能被领取；强制失败会重试并最终可见；重叠的 Cron 不会产生重复效果；readiness 失败和 failed 队列增长会触发告警。
@@ -25,7 +25,7 @@ updatedAt: "2026-08-24T00:00:00.000Z"
 
 Serverless 实例可能在响应返回后立刻冻结。必须完成的工作——邮件、积分发放、对象删除、账号导出与删除——会写入 `jobs` 表，而不是交给 `queueMicrotask` 或未等待的 Promise。
 
-当前任务包含欢迎/支付/邀请/预约邮件、注册积分、Slack 事件、存储删除、账号导出、导出过期和账号删除。
+当前任务包含欢迎/支付/邀请/预约邮件、注册积分、Slack 事件、存储删除、账号导出、导出过期、账号删除、营销邮件投递，以及五积分图像生成工作流。
 
 ## 安全入队
 

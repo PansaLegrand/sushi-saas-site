@@ -1,38 +1,146 @@
 ---
-title: 内容工作室与营销邮件
+title: 配置 Payload 内容工作室与营销邮件
 icon: "PanelsTopLeft"
-description: 运行独立的 Payload 内容应用，将客户数据留在 SaaS 中，并安全发送基于同意的营销活动。
-keywords: [Payload CMS, 内容工作室, 营销邮件, 用户同意, Resend]
-tags: [content, marketing, email]
+description: 配置独立 Payload CMS，私下创建首位管理员，运行内容任务，并通过 SaaS 网关投递已审核的营销邮件。
+keywords: [Payload CMS Next.js SaaS, 内容工作室配置, 营销邮件, Resend, 内容自动化]
+tags: [内容, 营销, 邮件, 部署]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> 已根据 starter 提交 [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) 验证。
+Content Studio 是 starter 中可选的第三个应用，使用 Payload/Next.js 管理页面、文章、内容简报、媒体和活动草稿。Web 与 Admin 共享 SaaS 数据和认证；Studio 拥有**独立数据库、编辑会话、迁移和队列**。独立的 Sushi SaaS 文档网站不会自动读取这个 CMS。
 
-Content Studio 是 starter 的第三个应用。它是独立部署的 Payload/Next.js 创作环境，用于页面、文章、内容简报、媒体和营销活动，不共享客户认证或 SaaS 数据库。
+## 本地启动并创建第一位编辑者
 
-## 明确部署边界
+从 starter 根目录运行：
 
-| 应用 | 本地端口 | 数据库 | 负责内容 |
-| --- | ---: | --- | --- |
-| 客户应用 | 3000 | `DATABASE_URL` | 账户、组织、计费、同意和投递审计 |
-| 管理控制台 | 3001 | `DATABASE_URL` | 运营视图和带审计的操作 |
-| Content Studio | 3002 | `CONTENT_DATABASE_URL` | 编辑文档、媒体元数据和活动草稿 |
+```bash
+./scripts/setup.sh development
+pnpm dev:doctor
+pnpm dev:all
+```
 
-`PAYLOAD_SECRET` 签署编辑会话，`CONTENT_STUDIO_URL` 让管理控制台链接到发布系统。不要让 Payload 使用 SaaS 数据库，也不要把订阅者或客户记录复制到 Studio。
+配置流程创建 `apps/content-studio/.env.development.local` 和 `sushi_content`，应用 Payload 迁移并保留已有值。之后只运行内容系统时使用 `pnpm dev:studio`，访问 `http://localhost:3002/admin`。
 
-`./scripts/setup.sh development` 会创建 `sushi_content`、写入缺失的 Studio 环境配置并应用 Payload 迁移。`pnpm dev:all` 同时启动三个应用和持久 Worker。
+**空 Studio 数据库中的第一个账户会成为管理员。** 当前代码允许在没有编辑者会话时创建这个账户。创建完成前，仅让受信任的运营人员访问部署，不要公开暴露空 Studio。项目没有 `bootstrap:admin` CLI。之后创建用户需要管理员权限，新账户默认是 `writer`。
 
-页面与文章支持五种语言、草稿、自动保存、预览、审阅、批准、定时发布和版本历史。内容使用已注册区块，不接受任意 HTML、CSS 或 JavaScript。修改 Payload collection 后运行 `studio:generate`、`studio:migrate:create`、`studio:migrate` 和 Studio check；这些迁移与 SaaS 的 Drizzle 历史独立。
+角色包括 `writer`、`seo-manager`、`reviewer`、`publisher`、`admin`，与 SaaS 的 `admin_ro`/`admin_rw` 独立。Admin 中的发布链接不会授予编辑权限。
 
-## 不创建影子 CRM 的营销系统
+## 配置独立生产应用
 
-Content Studio 负责布局、文案、预览、批准和计划；SaaS 负责真实邮箱、同意证据、退订与抑制、受众解析、持久投递任务、提供器凭据和审计。
+交互运行 `pnpm env:setup:prod`，选择启用 Studio 后才会创建 `apps/content-studio/.env.production.local`。非交互流程只准备 SaaS 生产文件。也可以把 Studio 的 `.env.example` 复制到该文件后手动填写。
 
-批准后的活动通过签名网关启动。SaaS 只选择当前已同意的订阅者，为每位收件人创建去重任务，并在调用 Resend 前再次检查同意。重复启动不会重复发送。取消只会停止尚未到达提供器的任务。
+| 变量 | 含义 |
+| --- | --- |
+| `CONTENT_DATABASE_URL` | 独立 Payload 数据库，不使用 SaaS 数据库 |
+| `PAYLOAD_SECRET` | 独立生成的 32 字节编辑会话密钥 |
+| `CONTENT_STUDIO_URL` | Studio origin，同时提供给 SaaS Admin 生成链接 |
+| `CONTENT_CORS_ORIGINS` | 允许的浏览器 origin，必须包含 Studio 编辑者自身 origin |
+| `SAAS_MARKETING_API_URL` | 接收签名营销请求的 SaaS origin |
+| `CONTENT_MARKETING_SECRET` | 与 SaaS 完全相同的网关密钥 |
+| `CRON_SECRET` | Studio 调度器密钥，不复用 SaaS cron/认证密钥 |
+| `CONTENT_STORAGE_*` | 生产媒体的持久私有存储 |
 
-共享 `CONTENT_MARKETING_SECRET`，但让 `MARKETING_UNSUBSCRIBE_SECRET` 保持独立，并为 `/api/marketing/webhooks/resend` 配置 `RESEND_WEBHOOK_SECRET`。
+当前配置把**同一列表同时用于 CORS 和 CSRF**。包含 Studio 自身地址，仅添加确实需要浏览器 API 的受信任前端。本地可使用 `http://localhost:3002,http://localhost:3000`，生产替换所有 localhost。
 
-**可以上线的标准：** 编辑者访问被隔离，两套迁移可独立部署，批准流程无法绕过，重复启动只发送一次，退订在下一次提供器调用前生效，并且 Payload 中没有订阅者地址。
+```dotenv
+CONTENT_STUDIO_URL=https://studio.example.com
+CONTENT_CORS_ORIGINS=https://studio.example.com,https://www.example.com
+SAAS_MARKETING_API_URL=https://app.example.com
+CONTENT_STORAGE_BUCKET=product-content
+CONTENT_STORAGE_REGION=auto
+CONTENT_STORAGE_ENDPOINT=https://ACCOUNT_ID.r2.cloudflarestorage.com
+CONTENT_STORAGE_ACCESS_KEY=
+CONTENT_STORAGE_SECRET_KEY=
+CONTENT_STORAGE_FORCE_PATH_STYLE=true
+```
+
+私下填写数据库 URL 和凭据。只有 **bucket、region、access key、secret key 四项全部填写**，存储插件才启用。本地磁盘只是开发回退；serverless 或只读容器必须使用持久对象存储。为 Studio 使用独立私有 bucket 和限定权限的凭据，并按提供商设置 region、endpoint 和 path-style。
+
+```bash
+openssl rand -hex 32 # PAYLOAD_SECRET
+openssl rand -hex 32 # Studio CRON_SECRET
+openssl rand -hex 32 # CONTENT_MARKETING_SECRET；同一个值复制到 SaaS 与 Studio
+openssl rand -hex 32 # MARKETING_UNSUBSCRIBE_SECRET；仅 SaaS，使用不同值
+pnpm env:check:prod
+```
+
+校验器检查已存在的 Studio 生产文件，包括数据库独立和营销密钥一致；它不会证明 CSRF 登录、bucket 连通或第一位管理员已创建。完整 SaaS 启动要求和进程载入方式见[环境配置](/zh/docs/environment-configuration)。
+
+## 先迁移，再部署
+
+向 Studio 发布进程提供自己的生产值：
+
+```bash
+NODE_ENV=production pnpm studio:migrate
+pnpm build:studio
+NODE_ENV=production pnpm start:studio
+```
+
+`NODE_ENV=production` 时 Payload CLI 会载入 Studio 的 Next 风格生产文件，平台导出的值优先。容器启动不执行迁移。修改 collection 后生成并提交类型、import map 和独立 Payload 迁移：
+
+```bash
+pnpm studio:generate
+pnpm studio:migrate:create
+pnpm studio:migrate
+pnpm --dir apps/content-studio check
+```
+
+Payload **3.90.2** 上线前必须应用 `20261005_024231_payload_security_fields`。它增加可空的密码重置限流和媒体 key 字段，不移动已有上传对象。Service Account API key 仅在生成时显示，立刻保存。升级后重新创建尚未执行的定时发布/撤回事件，因为用户引用现在包含认证 collection。
+
+## 草稿、审核、发布与自动化
+
+页面和文章支持五种语言、草稿、自动保存、预览、审核、批准、定时发布和版本历史。可使用已注册的 hero、rich text、callout、FAQ、CTA 和工具区块，不能通过内容安装任意 HTML、CSS、JavaScript 或可执行工具。检查语言、正文、SEO 和预览后，由 publisher/admin 批准并发布目标版本。
+
+你的产品网站需要消费已发布的 Payload 数据或 `/api/content/v1/published`；创建 Studio 不会替换本站的 MDX 加载器。给 Service Account 最少的权限，例如 `content:draft:create`、`content:read`，将 `content:publish` 与草稿流程分离。把仅显示一次的 API key 保存到自动化主机的密钥系统。
+
+Payload 使用准确格式 `Authorization: service-accounts API-Key <key>`。私下导出 `CONTENT_API_KEY` 后创建草稿：
+
+```bash
+curl --fail-with-body https://studio.example.com/api/content/v1/drafts \
+  -H "Authorization: service-accounts API-Key $CONTENT_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -H 'Idempotency-Key: first-product-update-v1' \
+  --data '{"collection":"posts","locale":"zh","slug":"first-product-update","title":"首次产品更新","summary":"介绍更新内容及其价值。","blocks":[{"type":"richText","markdown":"为客户提供有用的更新说明。"}]}'
+```
+
+重试同一操作时保持 key 和请求体一致；新操作使用新 key。同一个 key 配不同内容会被拒绝。API 还支持读取/替换草稿、提交审核、单独授权的发布、简报和批量导入。导入返回 job ID，使用相应 scope 查询 `/api/content/v1/jobs/:id`；已入队不代表已发布。
+
+## 独立运行 Payload 队列
+
+SaaS `pnpm jobs:work` **不会处理 Payload 队列**。Studio 当前定时器在进程持续存活时每分钟处理最多五个 `content` 任务。Serverless 不应依赖该计时器，需要配置外部调度。
+
+已载入 Studio 生产值的调度进程每分钟运行：
+
+```bash
+NODE_ENV=production pnpm --dir apps/content-studio jobs:run --all-queues --handle-schedules
+```
+
+也可定时调用有认证的 HTTP runner，包含全部队列和定时发布：
+
+```bash
+curl --fail-with-body \
+  -H "Authorization: Bearer $STUDIO_CRON_SECRET" \
+  'https://studio.example.com/api/payload-jobs/run?allQueues=true&limit=5'
+```
+
+这里的 `STUDIO_CRON_SECRET` 是调度器中保存 Studio `CRON_SECRET` 的私有变量，不是新应用配置，也不是 SaaS cron 密钥。验证一次导入和一次到期发布完成，监控失败与延迟。
+
+## 通过 SaaS 发送营销邮件
+
+Studio 负责布局、文案、预览、批准和时间计划；SaaS 负责订阅者地址、同意、退订/抑制、受众、Resend 凭据、收件任务和审计。自动化使用 `marketing:*` scope 和已审核的 action endpoint；普通 collection 更新不会启动发送。
+
+两边共享完全相同的 `CONTENT_MARKETING_SECRET`。SaaS 配置独立稳定的 `MARKETING_UNSUBSCRIBE_SECRET`、`RESEND_API_KEY`、`EMAIL_FROM` 和提供商签发的 `RESEND_WEBHOOK_SECRET`。注册 `https://app.example.com/api/marketing/webhooks/resend` 接收投递、退信、投诉、失败和抑制事件；签名密钥从 Resend 的该 endpoint 获取，不使用 OpenSSL 生成。
+
+创建包含真实邮寄地址的模板，编写活动，预览/验证，检查已同意的受众数量，发送测试，批准并发布准确版本，再启动。SaaS 去重收件人，在调用 Resend 前再次检查同意，补充地址/退订内容和一键退订头。重复启动不会重复投递。通过活动取消待发送工作，提供商已接受的邮件无法撤回。刷新状态并验证退订会阻止后续发送。
+
+## 接入自己网站的缓存刷新
+
+可选 `PUBLIC_SITE_REVALIDATE_URL` 指向你自己网站的接收端。独立生成 `CONTENT_REVALIDATION_SECRET`，只与该接收端共享。Studio 对 `timestamp.rawBody` 做 HMAC-SHA256，发送 `x-content-timestamp`、`x-content-signature`。产品网站自己实现验签、时效校验和缓存刷新；sushisaas.com 没有自动接收端。
+
+**上线证据：** 首位管理员私下创建、数据库隔离、编辑者 origin 的 CSRF 登录成功、上传持久可读、两套迁移已完成、API 重放只创建一个草稿、导入/定时发布实际执行，以及测试收件人的同意、重复启动和退订验证通过。
+
+**相关：** [环境配置](/zh/docs/environment-configuration)、[事务邮件](/zh/docs/email-service)、[任务与就绪检查](/zh/docs/jobs-and-readiness)、[部署与安全](/zh/docs/deployment-and-security)。
+
+来源：[Studio 合约](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/docs/content-platform.md)、[Payload 配置](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/apps/content-studio/src/payload.config.ts)、[首位用户创建](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/apps/content-studio/src/collections/users.ts)、[营销合约](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/docs/marketing-email.md)。

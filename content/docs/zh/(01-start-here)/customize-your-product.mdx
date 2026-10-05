@@ -6,7 +6,7 @@ keywords: [SaaS 定制, 品牌, 多语言, 主题, 法律配置, 功能取舍]
 tags: [配置, 产品决策, 定制]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
 完成本页后，启动模板将以**你的产品**的名称、URL、语言与视觉风格运行；每个可选系统也会有明确的保留、调整或移除结论。请在修改单个页面前完成这些决定，因为产品身份和边界会影响 URL、邮件、法律文本、分析、计费与管理控制台。
@@ -16,7 +16,7 @@ updatedAt: "2026-08-24T00:00:00.000Z"
 | 范围 | 默认行为 | 你的决定 |
 | --- | --- | --- |
 | 产品身份 | `saas.config.json` 跟踪名称、slug、支持方式和文档 URL | 运行 customizer 并审核跟踪差异 |
-| 支持方式 | 支持邮箱是明确的跟踪产品值 | 上线前设置，或明确由其他渠道承担 |
+| 支持方式 | 支持邮箱是明确的跟踪产品值 | 上线前设置真实支持邮箱；生产配置门禁要求该值 |
 | 语言 | 可用英语、中文、西班牙语、法语与日语；URL 按需添加语言前缀 | 选择默认语言、启用集合与浏览器语言检测 |
 | 视觉风格 | `studio` 是 Web 与管理端共享的构建时预设 | 保留它，或在代码中选择 `glass`、`soft`、`editorial`、`brutalist` |
 | 颜色模式 | 用户端通过环境变量默认使用 `system` | 选择 `system`、`light` 或 `dark`；管理端尚无模式切换器 |
@@ -53,7 +53,7 @@ pnpm customize -- --name "Acme Cloud" --slug acme-cloud --preset glass --locales
 
 ## 完成法律身份配置
 
-填写 `src/config/legal.ts` 中的 `LegalData`：注册实体名称与地址、隐私和法律联系地址、适用法律、生效日期，以及你实际使用的子处理方。逐项处理所有方括号占位内容。在必填身份字段完整之前，`LegalConfig.isConfigured` 为 false，隐私政策与服务条款会持续显示“未经审核的草稿”提示。
+在 `saas.config.json` 的 `legal` 中填写注册实体、地址、隐私与法律联系邮箱、适用法律和生效日期。`src/config/legal.ts` 读取这些值；只有产品专属政策文本与 `LegalData.subProcessors` 在该文件中修改。必填身份字段未完成时，`LegalConfig.isConfigured` 仍为 false，法律页面会显示草稿提示。上线前应同时审查身份信息与具体政策。
 
 内置文本只是起草骨架，不是法律建议或可直接发布的政策。删除未使用的供应商，补充接收个人数据的供应商，让数据保留承诺与账号删除行为一致，并请合格的法律专业人士审核。
 
@@ -70,6 +70,8 @@ pnpm customize -- --name "Acme Cloud" --slug acme-cloud --preset glass --locales
 ## 在开发业务功能前验证
 
 ```bash
+pnpm config:check
+pnpm config:check:prod
 pnpm lint
 pnpm test:run
 pnpm build:web
@@ -80,13 +82,13 @@ pnpm build:admin
 
 ## 尚未替你完成的部分
 
-启动模板不包含品牌配置器、运行时预设选择器、管理端暗色模式、通过环境变量设置的支持邮箱、经审核的法律政策，也不会替你决定哪些可选系统属于你的产品。这些选择有意留给采用者。
+`pnpm customize` 已提供可跟踪的品牌与产品配置流程。运行时预设选择、管理端暗色模式、通过环境变量设置支持邮箱、经审核的法律政策，以及可选业务系统的取舍，仍由采用者完成。支持邮箱来自 `saas.config.json` 的 `product.supportEmail`。
 
 ## 源码快照
 
-已根据启动模板提交 `2a1a04a` 验证：
+已根据启动模板提交 `b16b416` 验证：
 
-- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/site.ts)
-- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/i18n/locale.ts)
-- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/style.ts)
-- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/2a1a04a/src/config/legal.ts)
+- [`src/config/site.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/config/site.ts)
+- [`src/i18n/locale.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/i18n/locale.ts)
+- [`src/config/style.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/config/style.ts)
+- [`src/config/legal.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/config/legal.ts)

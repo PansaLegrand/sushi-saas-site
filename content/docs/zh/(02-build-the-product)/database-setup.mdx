@@ -6,10 +6,10 @@ keywords: [PostgreSQL, Drizzle, 数据库, 迁移]
 tags: [数据库, 运维]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> 已根据启动模板提交 [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) 验证。
+> 已根据启动模板提交 [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) 验证。
 
 完成本页后，你将知道各环境应连接哪个数据库、如何把 schema 修改变成可审查的 SQL，以及如何让数据库与应用独立发布。
 
@@ -36,9 +36,9 @@ pnpm test:db
 应用部署不会自动执行迁移。这是默认的安全策略：数据库和应用可以分别观察、重试和发布。
 
 ```bash
-pnpm db:check:prod
 pnpm db:migrate:prod
-pnpm db:integrity
+pnpm db:check:prod
+pnpm db:integrity -- --production
 ```
 
 生产执行器非交互运行，使用 PostgreSQL advisory lock 并校验 migration checksum。先备份，并采用 expand/contract 变更，使旧代码和新代码都能在 schema 与应用分开发版期间工作。
@@ -59,8 +59,14 @@ pnpm db:integrity
 - 关系变更前后运行 `db:integrity`。迁移 linter 会拒绝破坏性 drop、不安全 rename、无边界重写和阻塞式唯一索引，除非迁移包含可审核的发布说明。
 - 零停机发布优先使用 expand/contract。一步完成的破坏性重命名更简单，但会绑定 schema 与代码发布，并让回滚不安全。
 
-当 `pnpm db:check:prod` 显示预期的待执行集合、备份已更新、迁移已在 staging 副本验证，并且发布期间新旧应用版本都能运行时，才可以执行生产迁移。
+确认备份可恢复、迁移已在 staging 副本验证、`pnpm db:check:prod` 通过且无待应用或漂移的历史，并保证新旧代码在发布期间可共存后，再推广应用代码。
 
 修改生产数据契约前，请阅读模板内的 `docs/database.md` 与 `DEPLOYMENT.md`。
 
 **相关内容：** [架构与错误契约](/zh/docs/architecture-and-errors)说明数据层边界，[认证与管理](/zh/docs/authentication-and-admin)说明这些记录所关联的身份。
+
+## 升级认证时先迁移数据库
+
+当前版本使用 Better Auth 1.7.6。部署前先应用 SaaS 迁移 `0037_neat_excalibur.sql`，为 `two_factor` 增加 `verified`、`failed_verification_count` 与 `locked_until`。迁移只将已确认启用（`users.two_factor_enabled=true`）的记录标记为 verified；存在待确认 secret 并不代表已完成认证。迁移后在测试环境验证 MFA 注册、错误验证码锁定和 Admin 登录。
+
+`db:check:prod` 只在所有预期迁移已应用且校验和匹配时通过；待应用或不匹配的历史会阻止发布。`db:integrity` 为只读检查，覆盖关联、无效值、可空性和孤立记录。向发布命令明确传入生产数据库变量。

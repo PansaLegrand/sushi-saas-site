@@ -6,10 +6,10 @@ keywords: [画像生成, AI タスク, クレジット, jobs, 冪等性]
 tags: [tasks, AI, credits, storage]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> コミット [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) で確認済みです。
+> コミット [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) で確認済みです。
 
 画像生成は production-shaped な有料 workflow の最小例です。ローカル provider は商用 model を呼ばず SVG を作ります。価値は周囲の chain にあり、受理された 1 request は組織共有の 5 credit を消費します。
 
@@ -37,6 +37,10 @@ Provider は 5 回、job は 8 回試行し、残り 3 回を compensation 用�
 
 `IMAGE_GENERATION_MOCK_FAILURES=5` で failure path を確認できます。実 DB test は 1 spend/1 refund、Playwright は replay、正確な 5-credit 差、worker、Garage、signed download を証明します。
 
-実 provider は `src/services/ai/image.ts` だけを置き換え、idempotency、AbortSignal、task、credit、job、storage、error contract を保ってください。
+実際の生成サービスは `src/services/ai/image.ts` に実装し、冪等キー、AbortSignal、タスク、クレジット、ジョブ、ストレージ、エラーの契約を保ちます。認証情報と SDK 型はアダプター内に置きます。
+
+アダプターを置き換えるだけでは本番の生成は有効になりません。ページ、API ルート、タスクサービスはそれぞれ `isImageGenerationMockEnabled()` を確認し、この値は本番で常に false です。これらのデモ用受付条件を明示的な本番機能設定へ変更し、既存の同一オリジン、認証、権限、利用上限、クレジット確認を保ってください。
+
+現在の `GeneratedImage` 型が許可するのは `image/svg+xml`、拡張子 `svg`、生成元 `mock` だけです。実際の出力形式、拡張子、生成元の識別子、対応するファイル情報を定義して検証してからバイト列を受け入れます。本番での受付、再試行、非公開配信、補償をテストしてください。
 
 **関連：** [クレジット台帳](/ja/docs/account-ledger)、[非公開ストレージ](/ja/docs/storage-uploads)、[永続ジョブ](/ja/docs/jobs-and-readiness)、[テストと CI](/ja/docs/testing-and-ci)。

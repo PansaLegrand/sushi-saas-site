@@ -6,10 +6,10 @@ keywords: [deployment, security, Vercel, production]
 tags: [deployment, security]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Synced with starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+> Synced with starter commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
 
 Use this as the final adopter checklist, after the app works locally. The goal is not merely a green deployment: it is a release you can authenticate, bill, operate, restore, and administer without development shortcuts.
 
@@ -18,24 +18,30 @@ Use this as the final adopter checklist, after the app works locally. The goal i
 - The web app and admin console are separate builds and should use separate origins. They may share one repository, database, auth secret, and release tag.
 - Vercel is documented because `vercel.json` supplies cron scheduling, but any Node host works if it provides PostgreSQL, Redis, HTTPS, environment secrets, and an authenticated scheduler.
 - Use a pooled PostgreSQL URL for serverless traffic and, when the provider requires it, a direct URL for migrations. Run migrations before promoting code; they are intentionally not part of the build.
-- Start CSP in report-only mode, observe the hosts your analytics, Turnstile, Stripe, and storage actually use, then choose when to enforce it.
+- Start CSP in report-only mode, observe the hosts used by analytics, Turnstile, Stripe, and storage, then test enforcement before enabling it.
 
-**Ready to launch means:** both apps build from the same release, migrations are verified, `/api/ready` is healthy, backups can be restored, cron and Stripe webhooks complete a real test, no demo flags exist in production, and read-only/read-write admin access behaves as intended.
+**Ready to launch means:** both apps build from the same release, migrations are verified, `/api/ready` is healthy, backups can be restored, the selected queue runner and Stripe webhooks complete a real test, no demo flags exist in production, and read-only/read-write admin access behaves as intended.
 
-Deploy the web app and `apps/admin` as separate services with separate origins. Use Node `>=20.19.0 <23` and pnpm `10.22.0`, run `pnpm lint`, `pnpm test:cov`, and `pnpm build`, then apply database migrations explicitly with `pnpm db:check:prod` and `pnpm db:migrate:prod`. Migrations are never an automatic build step.
+Deploy the web app and `apps/admin` as separate services with separate origins. Use Node `>=20.19.0 <23` and pnpm `10.22.0`, run `pnpm lint`, `pnpm test:cov`, and `pnpm build`, then apply database migrations explicitly with `pnpm db:migrate:prod` and `pnpm db:check:prod`. Migrations are never an automatic build step.
 
 ## Required Production Controls
 
 - Strong `BETTER_AUTH_SECRET`, correct public/auth URLs, production PostgreSQL, and backups with restore drills.
 - Redis-backed distributed rate limiting and an explicitly trusted client-IP header/source.
-- Turnstile for protected auth flows; demo flags and development auth-link logging disabled.
-- `CRON_SECRET` and a five-minute schedule for `/api/cron/jobs` (the included `vercel.json` provides the schedule).
-- Stripe live keys, verified webhook, safe Billing Portal configuration, and configured Price IDs when billing is enabled.
-- Private S3-compatible objects, least-privilege credentials, correct CORS, and short signed URLs when storage is enabled.
-- Verified email domain and data-retention/legal policy reviewed for your jurisdiction.
+- Production Turnstile keys when captcha is enabled; demo features and development auth-link logging disabled.
+- `CRON_SECRET` and one default queue runner: authenticated `/api/cron/jobs` every five minutes, a bounded `pnpm jobs:run --production`, or `pnpm jobs:work --production`. The included `vercel.json` configures the HTTP schedule.
+- Stripe live keys, verified webhook, safe Billing Portal configuration, and the four primary Price IDs required by the current validator.
+- Private S3-compatible storage credentials, least-privilege access, correct CORS, and short signed URLs.
+- A verified email sender domain and a data-retention/legal policy reviewed for the markets you serve.
 
 Use `/api/health` for liveness and `/api/ready` for deployment readiness. The latter checks environment, database, migration state, Redis, and queue health; a degraded queue is an operational signal even if requests still serve.
 
-Security headers include production HSTS and a report-only CSP path. Observe CSP reports before enforcing a policy compatible with your analytics, captcha, payments, and storage hosts. After deploy, smoke-test auth, organization isolation, checkout/webhooks, cron jobs, exports/deletion, and admin MFA. Read `DEPLOYMENT.md`, `docs/security-headers.md`, and `.env.example` in the starter before launch.
+Security headers include production HSTS and a report-only CSP path. Observe CSP reports before enforcing a policy compatible with your analytics, captcha, payments, and storage hosts. After deploy, smoke-test auth, organization isolation, checkout/webhooks, queue execution, exports/deletion, and admin MFA. Read `DEPLOYMENT.md`, `docs/security-headers.md`, and `.env.example` in the starter before launch.
 
 The current release also ships hardened images for web, admin, worker, and Content Studio, plus `pnpm launch:check` to compose configuration, containers, migrations, integrity, retention, tests, and builds. Use [Containers and Launch Readiness](/docs/containers-and-launch-readiness) and prove recovery with [Backups, Retention, and Restore Drills](/docs/backups-retention-and-restore).
+
+## Validate the real production configuration
+
+Run `pnpm env:setup:prod` to prepare `.env.production.local`, then `pnpm env:check:prod`. Deploy web and Admin with the complete required settings: PostgreSQL, Redis, auth/cron secrets, public/auth origins, Resend and sender, Stripe private/webhook keys, portal configuration and four Prices, and private storage credentials. These provider settings are required by the shared production validator even if a screen does not use them. Empty keys do not disable billing or storage; removing a capability requires changing its validation and runtime deliberately.
+
+Admin needs its own `BETTER_AUTH_URL` and `NEXT_PUBLIC_AUTH_BASE_URL`; its `NEXT_PUBLIC_WEB_URL` remains the customer origin. Supply production variables to the portable worker and release commands through the host's secret manager. Use the [environment guide](/docs/environment-configuration) for exact sharing/loading rules. Apply `0037_neat_excalibur.sql` before the auth upgrade; apply the independent Payload migration before upgrading Studio.

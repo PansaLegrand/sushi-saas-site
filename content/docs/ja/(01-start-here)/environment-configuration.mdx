@@ -1,0 +1,123 @@
+---
+title: Next.js SaaS と Payload の環境設定
+icon: "Settings"
+description: 開発・本番プロファイルと内部シークレットを用意し、共有する SaaS サービスと独立した Content Studio を正しく設定します。
+keywords: [Next.js 環境変数, SaaS 本番設定, Payload CMS シークレット, 環境プロファイル]
+tags: [設定, デプロイ, 開発]
+author: "Sushi SaaS"
+publishedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
+---
+
+製品名、言語、スタイル、法的主体は Git 管理の `saas.config.json` に置き、`pnpm customize` で設定します。デプロイ URL、プロバイダー認証情報、シークレットは Git から除外した環境ファイルに置きます。Web、Admin、SaaS ワーカーはアプリ設定を共有し、任意の Content Studio は独自のデータベースと編集者認証を使います。
+
+## プロファイルの作成と検証
+
+スターターのルートで実行します。
+
+```bash
+pnpm customize
+pnpm env:setup:dev
+pnpm env:check:dev
+pnpm env:setup:prod
+pnpm env:check:prod
+pnpm config:check:prod
+```
+
+| アプリ | 開発 | 本番 | Git 管理する変数一覧 |
+| --- | --- | --- | --- |
+| Web、Admin、SaaS ワーカー | `.env.development.local` | `.env.production.local` | `.env.example` |
+| 任意の Studio | `apps/content-studio/.env.development.local` | `apps/content-studio/.env.production.local` | `apps/content-studio/.env.example` |
+
+開発設定は不足する両ファイルを作成し、シークレットを生成して既存値を保持します。従来の `.env`/`.env.local` も引き継げます。`./scripts/setup.sh development` は依存関係、ローカルサービス、マイグレーションも準備します。`env:setup:dev` 単体は設定の作成だけです。
+
+本番設定は SaaS ファイルと独立した認証・cron シークレットを準備し、デプロイもマイグレーションも行いません。**Studio 本番ファイルは対話形式で利用を選んだ場合だけ作成されます。** 非対話実行では Studio 本番ファイルの作成や外部認証情報の収集を行いません。Studio の例を本番ファイルへコピーして手動入力する方法も使えます。既存の Studio プロファイルは検証対象ですが、Studio 自体のデプロイは任意です。
+
+実値は各ホストのシークレット管理へ渡し、プロファイルをコミットしないでください。`NEXT_PUBLIC_*` は Next.js のビルドに埋め込まれるため、変更時に再ビルドします。
+
+## 本番起動に必要な設定
+
+SaaS 共通バリデーターは Web、Admin、本番ワーカーに適用されます。画面を隠したり認証情報を空欄にしたりしても要件は消えません。
+
+| 用途 | 必須設定 |
+| --- | --- |
+| Origin | `NEXT_PUBLIC_WEB_URL`、`BETTER_AUTH_URL`、`NEXT_PUBLIC_AUTH_BASE_URL` |
+| DB・認証 | `DATABASE_URL`、強い `BETTER_AUTH_SECRET`、別の強い `CRON_SECRET` |
+| 分散レート制限 | `RATE_LIMIT_REDIS_URL`、信頼する edge が上書きするヘッダーを示す `RATE_LIMIT_IP_SOURCE` |
+| 課金 | `STRIPE_PRIVATE_KEY`、`STRIPE_WEBHOOK_SECRET`、安全な `STRIPE_BILLING_PORTAL_CONFIGURATION_ID`、4 個の `STRIPE_PRICE_{PLUS,MAX}_{MONTHLY,YEARLY}` |
+| メール | `RESEND_API_KEY`、検証済み `EMAIL_FROM` |
+| 非公開ファイル | `STORAGE_BUCKET`、`STORAGE_ACCESS_KEY`、`STORAGE_SECRET_KEY` とプロバイダーに合う region・endpoint |
+| 既定で有効な CAPTCHA | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`、`TURNSTILE_SECRET_KEY`。明示的な `NEXT_PUBLIC_CAPTCHA_ENABLED=false` のみで無効化 |
+| 設定済みマーケティングゲートウェイ | `CONTENT_MARKETING_SECRET`、別の `MARKETING_UNSUBSCRIBE_SECRET`、プロバイダー発行の `RESEND_WEBHOOK_SECRET` |
+
+TLS Redis（`rediss://`）と非公開オブジェクトを使います。Portal ID は `bpc_`、定期 Price ID は `price_` で始まります。CNY Prices、Google OAuth、Slack、トレース、解析、サイト再検証は任意です。必須機能を取り除く場合はバリデーターと呼び出し元を同時に変更します。本番にはテスト DB・テスト Redis・復元演習の認証情報を渡さず、デモと `AUTH_DEV_EMAIL_LINKS` を無効にします。
+
+## 共有する値と各アプリ固有の値
+
+| 値 | 共有ルール |
+| --- | --- |
+| SaaS DB | Web/Admin/ワーカーは同じ業務 DB を使う。プール、内部、直接接続 URL は異なってよい |
+| `BETTER_AUTH_SECRET` | SaaS 各デプロイで完全に同じ値。Payload や cron へ流用しない |
+| 外部リソース | 同じ Stripe アカウント・カタログ、Resend 送信者、論理 bucket、Redis。必要な権限があれば認証情報は別でよい |
+| SaaS `CRON_SECRET` | Web とそのスケジューラーで完全一致。Admin/ワーカーにも有効値が必要 |
+| Web 認証 URL | `BETTER_AUTH_URL`、`NEXT_PUBLIC_AUTH_BASE_URL` は顧客アプリへ向ける |
+| Admin 認証 URL | `NEXT_PUBLIC_ADMIN_WEB_URL`、`BETTER_AUTH_URL`、`NEXT_PUBLIC_AUTH_BASE_URL` は Admin へ。`NEXT_PUBLIC_WEB_URL` は顧客アプリのまま |
+| Turnstile | 同じ widget の site/secret ペア。両ホストを許可した場合のみ再利用 |
+| Studio | 独自 DB、`PAYLOAD_SECRET`、bucket・認証情報、Studio スケジューラーの `CRON_SECRET` |
+| `CONTENT_MARKETING_SECRET` | Studio と参加する SaaS サービスで完全一致 |
+| `MARKETING_UNSUBSCRIBE_SECRET` | SaaS のみ。独立した安定値にし、ゲートウェイ変更後も送信済み解除リンクを保つ |
+| `CONTENT_REVALIDATION_SECRET` | Studio と自分のサイトの受信処理だけで共有。認証・マーケティングと別 |
+
+Web 変数を新しい Admin へコピーする際は、認証 URL を両方明示的に変更します。プラットフォームがすでに export している URL を Admin は推定し直しません。Studio 編集者と SaaS 運用者のセッションは独立です。
+
+## Bash で内部シークレットを生成
+
+セットアップは自動生成します。手動の場合は各行を別々に実行し、出力を指定フィールドへ貼り付けます。用途・環境ごとに別の値を生成し、同じ値が必要な参加者だけへコピーします。
+
+```bash
+openssl rand -base64 32 # BETTER_AUTH_SECRET
+openssl rand -hex 32    # SaaS CRON_SECRET
+openssl rand -hex 32    # PAYLOAD_SECRET
+openssl rand -hex 32    # Studio CRON_SECRET
+openssl rand -hex 32    # CONTENT_MARKETING_SECRET
+openssl rand -hex 32    # MARKETING_UNSUBSCRIBE_SECRET
+openssl rand -hex 32    # 任意の CONTENT_REVALIDATION_SECRET
+```
+
+Dotenv はデータです。`$(openssl ...)` を値として入れても shell として実行されません。Stripe、Resend、Turnstile、ストレージ、OAuth 認証情報は各プロバイダーから取得します。Webhook 署名シークレットも登録した endpoint ごとのプロバイダー発行値です。
+
+## 運用コマンドへ本番値を明示的に渡す
+
+`env:check:prod` は本番プロファイルを読みます。SaaS ワーカー、マイグレーション、整合性 CLI は**自動では読みません**。ホストが本番変数を export 済みなら、用途に応じて実行します。
+
+```bash
+pnpm env:check:prod -- --process
+pnpm jobs:work --production
+pnpm db:check:prod
+pnpm db:migrate:prod
+pnpm db:integrity -- --production
+```
+
+ワーカーは連続実行です。ローカルの運用プロセスは Node の `--env-file` でファイルを指定します。
+
+```bash
+node --env-file=.env.production.local --import=tsx --conditions=react-server \
+  scripts/jobs-worker.ts --production
+NODE_ENV=production node --env-file=.env.production.local scripts/migrate.mjs --check
+NODE_ENV=production node --env-file=.env.production.local scripts/migrate.mjs
+node --env-file=.env.production.local --import=tsx --conditions=react-server \
+  scripts/check-data-integrity.ts --production
+```
+
+環境変数として渡した値が優先されるため、クリーンなリリース shell を使います。マイグレーションは **`DATABASE_URL` だけ**を読みます。直接接続が必要ならそのプロセスの `DATABASE_URL` に渡します。`MIGRATION_DATABASE_URL` を設定するだけでは切り替わりません。両 URL を含むファイルでは次の明示的な変換を使えます。
+
+```bash
+NODE_ENV=production node --env-file=.env.production.local --input-type=module -e \
+  'process.env.DATABASE_URL = process.env.MIGRATION_DATABASE_URL || process.env.DATABASE_URL; await import("./scripts/migrate.mjs");' -- --check
+```
+
+最後の `-- --check` を外すのは、別途計画した適用時だけです。バックアップ後に expand/contract で適用し、最終マイグレーション・整合性チェックを通してからコードを昇格させます。
+
+**次へ：** [Content Studio](/ja/docs/content-studio-and-marketing)、[ジョブと readiness](/ja/docs/jobs-and-readiness)、[デプロイと安全性](/ja/docs/deployment-and-security)。
+
+出典：[変数一覧](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/.env.example)、[プロファイル作成](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/scripts/configure-env.mjs)、[バリデーター](https://github.com/PansaLegrand/sushi-saas-template/blob/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9/src/lib/env.ts)。

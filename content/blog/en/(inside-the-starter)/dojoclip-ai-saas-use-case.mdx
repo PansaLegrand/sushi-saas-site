@@ -1,0 +1,51 @@
+---
+title: "DojoClip: Building an AI SaaS with Next.js"
+icon: "Clapperboard"
+description: "See DojoClip as a real AI media SaaS use case, then map authentication, Stripe billing, usage credits, private media, and background jobs to your own Next.js product."
+tags: [AI SaaS, Next.js, DojoClip]
+author: "Sushi SaaS"
+publishedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
+---
+
+[DojoClip](https://dojoclip.com/) is an AI media SaaS built with Sushi SaaS. Its public product brings together video editing, image creation, music, and voice workflows. It illustrates why an AI application needs both a useful creative experience and an application foundation that can account for customers, payments, usage, and generated files.
+
+This guide maps that product use case to the starter's documented contracts. It does not describe DojoClip's private deployment, business results, or every internal implementation. The product's media tools are its own extensions; cloning Sushi SaaS does not install the DojoClip editor or commercial generation providers.
+
+## What an AI product needs around the model
+
+| Product need | What Sushi SaaS supplies | What your product must add |
+| --- | --- | --- |
+| Sign-in and team ownership | Better Auth, organizations, invitations, roles | Your onboarding and collaboration experience |
+| Subscription and usage billing | Stripe lifecycle handling, entitlements, organization credit ledger | Prices, usage rules, provider-cost policy |
+| Asynchronous generation | PostgreSQL jobs, deduplication, retries, compensation patterns | Real provider adapter, explicit production admission, progress UI |
+| Private media | S3-compatible uploads, checksums, scoped signed access, deletion | Validated output formats and media/editor behavior |
+| Operation after launch | Separate Admin, readiness, logs, backup/restore commands | Monitoring targets, support procedures, release ownership |
+
+These boundaries are useful because provider work can outlive a browser request, callbacks can repeat, and a failed generation may need its charge reversed. The surrounding system should be explainable even when the model provider is unavailable.
+
+## Start with one paid workflow
+
+Run the [five-credit image reference](/docs/image-generation-workflow) before adding a commercial provider. Follow one request through authorization, the deterministic credit spend, durable execution, a private stored result, and exactly-once compensation after terminal failure.
+
+The shipped reference writes a mock SVG and is gated off in production at the page, API, and service. A real AI product must introduce reviewed production admission at those boundaries, adapt the output contract to its validated media types, and implement the provider adapter. Changing an API key or adapter alone does not enable the feature.
+
+Preserve the [credit ledger](/docs/account-ledger), [private storage](/docs/storage-uploads), and [job contracts](/docs/jobs-and-readiness) while adding product-specific media behavior. This is the path from a runnable example to a workflow you can recover after a crash.
+
+## Keep the product experience yours
+
+A video timeline, music controls, image editing, generated-asset browsing, and voice selection are product features. Build those in the application layers around your customer workflow. Content Studio serves editorial pages and campaigns; it is a separate authoring app, not the customer media editor.
+
+Use [tracked customization](/docs/customize-your-product) for identity, languages and appearance, and [environment configuration](/docs/environment-configuration) for provider accounts and shared deployment values. Keep provider credentials server-side and customer media private.
+
+## An adoption path
+
+1. Run the [complete local stack](/docs/quick-start) and choose which capabilities fit your product.
+2. Configure product identity, Stripe Prices, email, and private storage.
+3. Trace the paid reference, then add one real workflow with replay and failure recovery.
+4. Validate the customer experience and operator recovery together.
+5. Complete [deployment and security](/docs/deployment-and-security) before exposing the real feature.
+
+Visit [DojoClip](https://dojoclip.com/) to see the public media product, and use the implementation guides here to build and operate your own application.
+
+> Sushi SaaS: [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9). DojoClip: [public product](https://dojoclip.com/).

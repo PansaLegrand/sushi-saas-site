@@ -6,10 +6,10 @@ keywords: [image generation, AI tasks, credits, durable jobs, idempotency]
 tags: [tasks, AI, credits, storage]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Verified against starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+> Verified against starter commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
 
 Image generation is the starter's minimal reference for a production-shaped paid workflow. The local provider returns a generated SVG rather than calling a commercial model; the important part is the chain around it. One accepted request costs exactly five pooled organization credits.
 
@@ -23,7 +23,7 @@ ENABLE_IMAGE_GENERATION_MOCK=true
 IMAGE_GENERATION_MOCK_FAILURES=0
 ```
 
-Start `pnpm dev:all`, sign in with the seeded demo account, and open `/en/tasks/image-generation`. The UI submits one idempotency key and polls the tenant-scoped task endpoint until the worker reaches a terminal state.
+Start `pnpm dev:all`, sign in with the seeded demo account, and open `/tasks/image-generation`. The UI submits one idempotency key and polls the tenant-scoped task endpoint until the worker reaches a terminal state.
 
 ## The recoverable chain
 
@@ -45,9 +45,13 @@ Provider attempts stop after five; the job has eight attempts, leaving three att
 
 Set `IMAGE_GENERATION_MOCK_FAILURES=5` to exercise the retry and compensation path. The real-database suite proves one spend and one refund after five failures; Playwright proves request replay, exact five-credit balance change, worker execution, Garage storage, and signed download.
 
-## Replace the provider, not the workflow
+## Adapt the example for production
 
-Implement the real adapter in `src/services/ai/image.ts`. Honor the supplied idempotency key and abort signal, return bytes plus content type, and keep provider credentials and SDK types inside that adapter. Preserve task, credit, job, storage, and public error contracts.
+Implement the real adapter in `src/services/ai/image.ts`, honoring the supplied idempotency key and abort signal. Keep provider credentials and SDK types inside that adapter, and preserve task, credit, job, storage, and public error contracts.
+
+Replacing the adapter alone does not enable production generation. The page, API route, and task service each check `isImageGenerationMockEnabled()`, which is always false in production. Replace those demo admission checks with an explicit production feature configuration, and keep same-origin, authentication, entitlement, quota, and credit checks at their existing boundaries.
+
+The current `GeneratedImage` type also permits only `image/svg+xml`, the `svg` extension, and provider `mock`. Define and validate the real provider's allowed output types, extensions, provider identity, and matching file metadata before accepting its bytes. Test the production admission path as well as retries, private output delivery, and compensation.
 
 **Ready to launch means:** duplicate HTTP requests spend once, provider retries use one external identity, private output is tenant-scoped, a crash after upload repairs the task link, terminal failure refunds once, and operators can recover a buried compensation job.
 

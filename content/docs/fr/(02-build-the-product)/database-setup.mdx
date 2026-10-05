@@ -6,10 +6,10 @@ keywords: [PostgreSQL, Drizzle, migrations, base de données]
 tags: [base de données, opérations]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Vérifié avec le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) du starter.
+> Vérifié avec le commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) du starter.
 
 À la fin, vous saurez quelle base utiliser dans chaque environnement, transformer une modification du schéma en SQL révisable et l’appliquer séparément de la version applicative.
 
@@ -36,9 +36,9 @@ Commitez le SQL généré et `meta/_journal.json` avec le code. Ne modifiez jama
 Les migrations ne sont jamais automatiques au déploiement. C’est le choix de sécurité livré : base et application peuvent être observées, relancées et publiées séparément.
 
 ```bash
-pnpm db:check:prod
 pnpm db:migrate:prod
-pnpm db:integrity
+pnpm db:check:prod
+pnpm db:integrity -- --production
 ```
 
 L’outil non interactif prend un advisory lock PostgreSQL et vérifie les checksums. Sauvegardez d’abord et appliquez expand/contract afin que versions actuelle et suivante coexistent pendant les déploiements séparés.
@@ -59,8 +59,14 @@ L’outil non interactif prend un advisory lock PostgreSQL et vérifie les check
 - Exécutez `db:integrity` avant et après une relation. Le linter refuse drop destructif, rename risqué, réécriture sans limite et index unique bloquant sans exception documentée.
 - Préférez expand/contract pour une release sans interruption. Un renommage destructif en une étape est plus simple, mais couple schéma et code et rend le rollback dangereux.
 
-Vous êtes prêt lorsque `pnpm db:check:prod` montre exactement les migrations attendues, que la sauvegarde est récente, que la migration a été testée sur une copie de staging et que les anciennes et nouvelles versions peuvent coexister pendant le déploiement.
+Promouvez le code seulement après avoir vérifié la sauvegarde, testé la migration en staging, obtenu un `pnpm db:check:prod` réussi sans historique en attente ou divergent, et confirmé la coexistence des anciennes et nouvelles versions.
 
 Lisez `docs/database.md` et `DEPLOYMENT.md` du starter avant de modifier les contrats de données.
 
 **Avant de modifier les tables :** relisez [Architecture et contrats d’erreur](/fr/docs/architecture-and-errors) et [Authentification des clients](/fr/docs/authentication-and-admin) pour préserver les frontières de couche et d’identité.
+
+## Migrer l’authentification avant le déploiement
+
+Cette version utilise Better Auth 1.7.6. Appliquez d’abord la migration SaaS `0037_neat_excalibur.sql` : elle ajoute `verified`, `failed_verification_count` et `locked_until` à `two_factor`. Seules les inscriptions déjà confirmées (`users.two_factor_enabled=true`) sont marquées vérifiées ; un secret en attente n’est pas une confirmation. Vérifiez l’inscription MFA, le verrouillage après codes erronés et la connexion Admin en staging.
+
+`db:check:prod` réussit uniquement lorsque toutes les migrations sont appliquées et leurs checksums correspondent ; une histoire en attente ou différente bloque la promotion. `db:integrity` vérifie relations, valeurs invalides, nullabilité et orphelins sans écriture. Fournissez explicitement les variables de production aux commandes.

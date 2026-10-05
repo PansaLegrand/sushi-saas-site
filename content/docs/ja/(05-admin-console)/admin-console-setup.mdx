@@ -6,10 +6,10 @@ keywords: [管理コンソール, RBAC, MFA, デプロイ]
 tags: [管理, セキュリティ, 運用]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> スターターのコミット [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) と同期しています。
+> スターターのコミット [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) と同期しています。
 
 顧客向けアプリの外から、顧客、請求、運用障害を調べる担当者が必要な場合に使います。管理コンソール自体は含まれていますが、デプロイするか、誰にアクセス権を与えるか、専用オリジンをどう保護するかは自分で決めます。
 
@@ -34,7 +34,7 @@ pnpm build:admin
 pnpm start:admin
 ```
 
-`.env` にローカル管理オリジンを設定します。
+`.env.development.local` にローカル管理オリジンを設定します。
 
 ```dotenv
 NEXT_PUBLIC_ADMIN_WEB_URL=http://localhost:3001
@@ -78,9 +78,11 @@ Google のみでログインするアカウントは、Better Auth で二要素�
 管理アプリはスターター共通の本番環境検証を読み込むため、管理画面が各外部サービスを直接使わない場合でも、現時点では本番で必須の環境変数一式が必要です。まず顧客向けアプリの本番環境変数を複製し、`.env.example` と[デプロイとセキュリティ](/ja/docs/deployment-and-security)を確認してください。そのうえで管理アプリ固有の値を調整します。
 
 - 顧客向けアプリと同じ `DATABASE_URL` と `BETTER_AUTH_SECRET` を使う
-- `NEXT_PUBLIC_ADMIN_WEB_URL` を管理オリジンに設定する（明示的に上書きしない限り、管理ビルドは Better Auth の URL にもこの値を使います）
+- `NEXT_PUBLIC_ADMIN_WEB_URL`、`BETTER_AUTH_URL`、`NEXT_PUBLIC_AUTH_BASE_URL` を Admin のオリジンに設定します。`NEXT_PUBLIC_WEB_URL` は顧客アプリを指します。明示したデプロイ変数が自動で推定する認証 URL より優先されます。
 - 管理ホスト名で有効な Turnstile のサイトキーとシークレットキーの組を設定する（顧客向けアプリのキー設定がそのホスト名を許可する場合に限り再利用する）
 - 製品に適した `ADMIN_MAX_CREDIT_GRANT` の上限を選ぶ（既定値は `100000`）
+
+現在の認証アダプターをデプロイする前に、SaaS 移行 `0037_neat_excalibur.sql` を適用し、確認済みの MFA 登録と Admin ログインを検証してください。Web の変数をコピーした場合は、Admin の二つの認証 URL が Web を指したままにならないよう変更します。[環境設定ガイド](/ja/docs/environment-configuration)に詳細があります。
 
 Web と管理のオリジンは分離してください。管理アプリは `noindex`、`nofollow`、`noarchive`、`no-store` のレスポンスヘッダーに加えて、厳格なフレーム、リファラー、コンテンツセキュリティポリシーを適用します。ただし、これらは露出を抑えるためのもので認可の代わりではありません。サーバーレイアウトと各管理 API がロールと MFA を検査します。
 

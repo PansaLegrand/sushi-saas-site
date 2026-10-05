@@ -6,10 +6,10 @@ keywords: [图像生成, AI 任务, 积分, 持久任务, 幂等]
 tags: [tasks, AI, credits, storage]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> 已根据 starter 提交 [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) 验证。
+> 已根据 starter 提交 [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) 验证。
 
 图像生成是 starter 中最小但完整的生产级付费工作流示例。本地提供器生成 SVG，不调用商业模型；关键价值是它周围的链路。每个被接受的请求固定消耗组织共享的五积分。
 
@@ -39,6 +39,10 @@ pending_payment → queued → running → succeeded
 
 设置 `IMAGE_GENERATION_MOCK_FAILURES=5` 可测试重试与补偿。真实数据库测试证明只有一次消耗和一次退款；Playwright 证明请求重放、精确五积分变化、Worker、Garage 存储和签名下载。
 
-真实提供器只需替换 `src/services/ai/image.ts`，并保留传入的幂等键、AbortSignal、任务、积分、Worker、存储和错误契约。
+在 `src/services/ai/image.ts` 实现真实提供器，保留传入的幂等键、AbortSignal，以及任务、积分、Worker、存储和错误契约。提供器凭据与 SDK 类型仍留在适配器内。
+
+只替换适配器不会开启生产生成。页面、API 路由和任务服务都检查 `isImageGenerationMockEnabled()`，它在生产始终为 false。需要把这些演示准入检查替换为明确的生产功能配置，同时保留原有的同源、认证、套餐、配额和积分检查。
+
+当前 `GeneratedImage` 类型只允许 `image/svg+xml`、扩展名 `svg` 和提供器 `mock`。接入真实提供器前，应定义并校验允许的输出类型、扩展名、提供器标识与匹配的文件元数据，并测试生产准入、重试、私有交付和补偿。
 
 **相关：** [组织积分账本](/zh/docs/account-ledger)、[私有存储](/zh/docs/storage-uploads)、[持久任务](/zh/docs/jobs-and-readiness)和[测试与 CI](/zh/docs/testing-and-ci)。

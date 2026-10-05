@@ -6,10 +6,10 @@ keywords: [organisations, équipes, tenancy, RBAC, invitations, sièges]
 tags: [organisations, autorisation, tenancy]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Vérifié avec le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) du starter.
+> Vérifié avec le commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) du starter.
 
 Répondez d’abord à une question produit : votre SaaS vend-il à une personne, un espace partagé ou une personne qui gère plusieurs espaces ? Sushi SaaS livre le modèle courant de « l’équipe d’une personne qui peut grandir ». Chaque client commence dans une organisation personnelle et toutes les ressources facturables lui appartiennent.
 
@@ -38,7 +38,9 @@ La hiérarchie est `owner` ⊃ `admin` ⊃ `member`.
 | Lire, créer/supprimer des fichiers, dépenser des crédits | ✓ | ✓ | ✓ |
 | Inviter, retirer et changer les rôles |  | ✓ | ✓ |
 | Modifier l’organisation |  | ✓ | ✓ |
-| Gérer la facturation ou supprimer l’organisation |  |  | ✓ |
+| Gérer la facturation |  |  | ✓ |
+
+La suppression d’une organisation n’est pas un parcours client livré. La suppression générique de Better Auth est désactivée par `disableOrganizationDeletion: true` ; la capacité `org:delete` ne fournit pas à elle seule un endpoint. L’effacement des comptes relève du service de cycle de vie séparé. Implémentez et testez un cycle de vie d’organisation avant d’exposer cette action.
 
 Utilisez `getOrgContext(request, optionalSlug)` puis `can(ctx, action, resource)`. N’acceptez jamais `org_uuid` dans le corps d’une requête.
 

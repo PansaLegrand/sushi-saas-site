@@ -6,10 +6,10 @@ keywords: [génération image, tâches AI, crédits, jobs, idempotence]
 tags: [tasks, AI, credits, storage]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Vérifié avec le commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+> Vérifié avec le commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
 
 La génération d’image est l’exemple minimal d’un flux payant de forme production. Le fournisseur local génère un SVG sans appeler de modèle commercial ; la valeur est la chaîne autour. Chaque requête acceptée coûte exactement cinq crédits mutualisés.
 
@@ -37,6 +37,10 @@ Le fournisseur a cinq essais et le job huit, réservant trois essais à la compe
 
 Utilisez `IMAGE_GENERATION_MOCK_FAILURES=5` pour tester l’échec. La base réelle prouve une dépense et un remboursement ; Playwright prouve rejeu, variation exacte de cinq crédits, worker, Garage et téléchargement signé.
 
-Remplacez seulement `src/services/ai/image.ts` par le vrai fournisseur et conservez idempotence, AbortSignal et contrats tâche, crédit, job, stockage et erreur.
+Implémentez le fournisseur réel dans `src/services/ai/image.ts` en conservant la clé idempotente, AbortSignal et les contrats de tâche, crédit, job, stockage et erreur. Les identifiants et types du SDK restent dans l’adaptateur.
+
+Remplacer l’adaptateur ne suffit pas à activer la génération en production. La page, la route API et le service de tâches vérifient `isImageGenerationMockEnabled()`, toujours false en production. Remplacez ces contrôles d’admission de démonstration par une configuration explicite de la fonction de production, en conservant les vérifications d’origine, authentification, droits, quotas et crédits.
+
+Le type `GeneratedImage` actuel accepte uniquement `image/svg+xml`, l’extension `svg` et le fournisseur `mock`. Définissez et validez les types de sortie, extensions, identité du fournisseur et métadonnées de fichier autorisés avant d’accepter ses octets. Testez l’admission en production, les reprises, la livraison privée et la compensation.
 
 **Liens :** [Registre de crédits](/fr/docs/account-ledger), [Stockage privé](/fr/docs/storage-uploads), [Jobs durables](/fr/docs/jobs-and-readiness), [Tests et CI](/fr/docs/testing-and-ci).

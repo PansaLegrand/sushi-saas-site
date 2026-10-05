@@ -6,10 +6,10 @@ keywords: [組織, チーム, テナント, RBAC, 招待, 席数]
 tags: [組織, 認可, テナント]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> スターターのコミット [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) で検証済みです。
+> スターターのコミット [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) で検証済みです。
 
 最初にプロダクト上の問いに答えます。あなたの SaaS は、一人で使う人、共同で使うチーム、複数の組織を管理する人のうち、誰に販売しますか。Sushi SaaS には「一人から始めてチームへ成長できる」モデルが含まれています。各顧客は個人用の組織から始まり、課金対象のリソースはすべて組織に属します。
 
@@ -38,7 +38,9 @@ Better Auth がメンバーシップと招待を提供し、Sushi がテナン�
 | データ閲覧、ファイル作成/削除、クレジット消費 | ✓ | ✓ | ✓ |
 | 招待、削除、ロール変更 |  | ✓ | ✓ |
 | 組織更新 |  | ✓ | ✓ |
-| 課金管理、組織削除 |  |  | ✓ |
+| 課金管理 |  |  | ✓ |
+
+組織を削除する顧客向けワークフローは同梱されていません。Better Auth の汎用削除は `disableOrganizationDeletion: true` で無効です。`org:delete` の権限が定義されていても、それだけでエンドポイントが使えるわけではありません。アカウントの消去は別のライフサイクルサービスが担当します。組織削除を公開する前に、そのライフサイクルを実装してテストしてください。
 
 `getOrgContext(request, optionalSlug)` で利用者、組織、役割を解決し、`can(ctx, action, resource)` で認可します。リクエスト本文の `org_uuid` は信用しません。
 

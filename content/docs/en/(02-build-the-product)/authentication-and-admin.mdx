@@ -6,10 +6,10 @@ keywords: [Better Auth, authentication, admin, MFA]
 tags: [authentication, admin, security]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Verified against starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+> Verified against starter commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
 
 This setup gives customers sign-up, verified email, sign-in, password recovery, sessions, and an organization workspace. It also gives trusted staff a separate admin console that requires both a platform-admin role and MFA.
 
@@ -41,3 +41,7 @@ Run `pnpm dev:admin` on port 3001. Deploy `apps/admin` independently and give it
 Before launch, test sign-up, verification, sign-in, recovery, Google callback if enabled, session revocation, MFA enrollment, and both admin permission levels. A successful result is not only “the page loads”: an unauthenticated request must read no private data, an `admin_ro` account must be unable to write, and every `admin_rw` mutation must appear in the audit trail. Follow the dedicated [Admin Console Setup and Access](/docs/admin-console-setup) guide for deployment and operator onboarding.
 
 **Related:** Read [Authentication in Sushi SaaS](/blogs/web-authentication-deep-dive) before changing identity providers, sessions, organization roles, or MFA policy.
+
+## Upgrade authentication before deploying new code
+
+The current release uses Better Auth 1.7.6. Apply SaaS migration `0037_neat_excalibur.sql` before deploying it: the `two_factor` table gains `verified`, `failed_verification_count`, and `locked_until`. The migration marks only already-confirmed enrollments (`users.two_factor_enabled=true`) as verified; pending secrets are not confirmation. Verify MFA enrollment, failed-code lockout, and Admin login on staging after the schema change.

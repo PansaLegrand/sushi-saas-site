@@ -193,6 +193,33 @@ export default async function LandingPage({
           </div>
         </section>
 
+        <section className="section section--compact">
+          <div className="shell">
+            <p className="eyebrow">{t("useCase.eyebrow")}</p>
+            <div className="reference-section__heading">
+              <h2>{t("useCase.title")}</h2>
+              <div>
+                <p>{t("useCase.body")}</p>
+                <Link href="/blogs/dojoclip-ai-saas-use-case" className="text-link">
+                  {t("useCase.action")}
+                  <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+                <div className="hero__actions">
+                  <a
+                    href="https://dojoclip.com/"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="button button--ghost"
+                  >
+                    {t("useCase.visit")}
+                    <ArrowRight size={16} aria-hidden="true" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="section reference-section">
           <div className="shell">
             <p className="eyebrow">{t("referenceFlow.eyebrow")}</p>

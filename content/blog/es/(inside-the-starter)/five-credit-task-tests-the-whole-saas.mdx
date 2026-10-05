@@ -5,10 +5,10 @@ description: "Un proveedor de imagen sencillo revela las conexiones difíciles e
 tags: [architecture, tasks, credits, reliability]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Basado en el commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+> Basado en el commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
 
 Muchas demos solo prueban que un botón llama a una API. No prueban reintentos del navegador, una caída entre escrituras, un proveedor que acepta antes del timeout, un objeto guardado antes de fallar la base o un reembolso temporalmente imposible.
 
@@ -29,7 +29,7 @@ El proveedor tiene cinco intentos y el job ocho. Los tres extra son para compens
 
 El mock evita coste, credenciales y no determinismo. E2E repite la petición, confirma un gasto exacto de cinco, ejecuta worker y lee el objeto Garage firmado. Un test de base fuerza fallo terminal y prueba un gasto y un refund.
 
-Sustituye únicamente `src/services/ai/image.ts`, conservando clave, AbortSignal, bytes/tipo y errores. Tarea, créditos, jobs, storage, UI y recuperación no dependen del modelo.
+El proveedor real pertenece a `src/services/ai/image.ts`, conservando clave idempotente, AbortSignal y errores públicos. La adopción en producción también requiere admisión explícita en página, API y servicio: sus controles demo siempre están cerrados en producción. El tipo de salida actual se limita a SVG y proveedor `mock`, por lo que debes definir y validar el formato real y los metadatos de archivo. Con esos límites adaptados, los contratos de créditos, ejecución durable, almacenamiento privado, consultas y recuperación pueden seguir independientes del modelo.
 
 Eso significa “pensado para producción”: las preguntas caras de fallo son visibles y comprobables, no una certificación automática.
 

@@ -6,10 +6,10 @@ keywords: [despliegue, seguridad, Vercel, producción]
 tags: [despliegue, seguridad]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Sincronizado con el commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) del starter.
+> Sincronizado con el commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) del starter.
 
 Usa esta lista final cuando la aplicación ya funcione en local. El objetivo no es solo un despliegue verde: es una versión que puedas autenticar, cobrar, operar, restaurar y administrar sin atajos de desarrollo.
 
@@ -18,24 +18,30 @@ Usa esta lista final cuando la aplicación ya funcione en local. El objetivo no 
 - Web y consola admin son builds separados y deben usar orígenes separados; pueden compartir repositorio, base, secreto de autenticación y etiqueta de versión.
 - Se documenta Vercel porque `vercel.json` trae cron, pero sirve cualquier host Node con PostgreSQL, Redis, HTTPS, secretos y un programador autenticado.
 - Usa una URL PostgreSQL con pool para tráfico serverless y, si hace falta, una directa para migraciones. Migra antes de promover código; no se ejecuta desde el build.
-- Empieza CSP en report-only, observa hosts de analytics, Turnstile, Stripe y storage y decide después cuándo aplicarla.
+- Empieza CSP en modo report-only, observa los hosts usados por analítica, Turnstile, Stripe y almacenamiento, y prueba la política antes de imponerla.
 
-**Está listo para producción cuando:** ambos builds parten de la misma versión, migraciones verificadas, `/api/ready` sano, backup restaurable, cron y webhook Stripe probados, sin flags demo y roles admin de lectura/escritura correctos.
+**Está listo para producción cuando:** ambos builds parten de la misma versión, migraciones verificadas, `/api/ready` sano, backup restaurable, el ejecutor de cola elegido y el webhook Stripe probados, sin flags demo y roles admin de lectura/escritura correctos.
 
-Despliega web y `apps/admin` como servicios con orígenes separados. Usa Node `>=20.19.0 <23` y pnpm `10.22.0`; ejecuta `pnpm lint`, `pnpm test:cov`, `pnpm build` y después `pnpm db:check:prod` y `pnpm db:migrate:prod`. Las migraciones nunca son automáticas.
+Despliega web y `apps/admin` como servicios con orígenes separados. Usa Node `>=20.19.0 <23` y pnpm `10.22.0`; ejecuta `pnpm lint`, `pnpm test:cov`, `pnpm build` y después `pnpm db:migrate:prod` y `pnpm db:check:prod`. Las migraciones nunca son automáticas.
 
 ## Controles obligatorios
 
-- `BETTER_AUTH_SECRET` fuerte, URLs correctas, PostgreSQL productivo y copias con pruebas de restauración.
-- Rate limit distribuido en Redis y fuente/header de IP explícitamente fiable.
-- Turnstile; flags demo y logs de enlaces auth desactivados.
-- `CRON_SECRET` y `/api/cron/jobs` cada cinco minutos (`vercel.json` lo incluye).
-- Stripe live, webhook, Portal seguro y Price IDs si hay facturación.
-- Objetos privados, mínimo privilegio, CORS correcto y URLs breves si hay storage.
-- Dominio de correo verificado y política legal/retención revisada.
+- `BETTER_AUTH_SECRET` fuerte, URL públicas y de autenticación correctas, PostgreSQL productivo y copias con pruebas de restauración.
+- Límites distribuidos en Redis y una fuente de IP explícitamente fiable.
+- Claves de producción de Turnstile si captcha está activado; demos y registro de enlaces de autenticación desactivados.
+- `CRON_SECRET` y un ejecutor predeterminado: `/api/cron/jobs` autenticado cada cinco minutos, `pnpm jobs:run --production` programado, o `pnpm jobs:work --production` continuo. `vercel.json` configura el horario HTTP.
+- Claves live de Stripe, webhook verificado, Billing Portal seguro y los cuatro Price ID principales exigidos por el validador actual.
+- Credenciales de almacenamiento S3 compatible privado, mínimo privilegio, CORS correcto y URL firmadas breves.
+- Un dominio remitente verificado y políticas de retención y legales revisadas para tus mercados.
 
 Usa `/api/health` para vida y `/api/ready` para entorno, base, migraciones, Redis y cola. Una cola degradada requiere alerta aunque sirva tráfico.
 
-Hay HSTS en producción y ruta CSP report-only. Observa reportes antes de aplicar una política compatible. Tras desplegar prueba auth, aislamiento, checkout/webhooks, cron, exportación/borrado y MFA admin. Lee `DEPLOYMENT.md`, `docs/security-headers.md` y `.env.example`.
+Hay HSTS en producción y ruta CSP report-only. Observa reportes antes de aplicar una política compatible. Tras desplegar prueba auth, aislamiento, checkout/webhooks, ejecución de cola, exportación/borrado y MFA admin. Lee `DEPLOYMENT.md`, `docs/security-headers.md` y `.env.example`.
 
 La versión actual también incluye imágenes reforzadas para web, admin, worker y Content Studio, y `pnpm launch:check` para unir configuración, contenedores, migraciones, integridad, retención, tests y builds. Sigue [Contenedores y lanzamiento](/es/docs/containers-and-launch-readiness) y demuestra recuperación con [Copias y restore](/es/docs/backups-retention-and-restore).
+
+## Valida la configuración real de producción
+
+Ejecuta `pnpm env:setup:prod` para preparar `.env.production.local` y después `pnpm env:check:prod`. Web y Admin necesitan PostgreSQL, Redis, secretos de auth/cron, orígenes públicos y de auth, Resend y remitente, claves privada/webhook de Stripe, Portal y cuatro Prices, y credenciales de almacenamiento privado. El validador compartido exige estos valores aunque una pantalla no use el proveedor. Dejar claves vacías no desactiva facturación o almacenamiento; retirar una capacidad requiere cambiar explícitamente validación y ejecución.
+
+`BETTER_AUTH_URL` y `NEXT_PUBLIC_AUTH_BASE_URL` de Admin apuntan a Admin; `NEXT_PUBLIC_WEB_URL` sigue siendo la app de clientes. Inyecta variables de producción en el worker y los comandos de publicación desde el gestor de secretos del host. Consulta las [reglas de entorno](/es/docs/environment-configuration). Aplica `0037_neat_excalibur.sql` antes de actualizar auth y la migración independiente de Payload antes de Studio.

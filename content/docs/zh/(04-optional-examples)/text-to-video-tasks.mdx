@@ -6,10 +6,10 @@ keywords: [任务, 文生视频, 积分, 幂等]
 tags: [任务, AI]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> 已与启动模板提交 [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) 同步。
+> 已与启动模板提交 [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) 同步。
 
 本页是构建按量计费 AI 功能的参考，不是可直接上线的视频产品。模板提供本地 mock 页面，以及租户隔离、套餐能力、月度上限、共享积分、幂等、失败状态与退款这些难点。生产环境忽略 demo 开关，因此克隆仓库不会启用真实视频生成。
 
@@ -21,7 +21,7 @@ updatedAt: "2026-08-24T00:00:00.000Z"
 
 **可以上线的标准：** 生产没有 mock；重复请求只产生一个任务和一次扣费；余额不足有清晰说明；供应商失败只产生一次退款；callback 不能跨组织；UI 能表达排队、执行中和失败。
 
-文生视频页面是可选开发模式，不是生产 AI 供应商。仅在启用 demo 与 text-to-video mock 时可用，生产会忽略 demo 开关。接入真实服务时只替换 `src/services/ai/video.ts` provider adapter。
+文生视频页面是可选开发模式，不是生产 AI 供应商。仅在启用 demo 与 text-to-video mock 时可用，生产会忽略 demo 开关。真实提供器在 `src/services/ai/video.ts` 中实现。只替换适配器不会让功能在生产可用：页面、API 路由和任务服务还会检查 `isTextToVideoMockEnabled()`，它在生产始终为 false。把这些演示准入检查替换为明确的生产功能配置，并保留同源、认证、套餐、配额和积分检查。关闭 mock 后测试真实的生产路径。
 
 `POST /api/tasks/text-to-video` 要求同源、限流、认证、组织 `tasks.text_to_video` entitlement、共享月度任务上限和足够的组织积分。header 或 body 提供 `Idempotency-Key`。服务只创建一条组织任务，消费积分并记录根交易号，调用 provider 后标记成功；失败则标记任务并追加积分退款。
 

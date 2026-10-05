@@ -6,10 +6,10 @@ keywords: [Vitest, Playwright, CI, base de datos de pruebas, cobertura]
 tags: [testing, CI, reliability]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Verificado con el commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+> Verificado con el commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
 
 La suite se organiza por lo que cada nivel puede simular. Un test con base simulada no prueba una restricción única; una ruta que simula su guard tampoco prueba que autentique antes de leer datos.
 
@@ -29,9 +29,16 @@ pnpm test:fast
 pnpm test:run
 pnpm test:cov
 pnpm test:db
+pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
-La base debe incluir `test` en su nombre porque el harness trunca tablas. La cobertura protege servicios, modelos, APIs y datos admin. Playwright prueba login, créditos tenant, subida/borrado en Garage y la tarea de imagen de cinco créditos hasta el worker y la descarga firmada.
+`test:fast` es la comprobación aislada previa al commit; `test:run` ejecuta los proyectos Vitest configurados. `test:cov` aplica los umbrales de cobertura a servicios, modelos, rutas API, código de servidor compartido y datos de Admin.
+
+Sin `TEST_DATABASE_URL` ni `TEST_REDIS_URL`, Vitest excluye el proyecto de infraestructura antes de recoger tests. PostgreSQL y Redis se activan por separado; una ejecución solo Redis no inicializa Better Auth ni PostgreSQL. CI exige ambas URL y falla si falta infraestructura. La base PostgreSQL de prueba debe contener `test` en su nombre porque el harness trunca las tablas. No configures URL de pruebas en producción.
+
+Playwright prueba login, créditos tenant, subida/borrado en Garage y la tarea de imagen de cinco créditos hasta el worker y la descarga firmada.
+
+Un destino E2E externo requiere `E2E_BASE_URL`, `E2E_USER_EMAIL` y `E2E_USER_PASSWORD`; las pruebas que escriben solo se ejecutan con `E2E_ALLOW_MUTATIONS=1` en un entorno desechable. No apuntes esta suite a producción.
 
 CI ejecuta lint, migraciones PostgreSQL 16, Redis, cobertura, todos los builds y el navegador. No reduzcas umbrales ni sustituyas infraestructura real por mocks para obtener verde.

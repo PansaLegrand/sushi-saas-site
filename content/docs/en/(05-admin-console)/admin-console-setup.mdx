@@ -6,10 +6,10 @@ keywords: [admin console, RBAC, MFA, deployment]
 tags: [admin, security, operations]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Synced with starter commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a).
+> Synced with starter commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
 
 Use this page when someone other than the application itself must investigate customers, billing, or operational failures. The starter already ships the console; your decision is whether to deploy it, who receives access, and how tightly its origin is protected.
 
@@ -34,7 +34,7 @@ pnpm build:admin
 pnpm start:admin
 ```
 
-Set the local admin origin in `.env`:
+Set the local admin origin in `.env.development.local`:
 
 ```dotenv
 NEXT_PUBLIC_ADMIN_WEB_URL=http://localhost:3001
@@ -78,9 +78,11 @@ Create a second hosting project from the same repository and run `pnpm build:adm
 The admin application imports the starter's shared production environment validator. It therefore currently needs the complete required production environment set, even when an admin screen does not directly use every provider. Start from the customer application's production variables, compare them with `.env.example`, and follow [Deployment and Security](/docs/deployment-and-security). Then adjust the admin-specific values:
 
 - keep the same `DATABASE_URL` and `BETTER_AUTH_SECRET` as the customer application;
-- set `NEXT_PUBLIC_ADMIN_WEB_URL` to the admin origin (the admin build also uses it for the Better Auth URLs unless you override them explicitly);
+- set `NEXT_PUBLIC_ADMIN_WEB_URL`, `BETTER_AUTH_URL`, and `NEXT_PUBLIC_AUTH_BASE_URL` to the Admin origin; keep `NEXT_PUBLIC_WEB_URL` pointing to the customer app. Explicit deployment variables override the inferred Admin auth URLs;
 - provide a Turnstile site/secret pair that is valid for the admin hostname—reuse the customer keys only when their widget configuration allows that hostname;
 - choose an appropriate `ADMIN_MAX_CREDIT_GRANT` ceiling (the default is `100000`).
+
+Before deploying the current auth adapter, apply SaaS migration `0037_neat_excalibur.sql` and verify confirmed MFA enrollment and Admin sign-in. Copying Web variables must never leave the two Admin auth URLs pointing at Web; follow the [environment configuration guide](/docs/environment-configuration).
 
 Keep the web and admin origins distinct. The admin app applies `noindex`, `nofollow`, `noarchive`, and `no-store` response headers plus restrictive framing, referrer, and content-security policies. Those headers reduce exposure but do not replace authorization: the server layout and each admin API enforce role and MFA checks.
 

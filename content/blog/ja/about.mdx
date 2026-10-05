@@ -13,7 +13,7 @@ keywords:
 tags: [概要, 評価, アーキテクチャ]
 author: "Sushi SaaS"
 publishedAt: "2025-10-02T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
 Sushi SaaS は、サブスクリプション型・従量課金型プロダクト向けの MIT ライセンスのソースコードスターターです。ホスティングサービスでも、フォームからアプリを生成するツールでもありません。リポジトリをクローンし、コードを所有・運用しながら、組み込まれた判断を自社ユーザーに合わせて変えていきます。
@@ -37,7 +37,7 @@ Next.js、TypeScript、PostgreSQL、Drizzle、Better Auth、Stripe を採用予�
 - `apps/content-studio`：独自 DB と editor auth を持つ Payload authoring/campaign app
 - VM/container または scheduler で動く durable worker
 
-Web と admin は SaaS schema/auth を共有しますが Content Studio は共有しません。Customer identity、consent、delivery audit は SaaS に残ります。公開 site は 4 番目の独立 repository です。
+Web と Admin は SaaS のスキーマと認証データを共有しますが、Content Studio は共有しません。顧客の ID、同意、配信の監査記録は SaaS に残ります。スターターは三つのアプリとワーカーを一つのリポジトリに含み、公開サイトは別の独立したリポジトリにあります。そのためアプリと公開コンテンツは別々にリリースできます。
 
 ## 引き継ぐ設計判断
 
@@ -70,4 +70,4 @@ Web と admin は SaaS schema/auth を共有しますが Content Studio は共�
 3. [Sushi SaaS が適しているケース](/ja/blogs/why-use-a-saas-template)を読み、各判断を「維持・変更・削除」に分けます。
 4. 本番工数を見積もる前に[デプロイとセキュリティ](/ja/docs/deployment-and-security)を確認します。
 
-ソース：[Sushi SaaS スターターのコミット `2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a)。
+ソース：[Sushi SaaS スターターのコミット `b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9)。

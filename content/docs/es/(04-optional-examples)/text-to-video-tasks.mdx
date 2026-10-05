@@ -6,10 +6,10 @@ keywords: [tareas, texto a vídeo, créditos, idempotencia]
 tags: [tareas, IA]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Sincronizado con el commit [`2a1a04a`](https://github.com/PansaLegrand/sushi-saas-template/tree/2a1a04a) del starter.
+> Sincronizado con el commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) del starter.
 
 Usa esta página como patrón para una función de IA medida, no como producto de vídeo listo. Se incluye una pantalla mock solo local y las piezas difíciles: tenancy, capacidades, límites mensuales, créditos compartidos, idempotencia, estados de fallo y reembolsos. Producción ignora las flags demo, por lo que clonar el repositorio no activa vídeo real.
 
@@ -21,7 +21,9 @@ Usa esta página como patrón para una función de IA medida, no como producto d
 
 **Está listo para producción cuando:** no hay mock en producción, duplicados crean una tarea y un cargo, saldo insuficiente se explica, un fallo genera un solo reembolso, callbacks no cruzan organizaciones y la UI muestra cola, ejecución y fallo.
 
-La pantalla es un patrón de desarrollo opt-in, no un proveedor IA productivo. Solo aparece con demo y mock activados; producción ignora esos flags. Sustituye únicamente el adaptador `src/services/ai/video.ts`.
+La pantalla es un patrón de desarrollo opt-in, no un proveedor IA productivo. Solo aparece con demo y mock activados; producción ignora esos flags.
+
+Implementa el adaptador real en `src/services/ai/video.ts`. Cambiarlo por sí solo no expone la función en producción: la página, la ruta API y el servicio también comprueban `isTextToVideoMockEnabled()`, siempre false en producción. Sustituye esas comprobaciones de admisión demo por una configuración explícita de la función de producción, conservando origen, autenticación, derechos, límites y contabilidad de créditos. Prueba la ruta de producción con el mock desactivado.
 
 `POST /api/tasks/text-to-video` exige mismo origen, rate limit, auth, entitlement `tasks.text_to_video`, límite mensual compartido y créditos. Envía `Idempotency-Key` en header o body. Se inserta una tarea de organización, se gastan créditos y guarda la transacción raíz; tras el proveedor se marca éxito. Un fallo marca error y añade reembolso.
 
