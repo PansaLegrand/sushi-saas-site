@@ -22,7 +22,7 @@ Utilisez cette liste finale une fois l’application fonctionnelle en local. Le 
 
 **Prêt pour la production signifie :** les deux builds viennent de la même version, les migrations sont vérifiées, `/api/ready` est sain, la sauvegarde est restaurable, le runner de file choisi et le webhook Stripe sont testés, aucun flag demo n’existe et les rôles admin lecture/écriture fonctionnent.
 
-Déployez web et `apps/admin` comme services et origines séparés. Utilisez Node `>=20.19.0 <23` et pnpm `10.22.0`, lancez `pnpm lint`, `pnpm test:cov`, `pnpm build`, puis `pnpm db:migrate:prod` et `pnpm db:check:prod`. Les migrations ne sont jamais automatiques.
+Déployez web et `apps/admin` comme services et origines séparés. Utilisez Node `>=24.22.1 <25` et pnpm `10.22.0`, lancez `pnpm lint`, `pnpm test:cov`, `pnpm build`, puis `pnpm db:migrate:prod` et `pnpm db:check:prod`. Les migrations ne sont jamais automatiques.
 
 ## Contrôles obligatoires
 

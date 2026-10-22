@@ -22,7 +22,7 @@ Use this as the final adopter checklist, after the app works locally. The goal i
 
 **Ready to launch means:** both apps build from the same release, migrations are verified, `/api/ready` is healthy, backups can be restored, the selected queue runner and Stripe webhooks complete a real test, no demo flags exist in production, and read-only/read-write admin access behaves as intended.
 
-Deploy the web app and `apps/admin` as separate services with separate origins. Use Node `>=20.19.0 <23` and pnpm `10.22.0`, run `pnpm lint`, `pnpm test:cov`, and `pnpm build`, then apply database migrations explicitly with `pnpm db:migrate:prod` and `pnpm db:check:prod`. Migrations are never an automatic build step.
+Deploy the web app and `apps/admin` as separate services with separate origins. Use Node `>=24.22.1 <25` and pnpm `10.22.0`, run `pnpm lint`, `pnpm test:cov`, and `pnpm build`, then apply database migrations explicitly with `pnpm db:migrate:prod` and `pnpm db:check:prod`. Migrations are never an automatic build step.
 
 ## Required Production Controls
 

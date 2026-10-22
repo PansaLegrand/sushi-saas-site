@@ -22,7 +22,7 @@ updatedAt: "2026-10-05T00:00:00.000Z"
 
 **可以上线的标准：** 两个应用从同一版本构建；迁移已验证；`/api/ready` 健康；备份可恢复；所选队列执行方式与 Stripe webhook 完成真实测试；生产无 demo flag；只读/可写管理员权限符合预期。
 
-将 Web 与 `apps/admin` 作为不同来源的独立服务部署。使用 Node `>=20.19.0 <23` 和 pnpm `10.22.0`，运行 `pnpm lint`、`pnpm test:cov`、`pnpm build`，再显式执行 `pnpm db:migrate:prod` 与 `pnpm db:check:prod`。迁移绝不是自动 build 步骤。
+将 Web 与 `apps/admin` 作为不同来源的独立服务部署。使用 Node `>=24.22.1 <25` 和 pnpm `10.22.0`，运行 `pnpm lint`、`pnpm test:cov`、`pnpm build`，再显式执行 `pnpm db:migrate:prod` 与 `pnpm db:check:prod`。迁移绝不是自动 build 步骤。
 
 ## 生产必备控制
 

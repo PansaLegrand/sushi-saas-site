@@ -22,7 +22,7 @@ updatedAt: "2026-10-05T00:00:00.000Z"
 
 **本番準備完了の条件：** 両アプリが同じリリースからビルドされ、マイグレーション済みで `/api/ready` が正常と応答し、バックアップを復元でき、選択したジョブ実行方式と Stripe Webhook を実際にテスト済みで、デモ用設定がなく、管理者の読み取り・書き込み権限が想定どおりに働くことです。
 
-Web と `apps/admin` を別オリジンの独立したサービスとしてデプロイします。Node.js `>=20.19.0 <23`、pnpm `10.22.0` で `pnpm lint`、`pnpm test:cov`、`pnpm build` を実行した後、`pnpm db:migrate:prod` と `pnpm db:check:prod` を明示的に実行します。マイグレーションはビルド中に自動実行しません。
+Web と `apps/admin` を別オリジンの独立したサービスとしてデプロイします。Node.js `>=24.22.1 <25`、pnpm `10.22.0` で `pnpm lint`、`pnpm test:cov`、`pnpm build` を実行した後、`pnpm db:migrate:prod` と `pnpm db:check:prod` を明示的に実行します。マイグレーションはビルド中に自動実行しません。
 
 ## 本番で必須の制御
 

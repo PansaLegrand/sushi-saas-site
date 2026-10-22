@@ -22,7 +22,7 @@ Usa esta lista final cuando la aplicación ya funcione en local. El objetivo no 
 
 **Está listo para producción cuando:** ambos builds parten de la misma versión, migraciones verificadas, `/api/ready` sano, backup restaurable, el ejecutor de cola elegido y el webhook Stripe probados, sin flags demo y roles admin de lectura/escritura correctos.
 
-Despliega web y `apps/admin` como servicios con orígenes separados. Usa Node `>=20.19.0 <23` y pnpm `10.22.0`; ejecuta `pnpm lint`, `pnpm test:cov`, `pnpm build` y después `pnpm db:migrate:prod` y `pnpm db:check:prod`. Las migraciones nunca son automáticas.
+Despliega web y `apps/admin` como servicios con orígenes separados. Usa Node `>=24.22.1 <25` y pnpm `10.22.0`; ejecuta `pnpm lint`, `pnpm test:cov`, `pnpm build` y después `pnpm db:migrate:prod` y `pnpm db:check:prod`. Las migraciones nunca son automáticas.
 
 ## Controles obligatorios
 
