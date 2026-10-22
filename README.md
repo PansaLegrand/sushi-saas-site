@@ -14,9 +14,10 @@ Stripe, storage, job worker, or admin runtime.
 
 ## Local development
 
-Requirements: Node 20.19 and pnpm 10.22.
+Requirements: Node 24.22.1 (the supported Node 24 line) and pnpm 10.22.0.
 
 ```bash
+nvm use
 pnpm install
 pnpm dev
 ```
@@ -45,7 +46,10 @@ pnpm check
 ```
 
 This validates content structure and links, lints, type-checks, runs rule tests,
-and produces a production build. CI runs the same gates with a frozen lockfile.
+produces a production build, and checks the built site's rendered SEO responses.
+CI runs the same gates with a frozen lockfile. The production check starts its
+own loopback server on a free port, runs both rendered SEO tests, and shuts the
+server down on success or failure; no manually managed server is needed.
 
 ## Relationship to the starter
 
@@ -81,10 +85,15 @@ To verify built HTML for crawlers as well as TypeScript:
 
 ```bash
 pnpm build
-pnpm start --port 3004
-# In another terminal:
-SEO_TEST_BASE_URL=http://localhost:3004 pnpm test
+pnpm test:production
 ```
+
+`pnpm test` remains the quick repository-rule pass and skips the rendered tests
+unless `SEO_TEST_BASE_URL` is set. `pnpm test:production` always supplies that URL
+and checks initial HTML for browser, Googlebot, and Twitterbot user agents in
+all five locales, plus sitemap, redirect, and missing-page indexing behavior.
+Run it after a fresh build, with any development server for this checkout
+stopped so it cannot modify the same `.next` output.
 
 Search performance priorities and post-release measurements are in
 [`docs/reviews/2026-10-05-search-content-plan.md`](docs/reviews/2026-10-05-search-content-plan.md).
