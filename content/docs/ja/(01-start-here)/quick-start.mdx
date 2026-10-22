@@ -9,7 +9,7 @@ publishedAt: "2025-09-29T00:00:00.000Z"
 updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> コミット [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) で確認済みです。
+> コミット [`105bddd`](https://github.com/PansaLegrand/sushi-saas-template/tree/105bddd6fe396d1de44c1cf8e6cbce96f51ac85d) で確認済みです。
 
 完了すると、顧客 app、admin console、Content Studio、durable worker、SaaS dev/test DB、Payload DB、Redis、private S3-compatible bucket が一緒に動きます。
 
@@ -68,3 +68,5 @@ Playwright は Better Auth で login し、tenant credits、実 Garage upload、
 ## 小さな構成から始める
 
 `pnpm starter core install`、`pnpm starter core setup`、`pnpm starter core doctor`、`pnpm starter core dev` は web と worker を対象とします。`operations` は admin、`publishing` は Content Studio も追加します。`lint`、`build`、`--dry-run` も利用できます。Core/operations は Studio の環境作成と移行を省略します。フィルター付きインストール後は `SAAS_STARTER_PROFILE=core` または `operations` をシェルに設定し、lint と pre-commit に同じ構成を使わせます。既定は全体構成で、実行時権限や料金プランは変えません。
+
+初期化時は TCP で PostgreSQL の準備を待つため、一時初期化サーバーが最終起動前に移行処理を開始させることはありません。

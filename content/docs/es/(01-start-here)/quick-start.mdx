@@ -9,7 +9,7 @@ publishedAt: "2025-09-29T00:00:00.000Z"
 updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Verificado con el commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37).
+> Verificado con el commit [`105bddd`](https://github.com/PansaLegrand/sushi-saas-template/tree/105bddd6fe396d1de44c1cf8e6cbce96f51ac85d).
 
 Al terminar tendrás la app cliente, consola admin, Content Studio, worker durable, bases SaaS de desarrollo/test, base Payload, Redis y un bucket S3 privado local funcionando juntos.
 
@@ -68,3 +68,5 @@ Playwright inicia sesión con Better Auth y prueba créditos tenant, subida Gara
 ## Elegir un perfil reducido
 
 Usa `pnpm starter core install`, `pnpm starter core setup`, `pnpm starter core doctor` y `pnpm starter core dev` para web y worker. `operations` añade admin; `publishing` añade Content Studio. También admiten `lint`, `build` y `--dry-run`. Core/operations omiten entorno y migraciones de Studio. Tras instalar con filtro, exporta `SAAS_STARTER_PROFILE=core` u `operations` para lint y pre-commit. El valor predeterminado conserva todo el stack; los perfiles no cambian permisos ni planes.
+
+El arranque espera PostgreSQL por TCP para evitar que el servidor temporal de inicialización dispare migraciones antes del inicio definitivo.
