@@ -6,10 +6,10 @@ keywords: [génération image, tâches AI, crédits, jobs, idempotence]
 tags: [tasks, AI, credits, storage]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Vérifié avec le commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
+> Vérifié avec le commit [`8ecec8c`](https://github.com/PansaLegrand/sushi-saas-template/tree/8ecec8c3db8934598da5da044c507dc427808e61).
 
 La génération d’image est l’exemple minimal d’un flux payant de forme production. Le fournisseur local génère un SVG sans appeler de modèle commercial ; la valeur est la chaîne autour. Chaque requête acceptée coûte exactement cinq crédits mutualisés.
 
@@ -21,16 +21,18 @@ IMAGE_GENERATION_MOCK_FAILURES=0
 
 Lancez `pnpm dev:all`, connectez-vous avec le compte démo et ouvrez `/fr/tasks/image-generation`. L’UI garde une clé idempotente et interroge l’état tenant-scoped.
 
-1. L’API vérifie origine, limite, auth, `tasks.image_generation` et quota mensuel.
+1. L’API vérifie l’origine, la limitation des requêtes et l’authentification ; le service résout les rejeux avant de vérifier les droits d’une nouvelle opération.
 2. `(user_uuid, type, idempotency_key)` identifie la tâche ; une empreinte refuse un autre prompt avec la même clé.
 3. `task_image:<task uuid>` identifie la dépense de cinq crédits ; les rejeux concurrents retournent le débit existant.
-4. `task_image_generation:<task uuid>` déduplique le job et répare une panne entre tâche, dépense et distribution.
+4. La réservation du quota, le débit de cinq crédits, la tâche et la distribution `task_image_generation:<task uuid>` sont validés dans une transaction. Un échec de la file annule le débit.
 5. Le worker appelle le fournisseur avec un UUID stable, écrit et vérifie un objet Garage/S3 privé, puis active le fichier.
 6. La lecture signe une URL courte après résolution du fichier dans l’organisation.
 
+Les tâches acceptées retournent `queued`. La maintenance répare les anciennes demandes déjà débitées après cinq minutes, sans rejeu du navigateur ; elle ne débite jamais un brouillon impayé.
+
 ```text
-pending_payment → queued → running → succeeded
-                           ↘ refunding → failed
+queued → running → succeeded
+           ↘ refunding → failed
 ```
 
 Le fournisseur a cinq essais et le job huit, réservant trois essais à la compensation. L’échec terminal passe en `refunding`, écrit un remboursement déterministe, puis seulement en `failed`. Le rejeu ne double ni fournisseur ni remboursement.

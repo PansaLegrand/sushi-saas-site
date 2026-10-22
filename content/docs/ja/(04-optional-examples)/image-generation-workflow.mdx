@@ -6,10 +6,10 @@ keywords: [画像生成, AI タスク, クレジット, jobs, 冪等性]
 tags: [tasks, AI, credits, storage]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> コミット [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) で確認済みです。
+> コミット [`8ecec8c`](https://github.com/PansaLegrand/sushi-saas-template/tree/8ecec8c3db8934598da5da044c507dc427808e61) で確認済みです。
 
 画像生成は production-shaped な有料 workflow の最小例です。ローカル provider は商用 model を呼ばず SVG を作ります。価値は周囲の chain にあり、受理された 1 request は組織共有の 5 credit を消費します。
 
@@ -21,16 +21,18 @@ IMAGE_GENERATION_MOCK_FAILURES=0
 
 `pnpm dev:all` を実行し、demo account で login して `/ja/tasks/image-generation` を開きます。UI は 1 idempotency key を保持して tenant-scoped task を poll します。
 
-1. API は same-origin、rate limit、auth、`tasks.image_generation`、月間上限を確認します。
+1. API は同一オリジン、レート制限、認証を確認します。サービスは再送を解決してから、新規操作の利用権限を確認します。
 2. `(user_uuid, type, idempotency_key)` が task を識別し、fingerprint が別 prompt での key 再利用を拒否します。
 3. `task_image:<task uuid>` が 5-credit spend を識別し、並行 replay は既存 debit を返します。
-4. `task_image_generation:<task uuid>` が durable job を重複排除し、task/spend/dispatch 間の crash を replay で修復します。
+4. 利用枠の確保、5 クレジットの引き落とし、タスク、`task_image_generation:<task uuid>` の登録を一つのトランザクションで確定します。キューへの書き込みが失敗すると引き落としも戻ります。
 5. Worker は安定 UUID で provider を呼び、private Garage/S3 object を書いて検証し、file を activate します。
 6. Task read は organization 内で file を解決して短時間 signed URL を返します。
 
+受理済みタスクは `queued` を返します。保守処理は5分後に引き落とし済みの旧タスクを修復し、ブラウザーの再送を必要としません。未払いの下書きへの引き落としは行いません。
+
 ```text
-pending_payment → queued → running → succeeded
-                           ↘ refunding → failed
+queued → running → succeeded
+           ↘ refunding → failed
 ```
 
 Provider は 5 回、job は 8 回試行し、残り 3 回を compensation 用に確保します。Terminal failure は `refunding` に入り、deterministic refund を追加してから `failed` になります。Replay は provider も refund も重複しません。

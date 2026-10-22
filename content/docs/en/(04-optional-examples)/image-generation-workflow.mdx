@@ -6,10 +6,10 @@ keywords: [image generation, AI tasks, credits, durable jobs, idempotency]
 tags: [tasks, AI, credits, storage]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Verified against starter commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
+> Verified against starter commit [`8ecec8c`](https://github.com/PansaLegrand/sushi-saas-template/tree/8ecec8c3db8934598da5da044c507dc427808e61).
 
 Image generation is the starter's minimal reference for a production-shaped paid workflow. The local provider returns a generated SVG rather than calling a commercial model; the important part is the chain around it. One accepted request costs exactly five pooled organization credits.
 
@@ -27,18 +27,20 @@ Start `pnpm dev:all`, sign in with the seeded demo account, and open `/tasks/ima
 
 ## The recoverable chain
 
-1. `POST /api/tasks/image-generation` checks same origin, rate limit, authentication, `tasks.image_generation`, and the shared monthly task limit.
+1. The API checks origin, rate limit and authentication; the service resolves replays before applying new-operation entitlements.
 2. `(user_uuid, type, idempotency_key)` identifies one task. A SHA-256 request fingerprint rejects reusing that key with another prompt.
 3. `task_image:<task uuid>` identifies the five-credit spend. Concurrent request replays return the existing logical debit instead of spending again.
-4. `task_image_generation:<task uuid>` deduplicates the durable job. A crash between task, spend, and dispatch is repaired by replaying the request.
+4. Quota reservation, the five-credit debit, the task and `task_image_generation:<task uuid>` dispatch commit in one transaction. Queue failure rolls the debit back.
 5. The worker calls the provider with the stable task UUID, writes a deterministic private Garage/S3 object, verifies it, activates its file row, and marks the task succeeded.
 6. `GET /api/tasks/[uuid]` resolves the organization-scoped file and creates a short-lived signed URL. Bucket credentials and object keys never enter the public task contract.
 
 The task state machine is:
 
+Accepted tasks return as `queued`. Maintenance repairs legacy charged intents after five minutes without requiring browser replay; unpaid drafts are never charged by maintenance.
+
 ```text
-pending_payment → queued → running → succeeded
-                           ↘ refunding → failed
+queued → running → succeeded
+           ↘ refunding → failed
 ```
 
 Provider attempts stop after five; the job has eight attempts, leaving three attempts for compensation if the database is temporarily unavailable. A terminal provider failure moves the task to `refunding`, appends the deterministic ledger refund, and only then records `failed`. Replaying a refunding or terminal task never runs the provider or refund twice.

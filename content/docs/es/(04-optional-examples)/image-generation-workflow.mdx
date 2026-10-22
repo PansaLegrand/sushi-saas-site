@@ -6,10 +6,10 @@ keywords: [generación de imágenes, tareas AI, créditos, jobs, idempotencia]
 tags: [tasks, AI, credits, storage]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Verificado con el commit [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9).
+> Verificado con el commit [`8ecec8c`](https://github.com/PansaLegrand/sushi-saas-template/tree/8ecec8c3db8934598da5da044c507dc427808e61).
 
 La generación de imagen es el ejemplo mínimo de un flujo de pago con forma de producción. El proveedor local genera SVG y no llama a un modelo comercial; el valor es la cadena que lo rodea. Cada solicitud aceptada cuesta exactamente cinco créditos comunes de la organización.
 
@@ -21,16 +21,18 @@ IMAGE_GENERATION_MOCK_FAILURES=0
 
 Ejecuta `pnpm dev:all`, inicia sesión con la cuenta demo y abre `/es/tasks/image-generation`. La UI conserva una clave idempotente y consulta el estado tenant-scoped.
 
-1. La API comprueba origen, límite, auth, `tasks.image_generation` y cuota mensual.
+1. La API comprueba origen, límites de solicitudes y autenticación; el servicio resuelve los reintentos antes de aplicar los permisos de una operación nueva.
 2. `(user_uuid, type, idempotency_key)` identifica la tarea; una huella rechaza otra petición con la misma clave.
 3. `task_image:<task uuid>` identifica el gasto de cinco créditos; replays concurrentes devuelven el débito existente.
-4. `task_image_generation:<task uuid>` deduplica el job durable y repara caídas entre tarea, gasto y despacho.
+4. La reserva de cuota, el débito de cinco créditos, la tarea y el despacho `task_image_generation:<task uuid>` se confirman en una transacción. Si falla la cola, se revierte el débito.
 5. El worker llama al proveedor con UUID estable, escribe y verifica un objeto privado Garage/S3 y activa su archivo.
 6. La consulta firma una URL corta después de resolver el archivo dentro de la organización.
 
+Las tareas aceptadas devuelven `queued`. El mantenimiento repara solicitudes antiguas ya cobradas tras cinco minutos sin depender del navegador; nunca cobra borradores sin pagar.
+
 ```text
-pending_payment → queued → running → succeeded
-                           ↘ refunding → failed
+queued → running → succeeded
+           ↘ refunding → failed
 ```
 
 El proveedor dispone de cinco intentos y el job de ocho, reservando tres para compensación. El fallo terminal entra en `refunding`, añade un reembolso determinista y solo entonces marca `failed`. El replay no duplica proveedor ni reembolso.

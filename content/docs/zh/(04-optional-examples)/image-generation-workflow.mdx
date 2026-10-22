@@ -6,10 +6,10 @@ keywords: [图像生成, AI 任务, 积分, 持久任务, 幂等]
 tags: [tasks, AI, credits, storage]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> 已根据 starter 提交 [`b16b416`](https://github.com/PansaLegrand/sushi-saas-template/tree/b16b416d3ac2f50d2e6f2c25ce5736b91f6740b9) 验证。
+> 已根据 starter 提交 [`8ecec8c`](https://github.com/PansaLegrand/sushi-saas-template/tree/8ecec8c3db8934598da5da044c507dc427808e61) 验证。
 
 图像生成是 starter 中最小但完整的生产级付费工作流示例。本地提供器生成 SVG，不调用商业模型；关键价值是它周围的链路。每个被接受的请求固定消耗组织共享的五积分。
 
@@ -23,16 +23,18 @@ IMAGE_GENERATION_MOCK_FAILURES=0
 
 ## 可恢复链路
 
-1. API 检查同源、限流、认证、`tasks.image_generation` 和月度任务上限。
+1. API 检查同源、限流和认证；服务先识别重放，再对新操作检查套餐权限。
 2. `(user_uuid, type, idempotency_key)` 标识任务，请求指纹拒绝用同一键提交其他提示词。
 3. `task_image:<task uuid>` 标识五积分消耗，并发重放只返回已有逻辑借记。
-4. `task_image_generation:<task uuid>` 去重持久任务；任务、消耗和派发之间的崩溃可通过重放修复。
+4. 配额预留、五积分扣除、任务及 `task_image_generation:<task uuid>` 派发在同一事务中提交。队列写入失败会回滚扣费。
 5. Worker 用稳定 UUID 调用提供器，写入确定性的私有 Garage/S3 对象，验证后激活文件并完成任务。
 6. 任务查询只在组织范围解析文件，并返回短时签名 URL；凭据和对象键不会进入公开任务契约。
 
+成功受理的任务返回 `queued`。维护流程在五分钟后修复已扣费的历史任务，无需浏览器重放；维护流程不会为未付款草稿扣费。
+
 ```text
-pending_payment → queued → running → succeeded
-                           ↘ refunding → failed
+queued → running → succeeded
+           ↘ refunding → failed
 ```
 
 提供器最多尝试五次，任务共允许八次，剩余三次专门用于在数据库故障后完成补偿。最终失败先进入 `refunding`、追加确定性的账本退款，再标记 `failed`。重放不会重复运行提供器或退款。
