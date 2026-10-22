@@ -5,6 +5,7 @@ import { DocsLayout } from "fumadocs-ui/layouts/notebook";
 import { localePath, normalizeLocale } from "@/i18n/locale";
 import { contentUiI18n } from "@/i18n/content-ui";
 import { SiteConfig } from "@/config/site";
+import { ContentSearchDialog } from "./search-dialog";
 
 export async function CollectionLayout({
   children,
@@ -19,7 +20,17 @@ export async function CollectionLayout({
   const t = await getTranslations("nav");
 
   return (
-    <RootProvider i18n={contentUiI18n(lang)} search={{ enabled: false }}>
+    <RootProvider
+      i18n={contentUiI18n(lang)}
+      search={{
+        SearchDialog: ContentSearchDialog,
+        links: [
+          [t("start"), localePath(lang, "/docs/quick-start")],
+          [t("docs"), localePath(lang, "/docs")],
+          [t("blog"), localePath(lang, "/blogs")]
+        ]
+      }}
+    >
       <DocsLayout
         tree={source.pageTree[lang] ?? { name: "", children: [] }}
         i18n
@@ -28,6 +39,11 @@ export async function CollectionLayout({
           url: localePath(lang)
         }}
         links={[
+          {
+            type: "button",
+            text: t("start"),
+            url: localePath(lang, "/docs/quick-start")
+          },
           {
             text: t("docs"),
             url: localePath(lang, "/docs"),
@@ -44,7 +60,6 @@ export async function CollectionLayout({
             external: true
           }
         ]}
-        searchToggle={{ enabled: false }}
       >
         {children}
       </DocsLayout>
