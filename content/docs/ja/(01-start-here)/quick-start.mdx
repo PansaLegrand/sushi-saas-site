@@ -1,7 +1,7 @@
 ---
 title: クイックスタート
 icon: "Zap"
-description: ガイド付きフローで web、admin、Content Studio、worker、PostgreSQL、Redis、ローカル storage を設定・起動します。
+description: Core で顧客アプリと永続 worker をローカル起動し、必要になったら管理コンソールと Content Studio を追加します。
 keywords: [クイックスタート, setup, Next.js, pnpm, Docker, Garage]
 tags: [setup, local development]
 author: "Sushi SaaS"
@@ -11,62 +11,108 @@ updatedAt: "2026-10-22T00:00:00.000Z"
 
 > コミット [`35e64b9`](https://github.com/PansaLegrand/sushi-saas-template/tree/35e64b91f4bb62dffea2ab928316eebc3d346cc9) で確認済みです。
 
-完了すると、顧客 app、admin console、Content Studio、durable worker、SaaS dev/test DB、Payload DB、Redis、private S3-compatible bucket が一緒に動きます。
+まず **Core** から始めます。顧客アプリ、永続 worker、PostgreSQL、Redis、非公開のローカルオブジェクトストレージが含まれます。最初の目標はデモワークスペースにログインしてクレジット台帳を見ることです。このローカル体験には Stripe、メール、AI プロバイダーのアカウントは不要です。
 
-## 必要環境
+## 開始する構成を選ぶ
 
-- Node.js `>=24.22.1 <25`
+| プロファイル | 起動するもの | 選ぶ場面 |
+| --- | --- | --- |
+| **Core — 最初におすすめ** | 顧客アプリ + 永続 worker | スターターの評価や製品開発を始めるとき。 |
+| Operations | Core + 管理コンソール | 請求、ジョブ、顧客サポートを運用するとき。 |
+| Publishing | Operations + Content Studio | 独立したコンテンツ編集アプリも必要なとき。 |
+
+他のアプリは後から追加できます。プロファイルはローカルツールとビルド対象を選ぶもので、製品プラン、権限、利用可能な API ルートは変更しません。
+
+## 1. 環境を準備する
+
+- Git
+- Node.js `>=24.22.1 <25`（`.nvmrc` が検証済みバージョンを指定）
 - pnpm `10.22.0`
-- Docker Compose
+- ローカルで起動した Docker と Compose
 
-## ガイド付き初回起動
+## 2. Core を起動する
+
+ターミナルで次のコマンドを実行します。確認済みのソースコミットからブランチを作り、コードと手順を揃えます。
 
 ```bash
 git clone https://github.com/PansaLegrand/sushi-saas-template.git
 cd sushi-saas-template
-pnpm install
-./scripts/setup.sh development
-pnpm dev:doctor
-pnpm dev:all
-```
-
-Setup は `pnpm customize` を開き、不足する ignored env を書き、PostgreSQL・Redis・Garage を起動し、`sushi_dev`、`sushi_test`、`sushi_content`、restore DB を作り、Drizzle/Payload migration と `sushi-dev` bucket を準備します。再実行可能で既存 env は上書きしません。中立設定のままなら `pnpm setup` を使えます。
-
-`dev:doctor` は version、環境境界と権限、Docker、DB、Redis、migration、object storage、Studio、port を secret を表示せず読み取り確認します。
-
-`dev:all` は次を起動します。
-
-| Process | Address |
-| --- | --- |
-| 顧客 app | `http://localhost:3000` |
-| Admin | `http://localhost:3001` |
-| Content Studio | `http://localhost:3002/admin` |
-| Worker | prefix log 付き background process |
-
-## 安全な fixture と reset
-
-```bash
+git switch -c my-saas 35e64b91f4bb62dffea2ab928316eebc3d346cc9
+export SAAS_STARTER_PROFILE=core
+pnpm starter core install
+pnpm starter core setup
 pnpm dev:seed
-pnpm dev:reset -- --dry-run
-pnpm dev:reset
+pnpm starter core doctor
+pnpm starter core dev
 ```
 
-Seed は verified `.test` account、personal organization、deterministic 1,000 credits、demo reservation を冪等に作成・修復します。Reset は外部 service を拒否し、対象を表示して確認を要求し、この Compose project の data だけを再作成します。
+ターミナルを起動したまま、[localhost:3000/login](http://localhost:3000/login) を開きます。
 
-## 完全な検証
+Setup は不足している Git 管理対象外の環境ファイルを作り、PostgreSQL、Redis、Garage を起動します。ローカルのアプリ・テスト・復元訓練用 DB を作成し、Drizzle マイグレーションを適用して非公開の `sushi-dev` bucket を準備します。Core は Content Studio のインストール、環境ファイル、DB 作成、マイグレーションを省略します。Setup は再実行でき、既存の環境ファイルを上書きしません。
+
+`doctor` はツール、環境境界、インフラ、マイグレーション、ストレージ、ポートを読み取り専用で検査し、秘密値は表示しません。起動スクリプトは doctor を再確認して web と worker を起動し、`Ctrl-C` で両方を停止します。
+
+フィルター付きインストール後、通常の `pnpm lint` やコミットに使う各ターミナルで `SAAS_STARTER_PROFILE=core` を export し、同じ構成で検査します。ここでの `export` は POSIX shell 用です。PowerShell では `$env:SAAS_STARTER_PROFILE="core"` を使います。
+
+## 3. 最初の動作画面を確認する
+
+1. `demo@example.test` と `DemoPass123!`、または seed 前に `DEV_SEED_PASSWORD` で設定したパスワードでログインします。
+2. **アカウント → クレジット**を開きます。新規環境のデモワークスペースには **1,000 クレジット**と対応する台帳記録があります。
+3. **アカウント → プロフィールとセキュリティ**で設定を確認します。ワークスペースとセッションは実際のローカルアプリで動作しています。
+
+この認証情報はローカル開発専用です。Seed は予約済みドメインの検証済みアカウントを作り、同じクレジット付与を重複させずに不足データを修復します。メール送信は不要です。既存のデモ操作により表示残高が変わることがあります。
+
+別のターミナルでサービスを確認します。
 
 ```bash
 curl http://localhost:3000/api/health
 curl http://localhost:3000/api/ready
 pnpm test:fast
-pnpm test:e2e
-pnpm build
 ```
 
-Playwright は Better Auth で login し、tenant credits、実 Garage upload、5-credit image task から worker と signed result までを確認します。次に[製品のカスタマイズ](/ja/docs/customize-your-product)、[アーキテクチャ](/ja/docs/architecture-and-errors)、[テストと CI](/ja/docs/testing-and-ci)へ進んでください。
+開発と本番ビルドは `.next` を共有するため、ビルド前に `Ctrl-C` で開発プロセスを停止します。
 
-## 小さな構成から始める
+```bash
+pnpm starter core build
+```
 
-`pnpm starter core install`、`pnpm starter core setup`、`pnpm starter core doctor`、`pnpm starter core dev` は web と worker を対象とします。`operations` は admin、`publishing` は Content Studio も追加します。`lint`、`build`、`--dry-run` も利用できます。Core/operations は Studio の環境作成と移行を省略します。フィルター付きインストール後は `SAAS_STARTER_PROFILE=core` または `operations` をシェルに設定し、lint と pre-commit に同じ構成を使わせます。既定は全体構成で、実行時権限や料金プランは変えません。
+ビルドはルートのテストを維持し、worker ランタイムもまとめます。実際のローカルストレージとモックプロバイダーのジョブを使うブラウザ検証は、使い捨て環境向けの[テストと CI](/ja/docs/testing-and-ci)を参照してください。
 
-初期化時は TCP で PostgreSQL の準備を待つため、一時初期化サーバーが最終起動前に移行処理を開始させることはありません。
+## 4. 自分の製品にする
+
+`pnpm customize` で製品情報、外観、言語を設定します。[製品のカスタマイズ](/ja/docs/customize-your-product)と[アーキテクチャとエラー契約](/ja/docs/architecture-and-errors)へ進んでください。外部サービスは該当機能を使う段階で設定します。[環境設定](/ja/docs/environment-configuration)を参照してください。
+
+## 必要なアプリを追加する
+
+プロファイル変更前に現在の開発プロセスを停止します。`http://localhost:3001` の管理コンソールを追加するには：
+
+```bash
+export SAAS_STARTER_PROFILE=operations
+pnpm starter operations install
+pnpm starter operations setup
+pnpm starter operations dev
+```
+
+運用者権限と MFA は[管理コンソール設定](/ja/docs/admin-console-setup)に従ってください。デモ顧客は自動的に管理者にはなりません。
+
+`http://localhost:3002/admin` の Content Studio も追加するには：
+
+```bash
+export SAAS_STARTER_PROFILE=publishing
+pnpm starter publishing install
+pnpm starter publishing setup
+pnpm starter publishing dev
+```
+
+Publishing は独立した Payload DB とマイグレーションを準備します。認証と DB は SaaS と分離してください。[Content Studio とマーケティング](/ja/docs/content-studio-and-marketing)で説明しています。
+
+全プロファイルで `doctor`、`lint`、`build`、`--dry-run` を利用できます。プロファイル未選択なら、`pnpm setup`、`pnpm dev:all`、`pnpm build` は全アプリ構成を維持します。対話型の全体セットアップには、`SAAS_STARTER_PROFILE` を設定していない shell で `./scripts/setup.sh development` を使います。
+
+## ローカルデータのリセットは確認して行う
+
+```bash
+pnpm dev:reset -- --dry-run
+pnpm dev:reset
+```
+
+先に対象を確認します。Reset は外部サービスを拒否し、明示的な確認を求め、この Compose プロジェクトのローカルデータだけを再作成します。マイグレーションと、指定がなければ seed を再実行します。環境ファイルは保持します。通常の再起動には不要です。

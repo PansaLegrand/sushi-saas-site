@@ -1,7 +1,7 @@
 ---
 title: Démarrage rapide
 icon: "Zap"
-description: Personnalisez et lancez web, admin, Content Studio, worker, PostgreSQL, Redis et stockage local avec un parcours guidé.
+description: Lancez l’app client et le worker durable en local avec Core. Ajoutez la console admin et Content Studio selon vos besoins.
 keywords: [démarrage rapide, setup, Next.js, pnpm, Docker, Garage]
 tags: [setup, local development]
 author: "Sushi SaaS"
@@ -11,62 +11,108 @@ updatedAt: "2026-10-22T00:00:00.000Z"
 
 > Vérifié avec le commit [`35e64b9`](https://github.com/PansaLegrand/sushi-saas-template/tree/35e64b91f4bb62dffea2ab928316eebc3d346cc9).
 
-À la fin, l’app client, la console admin, Content Studio, le worker durable, les bases SaaS dev/test, la base Payload, Redis et un bucket S3 local privé fonctionneront ensemble.
+Commencez par **Core** : l’app client, le worker durable, PostgreSQL, Redis et le stockage local privé. Le premier objectif est de vous connecter à un espace de démonstration et de consulter son registre de crédits. Aucun compte Stripe, email ou fournisseur d’IA n’est nécessaire pour ce parcours local.
 
-## Prérequis
+## Choisir votre point de départ
 
-- Node.js `>=24.22.1 <25`
+| Profil | Applications lancées | Quand le choisir |
+| --- | --- | --- |
+| **Core — recommandé pour commencer** | App client + worker durable | Pour évaluer le starter ou construire votre produit. |
+| Operations | Core + console admin | Pour gérer facturation, jobs et assistance client. |
+| Publishing | Operations + Content Studio | Pour ajouter l’application indépendante de rédaction. |
+
+Vous pourrez ajouter les autres applications plus tard. Les profils sélectionnent des outils et cibles de build, sans changer les forfaits, les permissions ou les routes API disponibles.
+
+## 1. Préparer votre machine
+
+- Git
+- Node.js `>=24.22.1 <25` (`.nvmrc` indique la version testée)
 - pnpm `10.22.0`
-- Docker Compose
+- Docker avec Compose, démarré en local
 
-## Première exécution guidée
+## 2. Lancer Core
+
+Exécutez ces commandes dans un terminal. La branche part de la révision vérifiée pour garder le code et les instructions alignés.
 
 ```bash
 git clone https://github.com/PansaLegrand/sushi-saas-template.git
 cd sushi-saas-template
-pnpm install
-./scripts/setup.sh development
-pnpm dev:doctor
-pnpm dev:all
-```
-
-Le setup ouvre `pnpm customize`, écrit les profils ignorés manquants, lance PostgreSQL, Redis et Garage, crée `sushi_dev`, `sushi_test`, `sushi_content` et la base de restauration, applique les migrations Drizzle/Payload et prépare le bucket `sushi-dev`. Il est idempotent et ne remplace jamais un fichier existant. Utilisez `pnpm setup` pour conserver les valeurs neutres.
-
-`dev:doctor` vérifie en lecture seule versions, limites et permissions d’environnement, Docker, bases, Redis, migrations, objets, Studio et ports sans afficher de secret.
-
-`dev:all` lance :
-
-| Processus | Adresse |
-| --- | --- |
-| App client | `http://localhost:3000` |
-| Admin | `http://localhost:3001` |
-| Content Studio | `http://localhost:3002/admin` |
-| Worker | processus de fond avec logs préfixés |
-
-## Fixtures et reset sûrs
-
-```bash
+git switch -c my-saas 35e64b91f4bb62dffea2ab928316eebc3d346cc9
+export SAAS_STARTER_PROFILE=core
+pnpm starter core install
+pnpm starter core setup
 pnpm dev:seed
-pnpm dev:reset -- --dry-run
-pnpm dev:reset
+pnpm starter core doctor
+pnpm starter core dev
 ```
 
-Seed crée ou répare de façon idempotente un compte `.test` vérifié, son organisation, 1 000 crédits déterministes et une réservation démo. Reset refuse les services externes, affiche ses cibles, exige une confirmation et ne recrée que les données de ce projet Compose.
+Laissez le terminal ouvert, puis rendez-vous sur [localhost:3000/login](http://localhost:3000/login).
 
-## Vérifier
+Setup crée les fichiers d’environnement ignorés manquants, démarre PostgreSQL, Redis et Garage, crée les bases locales app/test et de restauration, applique les migrations Drizzle et prépare le bucket privé `sushi-dev`. Core omet l’installation, les fichiers d’environnement, la base et les migrations de Content Studio. Vous pouvez relancer setup : il ne remplace jamais un fichier d’environnement existant.
+
+`doctor` vérifie en lecture seule outils, limites d’environnement, infrastructure, migrations, stockage et ports sans afficher les secrets. Le lanceur vérifie doctor, démarre web et worker, puis arrête les deux avec `Ctrl-C`.
+
+Exportez `SAAS_STARTER_PROFILE=core` dans chaque terminal utilisé pour `pnpm lint` ou les commits après l’installation filtrée. Ces commandes `export` utilisent un shell POSIX ; sous PowerShell, utilisez `$env:SAAS_STARTER_PROFILE="core"`.
+
+## 3. Obtenir votre premier écran fonctionnel
+
+1. Connectez-vous avec `demo@example.test` et `DemoPass123!`, ou le mot de passe défini avec `DEV_SEED_PASSWORD` avant le seed.
+2. Ouvrez **Compte → Crédits**. Sur une installation neuve, l’espace démo dispose de **1 000 crédits** et de l’écriture correspondante.
+3. Ouvrez **Compte → Profil et sécurité** pour explorer les réglages. Votre espace et votre session utilisent maintenant la véritable application locale.
+
+Ces identifiants sont réservés au développement local. Le seed crée un compte vérifié avec domaine réservé et répare les fixtures sans attribuer deux fois le même crédit. Aucun email n’a besoin d’être envoyé. Une activité démo existante peut modifier le solde affiché.
+
+Dans un autre terminal, vérifiez les services :
 
 ```bash
 curl http://localhost:3000/api/health
 curl http://localhost:3000/api/ready
 pnpm test:fast
-pnpm test:e2e
-pnpm build
 ```
 
-Playwright se connecte avec Better Auth et teste crédits tenant, upload Garage réel et tâche image à cinq crédits jusqu’au worker et au résultat signé. Continuez avec [Personnalisation](/fr/docs/customize-your-product), [Architecture](/fr/docs/architecture-and-errors) et [Tests et CI](/fr/docs/testing-and-ci).
+Arrêtez le lanceur avec `Ctrl-C` avant de compiler : les modes développement et production partagent `.next`.
 
-## Choisir un profil réduit
+```bash
+pnpm starter core build
+```
 
-Utilisez `pnpm starter core install`, `pnpm starter core setup`, `pnpm starter core doctor` et `pnpm starter core dev` pour web et worker. `operations` ajoute admin ; `publishing` ajoute Content Studio. `lint`, `build` et `--dry-run` sont aussi disponibles. Core/operations omettent l’environnement et les migrations Studio. Après installation filtrée, exportez `SAAS_STARTER_PROFILE=core` ou `operations` pour lint et pre-commit. Le défaut conserve toute la stack ; ces profils ne changent ni permissions ni forfaits.
+Le build conserve la suite de tests racine et prépare le runtime du worker. Pour les parcours navigateur avec stockage local réel et jobs simulés dans un environnement jetable, consultez [Tests et CI](/fr/docs/testing-and-ci).
 
-Le démarrage attend PostgreSQL via TCP pour éviter que le serveur temporaire d’initialisation déclenche les migrations avant le serveur définitif.
+## 4. Personnaliser votre produit
+
+Exécutez `pnpm customize` pour définir identité, apparence et langues. Continuez avec [Personnalisation](/fr/docs/customize-your-product) et [Architecture](/fr/docs/architecture-and-errors). Configurez les services externes lorsque la fonctionnalité choisie le nécessite : [Configuration d’environnement](/fr/docs/environment-configuration).
+
+## Ajouter des applications au besoin
+
+Arrêtez le lanceur actuel avant de changer de profil. Pour ajouter l’admin sur `http://localhost:3001` :
+
+```bash
+export SAAS_STARTER_PROFILE=operations
+pnpm starter operations install
+pnpm starter operations setup
+pnpm starter operations dev
+```
+
+Suivez [Configurer la console admin](/fr/docs/admin-console-setup) pour les accès opérateur et le MFA ; le compte client démo n’est pas automatiquement administrateur.
+
+Pour ajouter également Content Studio sur `http://localhost:3002/admin` :
+
+```bash
+export SAAS_STARTER_PROFILE=publishing
+pnpm starter publishing install
+pnpm starter publishing setup
+pnpm starter publishing dev
+```
+
+Publishing prépare la base Payload et ses migrations séparées. Conservez une authentification et une base distinctes du SaaS ; voir [Content Studio et marketing](/fr/docs/content-studio-and-marketing).
+
+Tous les profils proposent `doctor`, `lint`, `build` et `--dry-run`. Sans profil sélectionné, `pnpm setup`, `pnpm dev:all` et `pnpm build` gardent la stack complète. Pour le customizer interactif complet, utilisez `./scripts/setup.sh development` sans `SAAS_STARTER_PROFILE` dans le shell.
+
+## Réinitialiser les données locales volontairement
+
+```bash
+pnpm dev:reset -- --dry-run
+pnpm dev:reset
+```
+
+Prévisualisez d’abord les cibles. Reset refuse les services externes, exige une confirmation, ne recrée que les données de ce projet Compose, réapplique les migrations et relance le seed sauf indication contraire. Il conserve les profils d’environnement. Un redémarrage normal ne nécessite pas de reset.

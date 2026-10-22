@@ -1,7 +1,7 @@
 ---
 title: 快速开始
 icon: "Zap"
-description: 通过一套引导流程自定义并启动 Web、管理后台、Content Studio、Worker、PostgreSQL、Redis 与本地对象存储。
+description: 使用 Core 在本地运行客户端应用与持久化 worker，需要时再添加管理后台和 Content Studio。
 keywords: [快速开始, 安装, Next.js, pnpm, Docker, Garage]
 tags: [setup, local development]
 author: "Sushi SaaS"
@@ -11,62 +11,108 @@ updatedAt: "2026-10-22T00:00:00.000Z"
 
 > 已根据 starter 提交 [`35e64b9`](https://github.com/PansaLegrand/sushi-saas-template/tree/35e64b91f4bb62dffea2ab928316eebc3d346cc9) 验证。
 
-完成本页后，客户应用、管理控制台、Content Studio、持久 Worker、SaaS 开发/测试数据库、Payload 数据库、Redis 和私有本地 S3 兼容 bucket 会一起运行。
+先从 **Core** 开始：客户端应用、持久化 worker、PostgreSQL、Redis 和私有本地对象存储。第一个目标是登录演示工作区，查看积分账本。这个本地体验不需要 Stripe、邮件或 AI 供应商账号。
 
-## 环境要求
+## 选择起点
 
-- Node.js `>=24.22.1 <25`
+| 配置 | 运行内容 | 适用场景 |
+| --- | --- | --- |
+| **Core — 推荐先用** | 客户端应用 + 持久化 worker | 评估 starter 或开发你的产品。 |
+| Operations | Core + 管理后台 | 管理计费、任务和客户支持。 |
+| Publishing | Operations + Content Studio | 还需要独立的内容创作应用。 |
+
+可以随时添加其他应用。这些配置只选择本地工具和构建目标，不会改变产品套餐、权限或可用 API 路由。
+
+## 1. 准备环境
+
+- Git
+- Node.js `>=24.22.1 <25`（仓库的 `.nvmrc` 固定了已测试版本）
 - pnpm `10.22.0`
-- Docker Compose
+- 本地已启动的 Docker 和 Compose
 
-## 第一次引导安装
+## 2. 运行 Core
+
+在终端中执行下列命令。新分支从已审核的源码提交创建，确保代码与指南一致。
 
 ```bash
 git clone https://github.com/PansaLegrand/sushi-saas-template.git
 cd sushi-saas-template
-pnpm install
-./scripts/setup.sh development
-pnpm dev:doctor
-pnpm dev:all
-```
-
-引导流程会打开 `pnpm customize`，写入缺失的忽略环境配置，启动 PostgreSQL、Redis 与 Garage，创建 `sushi_dev`、`sushi_test`、`sushi_content` 和恢复演练数据库，应用 Drizzle/Payload 迁移，并准备私有 `sushi-dev` bucket。它可以重复运行且不会覆盖现有环境文件。若想保留中性产品默认值，可用 `pnpm setup`。
-
-`dev:doctor` 只读检查工具版本、环境边界和权限、Docker、数据库、Redis、迁移、对象存储、Studio 配置与端口，不打印密钥。
-
-`dev:all` 启动：
-
-| 进程 | 地址 |
-| --- | --- |
-| 客户应用 | `http://localhost:3000` |
-| 管理控制台 | `http://localhost:3001` |
-| Content Studio | `http://localhost:3002/admin` |
-| 持久 Worker | 带前缀日志的后台进程 |
-
-## 安全演示数据与重置
-
-```bash
+git switch -c my-saas 35e64b91f4bb62dffea2ab928316eebc3d346cc9
+export SAAS_STARTER_PROFILE=core
+pnpm starter core install
+pnpm starter core setup
 pnpm dev:seed
-pnpm dev:reset -- --dry-run
-pnpm dev:reset
+pnpm starter core doctor
+pnpm starter core dev
 ```
 
-Seed 会幂等创建或修复已验证的 `.test` 账户、个人组织、确定性的 1,000 积分和演示预约。Reset 会拒绝外部服务、预览本地目标、要求明确确认，并只重建本 Compose 项目的数据。
+保持终端运行，打开 [localhost:3000/login](http://localhost:3000/login)。
 
-## 验证完整 starter
+Setup 会创建缺失且已被 Git 忽略的环境文件，启动 PostgreSQL、Redis 和 Garage，创建本地应用、测试及恢复演练数据库，应用 Drizzle 迁移，并配置私有 `sushi-dev` bucket。Core 跳过 Content Studio 的安装、环境文件、数据库创建和迁移。可以重复执行 setup，它不会覆盖已有环境文件。
+
+`doctor` 只读检查工具、环境边界、基础设施、迁移、存储和端口，不输出秘密值。开发启动器再次执行 doctor，同时启动 web 和 worker，并在按 `Ctrl-C` 时停止两者。
+
+筛选安装后，在每个用于 `pnpm lint` 或提交的终端中导出 `SAAS_STARTER_PROFILE=core`，让检查采用相同配置。这里的 `export` 适用于 POSIX shell；PowerShell 使用 `$env:SAAS_STARTER_PROFILE="core"`。
+
+## 3. 看到第一个可用页面
+
+1. 使用 `demo@example.test` 和 `DemoPass123!` 登录，或使用 seed 前通过 `DEV_SEED_PASSWORD` 设置的密码。
+2. 打开 **账户 → 积分**。全新安装的演示工作区拥有 **1,000 积分**及对应账本记录。
+3. 打开 **账户 → 个人资料与安全**探索设置。此时工作区和会话已在真实的本地应用中运行。
+
+这些凭据仅用于本地开发。Seed 创建使用保留域名的已验证账号，并修复缺失的演示数据，不会重复发放同一笔积分，也不需要发送邮件。已有演示活动可能改变显示的余额。
+
+在另一个终端中检查服务：
 
 ```bash
 curl http://localhost:3000/api/health
 curl http://localhost:3000/api/ready
 pnpm test:fast
-pnpm test:e2e
-pnpm build
 ```
 
-Playwright 会通过 Better Auth 登录，并验证组织积分、真实 Garage 上传，以及经过 Worker 和签名结果的五积分图像任务。下一步阅读[自定义产品](/zh/docs/customize-your-product)、[架构与错误契约](/zh/docs/architecture-and-errors)和[测试与 CI](/zh/docs/testing-and-ci)。
+构建前先按 `Ctrl-C` 停止开发启动器，因为开发和生产构建共用 `.next`：
 
-## 选择较小的模板组合
+```bash
+pnpm starter core build
+```
 
-执行 `pnpm starter core install`、`pnpm starter core setup`、`pnpm starter core doctor` 和 `pnpm starter core dev`，仅运行 web 与 worker。`operations` 增加管理员应用，`publishing` 再增加 Content Studio。也支持 `lint`、`build` 和 `--dry-run`。Core/operations 跳过 Studio 环境文件与迁移。过滤安装后，在 shell 导出 `SAAS_STARTER_PROFILE=core` 或 `operations`，让常规 lint 与提交检查使用相同组合。默认仍为完整栈；这些组合不改变运行时权限或套餐。
+构建保留根目录测试套件，并打包 worker 运行时。完整浏览器流程见[测试与 CI](/zh/docs/testing-and-ci)，它在可丢弃环境中覆盖真实本地存储和模拟供应商任务。
 
-初始化通过 TCP 等待 PostgreSQL 就绪，避免临时初始化服务在最终启动前触发迁移。
+## 4. 开始定制
+
+运行 `pnpm customize` 设置产品身份、外观和语言，然后阅读[定制产品](/zh/docs/customize-your-product)和[架构与错误契约](/zh/docs/architecture-and-errors)。等用到对应功能时再配置外部服务，参考[环境配置](/zh/docs/environment-configuration)。
+
+## 按需添加应用
+
+切换配置前先停止正在运行的开发启动器。要添加位于 `http://localhost:3001` 的管理后台：
+
+```bash
+export SAAS_STARTER_PROFILE=operations
+pnpm starter operations install
+pnpm starter operations setup
+pnpm starter operations dev
+```
+
+按照[管理后台设置](/zh/docs/admin-console-setup)配置运营权限与 MFA；演示客户账号不会自动成为管理员。
+
+要进一步添加位于 `http://localhost:3002/admin` 的 Content Studio：
+
+```bash
+export SAAS_STARTER_PROFILE=publishing
+pnpm starter publishing install
+pnpm starter publishing setup
+pnpm starter publishing dev
+```
+
+Publishing 创建独立的 Payload 数据库并应用迁移。它的身份验证和数据库必须与 SaaS 分离，详见 [Content Studio 与营销](/zh/docs/content-studio-and-marketing)。
+
+所有配置都支持 `doctor`、`lint`、`build` 和 `--dry-run`。未选择配置时，`pnpm setup`、`pnpm dev:all` 和 `pnpm build` 保留完整应用默认行为。需要交互式完整安装与定制时，在没有 `SAAS_STARTER_PROFILE` 的 shell 中执行 `./scripts/setup.sh development`。
+
+## 确认后再重置本地演示数据
+
+```bash
+pnpm dev:reset -- --dry-run
+pnpm dev:reset
+```
+
+先预览目标。Reset 拒绝外部服务，要求明确确认，只重建当前 Compose 项目的本地数据，重新迁移并默认重新填充演示数据。环境配置文件会保留。普通重启无需重置。
