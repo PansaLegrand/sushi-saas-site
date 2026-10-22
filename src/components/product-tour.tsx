@@ -5,6 +5,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowUpRight, Coins, Layers3, ShieldCheck } from "lucide-react";
 import { trackAdoptionEvent } from "@/lib/analytics/client";
+import { useAnalyticsEnabled } from "@/components/analytics/analytics-provider";
 
 const previews = [
   { id: "credits", image: "/product/credits.jpg", icon: Coins },
@@ -19,21 +20,24 @@ export function ProductTour() {
   const id = useId();
   const section = useRef<HTMLElement>(null);
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
+  const viewRecorded = useRef(false);
+  const analyticsEnabled = useAnalyticsEnabled();
   const current = previews[selected];
   const copy = items[selected];
 
   useEffect(() => {
     const target = section.current;
-    if (!target) return;
+    if (!target || !analyticsEnabled || viewRecorded.current) return;
     const observer = new IntersectionObserver(entries => {
       if (entries.some(entry => entry.isIntersecting)) {
         trackAdoptionEvent("tour_viewed");
+        viewRecorded.current = true;
         observer.disconnect();
       }
     }, { threshold: 0.25 });
     observer.observe(target);
     return () => observer.disconnect();
-  }, []);
+  }, [analyticsEnabled]);
 
   function select(index: number, focus = false) {
     setSelected(index);

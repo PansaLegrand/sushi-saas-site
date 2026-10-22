@@ -30,6 +30,7 @@ const AnalyticsContext = createContext<{
   openSettings: () => void;
   registerSettingsTrigger: () => () => void;
   label: string;
+  canMeasure: boolean;
 } | null>(null);
 
 export function AnalyticsProvider({ children, copy, privacyHref }: {
@@ -131,7 +132,7 @@ export function AnalyticsProvider({ children, copy, privacyHref }: {
 
   const visible = hostEnabled && ready && (open || (consent === "unknown" && !blocked));
   return (
-    <AnalyticsContext.Provider value={hostEnabled ? { openSettings, registerSettingsTrigger, label: copy.settings } : null}>
+    <AnalyticsContext.Provider value={hostEnabled ? { openSettings, registerSettingsTrigger, label: copy.settings, canMeasure: ready && consent === "accepted" && !blocked } : null}>
       {children}
       {hostEnabled && ready && settingsTriggerCount === 0 && (
         <button type="button" hidden={visible} onClick={openSettings} className="fixed bottom-3 right-3 z-40 min-h-11 rounded-full border bg-[var(--card)] px-4 py-2 text-xs font-medium text-[var(--muted-foreground)] shadow-sm sm:bottom-6 sm:right-6" data-analytics-settings>
@@ -155,6 +156,10 @@ export function AnalyticsProvider({ children, copy, privacyHref }: {
       )}
     </AnalyticsContext.Provider>
   );
+}
+
+export function useAnalyticsEnabled(): boolean {
+  return useContext(AnalyticsContext)?.canMeasure ?? false;
 }
 
 export function AnalyticsSettingsButton({ className }: { className?: string }) {
