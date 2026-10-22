@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { usePathname } from "next/navigation";
 import {
   analyticsConfig,
+  applyAnalyticsPrivacyPreference,
   privacySignalEnabled,
   readAnalyticsConsent,
   resetVolatileConsent,
@@ -57,6 +58,7 @@ export function AnalyticsProvider({ children, copy, privacyHref }: {
     if (!isAnalyticsHost(analyticsConfig, window.location.hostname)) return;
     setHostEnabled(true);
     const sync = () => {
+      applyAnalyticsPrivacyPreference();
       setConsent(readAnalyticsConsent());
       setBlocked(privacySignalEnabled());
       setReady(true);
@@ -70,9 +72,11 @@ export function AnalyticsProvider({ children, copy, privacyHref }: {
     sync();
     window.addEventListener("storage", storage);
     window.addEventListener("focus", sync);
+    document.addEventListener("visibilitychange", sync);
     return () => {
       window.removeEventListener("storage", storage);
       window.removeEventListener("focus", sync);
+      document.removeEventListener("visibilitychange", sync);
     };
   }, []);
 

@@ -46,7 +46,7 @@
   },
   "analytics": {
     "title": "Help improve the starter",
-    "description": "With your permission, Plausible measures which pages and setup links are useful. It receives your IP address and browser information. No installation activity or form contents are tracked.",
+    "description": "With your permission, Google Analytics uses cookies to measure useful pages and setup links. Google receives your IP address, browser information and usage events. We do not track installations or form contents.",
     "allow": "Allow analytics",
     "decline": "Keep analytics off",
     "settings": "Analytics settings",
@@ -72,10 +72,10 @@
       {
         "heading": "Optional analytics and preferences",
         "paragraphs": [
-          "Analytics is disabled by default. If enabled for this website, Plausible receives events only after you explicitly allow analytics. We do not track installations or activity in products built from the starter.",
-          "Events contain public page categories, language, fixed interaction labels and, when present, a limited set of approved campaign labels. We do not send form contents, email addresses, arbitrary page paths, full referrers or raw query strings. The connection still exposes your IP address and browser headers to Plausible.",
-          "After you make a choice, this website stores only accepted or declined in local storage under sushi:analytics-consent:v1. If storage is unavailable, the choice lasts for the current page session. Analytics settings in the footer, or the floating control on documentation pages, let you withdraw permission. Withdrawal stops future events; it does not retract information already sent. Do Not Track and Global Privacy Control override any earlier permission.",
-          "The site may also store necessary preferences, such as your chosen language or theme. The analytics adapter adds no tracking cookies or visitor identifier."
+          "Analytics is disabled unless a Google Analytics 4 property and this website’s hostname are configured. The Google tag is loaded only after you explicitly allow analytics. We do not track installations or activity in products built from the starter.",
+          "Our events contain public page categories, language, fixed interaction labels and, when present, approved campaign labels. We do not send form contents, email addresses, arbitrary page paths, full referrers or raw query strings in these events. Google also receives network information, including your IP address and browser headers, and standard analytics session and device information. Advertising storage, Google signals and advertising personalization are disabled by this integration.",
+          "Google Analytics uses visitor and session identifiers in cookies after permission is granted. We configure this site’s analytics cookies with a sushi prefix, this hostname only and a 30-day lifetime without refreshing the expiry on each visit. This site also stores your accepted or declined choice under sushi:analytics-consent:ga4:v1 in local storage. If storage is unavailable, the choice lasts only for the current page session.",
+          "Analytics settings in the footer, or the floating control on documentation pages, let you withdraw permission. This stops future events from the integration and removes accessible analytics cookies created by it; it does not retract information already sent to Google. Do Not Track and Global Privacy Control override earlier permission. The site may also store necessary preferences such as language or theme."
         ]
       },
       {

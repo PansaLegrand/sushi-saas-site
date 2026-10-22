@@ -46,7 +46,7 @@
   },
   "analytics": {
     "title": "Aidez à améliorer le starter",
-    "description": "Avec votre accord, Plausible mesure les pages et les liens d’installation utiles. Ce service reçoit votre adresse IP et des informations sur votre navigateur. Aucune installation ni aucun contenu de formulaire n’est suivi.",
+    "description": "Avec votre accord, Google Analytics utilise des cookies pour mesurer les pages et les liens d’installation utiles. Google reçoit votre adresse IP, des informations sur votre navigateur et des événements d’utilisation. Nous ne suivons ni les installations ni le contenu des formulaires.",
     "allow": "Autoriser les statistiques",
     "decline": "Garder désactivées",
     "settings": "Réglages des statistiques",
@@ -72,10 +72,10 @@
       {
         "heading": "Statistiques facultatives et préférences",
         "paragraphs": [
-          "Les statistiques sont désactivées par défaut. Si elles sont configurées pour ce site, Plausible ne reçoit des événements qu’après votre autorisation explicite. Nous ne suivons ni les installations ni l’activité dans les produits créés avec le starter.",
-          "Les événements contiennent des catégories de pages publiques, la langue, des libellés d’interaction prédéfinis et, le cas échéant, un ensemble limité de libellés de campagne autorisés. Nous n’envoyons ni contenu de formulaire, ni adresse e-mail, ni chemin de page arbitraire, ni adresse de provenance complète, ni chaîne de requête brute. La connexion révèle toutefois votre adresse IP et les en-têtes du navigateur à Plausible.",
-          "Après votre choix, ce site enregistre uniquement accepted ou declined dans le stockage local sous sushi:analytics-consent:v1. Si ce stockage est indisponible, le choix ne vaut que pour la session de page actuelle. Les réglages des statistiques du pied de page, ou le bouton flottant des pages de documentation, permettent de retirer votre accord. Ce retrait arrête les événements futurs, mais ne récupère pas les informations déjà transmises. Do Not Track et Global Privacy Control priment sur toute autorisation antérieure.",
-          "Le site peut également mémoriser des préférences nécessaires, telles que la langue ou le thème. L’adaptateur de statistiques n’ajoute ni cookie de suivi ni identifiant de visiteur."
+          "Les statistiques sont désactivées tant qu’une propriété Google Analytics 4 et le nom d’hôte de ce site ne sont pas configurés. La balise Google n’est chargée qu’après votre autorisation explicite. Nous ne suivons ni les installations ni l’activité dans les produits créés avec le starter.",
+          "Nos événements contiennent des catégories de pages publiques, la langue, des libellés d’interaction prédéfinis et, le cas échéant, des libellés de campagne autorisés. Nous n’y envoyons ni contenu de formulaire, ni adresse e-mail, ni chemin arbitraire, ni adresse de provenance complète, ni chaîne de requête brute. Google reçoit également des informations réseau, dont votre adresse IP et les en-têtes du navigateur, ainsi que des données standard de session et d’appareil. Cette intégration désactive le stockage publicitaire, Google signals et la personnalisation des annonces.",
+          "Après autorisation, Google Analytics utilise des identifiants de visiteur et de session dans des cookies. Les cookies statistiques de ce site utilisent le préfixe sushi, sont limités à ce nom d’hôte et expirent après 30 jours, sans prolongation à chaque visite. Le site enregistre aussi votre choix accepted ou declined dans le stockage local sous sushi:analytics-consent:ga4:v1. Si ce stockage est indisponible, le choix ne vaut que pour la session de page actuelle.",
+          "Les réglages des statistiques du pied de page, ou le bouton flottant des pages de documentation, permettent de retirer votre accord. Ce retrait arrête les événements futurs de l’intégration et supprime les cookies statistiques accessibles qu’elle a créés ; il ne récupère pas les informations déjà transmises à Google. Do Not Track et Global Privacy Control priment sur toute autorisation antérieure. Le site peut aussi mémoriser des préférences nécessaires, comme la langue ou le thème."
         ]
       },
       {

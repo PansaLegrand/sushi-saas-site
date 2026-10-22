@@ -1,7 +1,7 @@
 import createNextIntlPlugin from "next-intl/plugin";
 import { createMDX } from "fumadocs-mdx/next";
 import { defaultLocale, locales } from "./src/i18n/locale";
-import { analyticsConnectSrc } from "./src/lib/analytics/policy";
+import { analyticsConnectSrc, analyticsScriptSrc } from "./src/lib/analytics/policy";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 const withMDX = createMDX();
@@ -58,11 +58,11 @@ const nextConfig = {
               "frame-ancestors 'none'",
               "form-action 'self'",
               "object-src 'none'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              analyticsScriptSrc(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID, process.env.NEXT_PUBLIC_ANALYTICS_HOSTNAME),
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
-              analyticsConnectSrc(process.env.NEXT_PUBLIC_ANALYTICS_PROVIDER, process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN),
+              analyticsConnectSrc(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID, process.env.NEXT_PUBLIC_ANALYTICS_HOSTNAME),
               "upgrade-insecure-requests"
             ].join("; ")
           }

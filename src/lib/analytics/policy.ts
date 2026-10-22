@@ -10,9 +10,13 @@ export const adoptionEvents = {
 
 export type AdoptionEvent = keyof typeof adoptionEvents;
 export type AnalyticsConsent = "accepted" | "declined" | "unknown";
-export type AnalyticsConfig = { provider: "plausible"; domain: string };
-export const CONSENT_STORAGE_KEY = "sushi:analytics-consent:v1";
-export const ANALYTICS_ENDPOINT = "https://plausible.io/api/event";
+export type AnalyticsConfig = { measurementId: string; domain: string };
+// Provider-specific: an earlier choice for another analytics provider is not GA consent.
+export const CONSENT_STORAGE_KEY = "sushi:analytics-consent:ga4:v1";
+export const GOOGLE_TAG_ORIGIN = "https://www.googletagmanager.com";
+export const GOOGLE_COLLECTION_ORIGINS = ["https://www.google-analytics.com", "https://region1.google-analytics.com"] as const;
+export const GA_COOKIE_PREFIX = "sushi";
+export const GA_DATA_LAYER = "sushiAnalyticsLayer";
 
 const campaigns = ["launch", "billing-recovery", "core-quickstart", "dojoclip-case-study"] as const;
 const campaignSources = ["github", "hacker-news", "devto", "reddit", "linkedin"] as const;
@@ -21,8 +25,8 @@ export function analyticsCampaign(search: string): Record<string, string> {
   const params = new URLSearchParams(search);
   const result: Record<string, string> = {};
   for (const [query, property, allowed] of [
-    ["utm_campaign", "campaign", campaigns],
-    ["utm_source", "campaign_source", campaignSources]
+    ["utm_campaign", "site_campaign", campaigns],
+    ["utm_source", "site_campaign_source", campaignSources]
   ] as const) {
     const values = params.getAll(query);
     if (values.length === 1 && (allowed as readonly string[]).includes(values[0])) result[property] = values[0];
@@ -30,16 +34,23 @@ export function analyticsCampaign(search: string): Record<string, string> {
   return result;
 }
 
-export function parseAnalyticsConfig(provider: string | undefined, domain: string | undefined): AnalyticsConfig | null {
-  if (provider !== "plausible" || !domain) return null;
+export function parseAnalyticsConfig(measurementId: string | undefined, domain: string | undefined): AnalyticsConfig | null {
+  if (!measurementId || !/^G-[A-Z0-9]{6,20}$/.test(measurementId) || !domain) return null;
   const normalized = domain.trim().toLowerCase();
   // A domain is public configuration, never a URL, credential, path or query.
   if (normalized.length > 253 || !/^(?:localhost|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63})$/.test(normalized)) return null;
-  return { provider, domain: normalized };
+  return { measurementId, domain: normalized };
 }
 
-export function analyticsConnectSrc(provider: string | undefined, domain: string | undefined): string {
-  return parseAnalyticsConfig(provider, domain) ? "connect-src 'self' https://plausible.io" : "connect-src 'self'";
+export function analyticsConnectSrc(measurementId: string | undefined, domain: string | undefined): string {
+  return parseAnalyticsConfig(measurementId, domain)
+    ? `connect-src 'self' ${GOOGLE_TAG_ORIGIN} ${GOOGLE_COLLECTION_ORIGINS.join(" ")}`
+    : "connect-src 'self'";
+}
+
+export function analyticsScriptSrc(measurementId: string | undefined, domain: string | undefined): string {
+  const baseline = "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+  return parseAnalyticsConfig(measurementId, domain) ? `${baseline} ${GOOGLE_TAG_ORIGIN}` : baseline;
 }
 
 export function parseConsent(value: string | null): AnalyticsConsent {
@@ -97,5 +108,25 @@ export function createAnalyticsPayload(
     if (typeof value !== "string" || !values.includes(value)) return null;
     props[key] = value;
   }
-  return { name: event, domain: config.domain, url: `https://${config.domain}${page.path}`, props };
+  return { name: event === "pageview" ? "page_view" : event, domain: config.domain, url: `https://${config.domain}${page.path}`, props };
+}
+
+export function googlePageParameters(payload: NonNullable<ReturnType<typeof createAnalyticsPayload>>): Record<string, string | boolean> {
+  return { page_location: payload.url, page_title: new URL(payload.url).pathname, page_referrer: "", ignore_referrer: true };
+}
+
+export function googleTagConfiguration(payload: NonNullable<ReturnType<typeof createAnalyticsPayload>>): Record<string, unknown> {
+  return {
+    ...googlePageParameters(payload),
+    send_page_view: false,
+    allow_google_signals: false,
+    allow_ad_personalization_signals: false,
+    cookie_prefix: GA_COOKIE_PREFIX,
+    cookie_domain: "none",
+    cookie_path: "/",
+    cookie_expires: 30 * 24 * 60 * 60,
+    cookie_update: false,
+    cookie_flags: "SameSite=Lax;Secure",
+    groups: "sushi"
+  };
 }
