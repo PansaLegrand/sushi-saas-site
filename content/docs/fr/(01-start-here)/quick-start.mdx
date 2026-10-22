@@ -9,9 +9,9 @@ publishedAt: "2025-09-29T00:00:00.000Z"
 updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Vérifié avec le commit [`35e64b9`](https://github.com/PansaLegrand/sushi-saas-template/tree/35e64b91f4bb62dffea2ab928316eebc3d346cc9).
+> Vérifié avec le commit [`e632762`](https://github.com/PansaLegrand/sushi-saas-template/tree/e63276252e4b64566229cb87225afc72da6991de).
 
-Commencez par **Core** : l’app client, le worker durable, PostgreSQL, Redis et le stockage local privé. Le premier objectif est de vous connecter à un espace de démonstration et de consulter son registre de crédits. Aucun compte Stripe, email ou fournisseur d’IA n’est nécessaire pour ce parcours local.
+Commencez par **Core** : l’app client, le worker durable, PostgreSQL, Redis et le stockage local privé. Le premier objectif est un parcours local complet : connexion, attribution de crédits démo, tâche image simulée, résultat privé et écriture au registre. Aucun compte Stripe, email ou fournisseur d’IA n’est nécessaire pour ce parcours local.
 
 ## Choisir votre point de départ
 
@@ -37,30 +37,58 @@ Exécutez ces commandes dans un terminal. La branche part de la révision vérif
 ```bash
 git clone https://github.com/PansaLegrand/sushi-saas-template.git
 cd sushi-saas-template
-git switch -c my-saas 35e64b91f4bb62dffea2ab928316eebc3d346cc9
+git switch -c my-saas e63276252e4b64566229cb87225afc72da6991de
 export SAAS_STARTER_PROFILE=core
 pnpm starter core install
 pnpm starter core setup
-pnpm dev:seed
 pnpm starter core doctor
-pnpm starter core dev
+pnpm starter core demo
 ```
 
-Laissez le terminal ouvert, puis rendez-vous sur [localhost:3000/login](http://localhost:3000/login).
+`demo` exécute d’abord doctor en lecture seule, prépare le compte local uniquement après sa réussite, puis démarre Core avec les images simulées, zéro échec fournisseur simulé et le captcha local désactivé. Email, Slack et Stripe sont désactivés pour ces processus ; les fichiers d’environnement restent inchangés. Aucun fournisseur IA commercial n’est contacté. Utilisez bash/zsh ou WSL. `pnpm starter core dev` reste le parcours de développement habituel et n’active pas ce mode démo.
+
+Laissez le terminal ouvert, puis rendez-vous sur [localhost:3000/fr/login](http://localhost:3000/fr/login).
 
 Setup crée les fichiers d’environnement ignorés manquants, démarre PostgreSQL, Redis et Garage, crée les bases locales app/test et de restauration, applique les migrations Drizzle et prépare le bucket privé `sushi-dev`. Core omet l’installation, les fichiers d’environnement, la base et les migrations de Content Studio. Vous pouvez relancer setup : il ne remplace jamais un fichier d’environnement existant.
 
-`doctor` vérifie en lecture seule outils, limites d’environnement, infrastructure, migrations, stockage et ports sans afficher les secrets. Le lanceur vérifie doctor, démarre web et worker, puis arrête les deux avec `Ctrl-C`.
+Avant d’écrire les fichiers d’environnement, setup vérifie Docker actif, Docker Compose et l’appartenance des services sur les ports 5432/6379. Un outil absent, Docker arrêté ou un service en conflit provoque un arrêt en erreur ; corrigez le prérequis indiqué avant de réessayer.
+
+`doctor` vérifie en lecture seule outils, limites d’environnement, infrastructure, migrations, stockage et ports sans afficher les secrets. Demo vérifie doctor avant le seed, puis lance web et worker sans répéter inutilement cette vérification. `Ctrl-C` arrête les deux processus.
 
 Exportez `SAAS_STARTER_PROFILE=core` dans chaque terminal utilisé pour `pnpm lint` ou les commits après l’installation filtrée. Ces commandes `export` utilisent un shell POSIX ; sous PowerShell, utilisez `$env:SAAS_STARTER_PROFILE="core"`.
 
 ## 3. Obtenir votre premier écran fonctionnel
 
-1. Connectez-vous avec `demo@example.test` et `DemoPass123!`, ou le mot de passe défini avec `DEV_SEED_PASSWORD` avant le seed.
-2. Ouvrez **Compte → Crédits**. Sur une installation neuve, l’espace démo dispose de **1 000 crédits** et de l’écriture correspondante.
+1. Pour un nouveau compte, utilisez `demo@example.test` et `DemoPass123!`, ou le `DEV_SEED_PASSWORD` utilisé lors de sa création. Un compte existant conserve son mot de passe initial ; la sortie de demo indique qu’il est inchangé.
+2. Ouvrez **Compte → Crédits**. Repérez l’**attribution démo unique de 1 000 crédits**. Le worker peut aussi traiter l’**attribution d’inscription distincte de 10 crédits**, portant un solde neuf à 1 010. L’attribution démo ne signifie pas que le solde total reste toujours à 1 000.
 3. Ouvrez **Compte → Profil et sécurité** pour explorer les réglages. Votre espace et votre session utilisent maintenant la véritable application locale.
 
 Ces identifiants sont réservés au développement local. Le seed crée un compte vérifié avec domaine réservé et répare les fixtures sans attribuer deux fois le même crédit. Aucun email n’a besoin d’être envoyé. Une activité démo existante peut modifier le solde affiché.
+
+## 4. Réussir votre première tâche image
+
+1. Une fois les attributions initiales traitées, actualisez **Compte → Crédits** et notez le solde. Gardez le même espace pendant tout le parcours.
+2. Ouvrez [la tâche image locale](http://localhost:3000/fr/tasks/image-generation). Conservez le paramètre `org` ajouté à l’URL. Saisissez `Ma première tâche image Sushi SaaS` dans **Instruction**, puis cliquez une seule fois sur **Générer l’image**.
+3. L’état peut passer brièvement par **En attente du worker…** puis **Génération et stockage de l’image…**. Attendez **Image prête**. Le résultat attendu est un SVG bleu/violet marqué **Image generation mock**, avec votre instruction. C’est une réponse simulée, pas une illustration créée par IA.
+4. Actualisez la même URL : vous devez retrouver le même ID de tâche et l’image sans nouveau débit. **Générer une autre image** crée volontairement une nouvelle tâche, facturée cinq crédits supplémentaires.
+5. Dans **Compte → Crédits**, pour le même espace, repérez un seul débit **Génération d’image** de **−5**. Sans autre écriture, le solde est celui noté moins cinq : 1 000 → 995, ou 1 010 → 1 005 après l’attribution d’inscription. Dans **Compte → Fichiers**, le résultat s’appelle `generated-<ID de tâche>.svg`.
+
+Le résultat est stocké dans le bucket Garage local privé. La page l’affiche avec une URL signée valable 15 minutes ; rouvrir l’URL de la tâche en crée une nouvelle. L’URL signée donne elle-même un accès temporaire à son détenteur : ce n’est pas une adresse publique permanente.
+
+**Vous avez testé :** connexion → autorisation de l’espace → débit unique de cinq crédits → worker durable → résultat privé → reprise dans l’interface. Le forfait Free inclut cet exemple ; aucun abonnement ni seed `--paid-examples` n’est nécessaire.
+
+### Si le premier essai bloque
+
+| Symptôme | Vérification |
+| --- | --- |
+| Setup termine sans créer les services locaux | Utilisez `pnpm starter core setup` ou `pnpm run setup`. Le nom `setup` est aussi une commande interne de pnpm ; `run` est nécessaire pour appeler directement le script du projet. |
+| Page image en 404 | Redémarrez avec `pnpm starter core demo`. Le mode dev habituel n’active pas les images simulées ; la démo est volontairement indisponible en production. |
+| Tâche toujours en attente | Laissez le terminal Core ouvert et consultez ses logs `[worker]`. `pnpm dev` seul ne lance pas le worker. |
+| Connexion refusée | Un nouveau compte utilise `demo@example.test` / `DemoPass123!`, sauf si `DEV_SEED_PASSWORD` était défini. Un compte existant conserve son mot de passe. |
+| Le solde n’est pas exactement 995 | Vérifiez le seul débit −5 de cette tâche ; inscription, anciennes démos et autres activités ont leurs propres écritures. |
+| Échec d’image ou de stockage | Lancez `pnpm starter core doctor`, consultez l’erreur du worker et le [dépannage image](/fr/docs/image-generation-workflow). Actualisez la tâche existante au lieu d’en créer une autre. |
+
+## Vérifier la stack locale
 
 Dans un autre terminal, vérifiez les services :
 
@@ -78,7 +106,7 @@ pnpm starter core build
 
 Le build conserve la suite de tests racine et prépare le runtime du worker. Pour les parcours navigateur avec stockage local réel et jobs simulés dans un environnement jetable, consultez [Tests et CI](/fr/docs/testing-and-ci).
 
-## 4. Personnaliser votre produit
+## 5. Personnaliser votre produit
 
 Exécutez `pnpm customize` pour définir identité, apparence et langues. Continuez avec [Personnalisation](/fr/docs/customize-your-product) et [Architecture](/fr/docs/architecture-and-errors). Configurez les services externes lorsque la fonctionnalité choisie le nécessite : [Configuration d’environnement](/fr/docs/environment-configuration).
 
@@ -106,7 +134,7 @@ pnpm starter publishing dev
 
 Publishing prépare la base Payload et ses migrations séparées. Conservez une authentification et une base distinctes du SaaS ; voir [Content Studio et marketing](/fr/docs/content-studio-and-marketing).
 
-Tous les profils proposent `doctor`, `lint`, `build` et `--dry-run`. Sans profil sélectionné, `pnpm setup`, `pnpm dev:all` et `pnpm build` gardent la stack complète. Pour le customizer interactif complet, utilisez `./scripts/setup.sh development` sans `SAAS_STARTER_PROFILE` dans le shell.
+Tous les profils proposent `doctor`, `lint`, `build` et `--dry-run`. Sans profil sélectionné, `pnpm run setup`, `pnpm dev:all` et `pnpm build` gardent la stack complète. Pour le customizer interactif complet, utilisez `./scripts/setup.sh development` sans `SAAS_STARTER_PROFILE` dans le shell.
 
 ## Réinitialiser les données locales volontairement
 

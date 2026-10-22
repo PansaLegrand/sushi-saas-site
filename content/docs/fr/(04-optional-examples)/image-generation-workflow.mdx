@@ -9,17 +9,42 @@ publishedAt: "2026-08-24T00:00:00.000Z"
 updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Vérifié avec le commit [`35e64b9`](https://github.com/PansaLegrand/sushi-saas-template/tree/35e64b91f4bb62dffea2ab928316eebc3d346cc9).
+> Vérifié avec le commit [`e632762`](https://github.com/PansaLegrand/sushi-saas-template/tree/e63276252e4b64566229cb87225afc72da6991de).
 
 La génération d’image est l’exemple minimal d’un flux payant de forme production. Le fournisseur local génère un SVG sans appeler de modèle commercial ; la valeur est la chaîne autour. Chaque requête acceptée coûte exactement cinq crédits mutualisés.
 
-```dotenv
-ENABLE_DEMO_FEATURES=true
-ENABLE_IMAGE_GENERATION_MOCK=true
-IMAGE_GENERATION_MOCK_FAILURES=0
+## Réussir une tâche image
+
+Terminez d’abord la configuration locale Core du [Démarrage rapide](/fr/docs/quick-start). Arrêtez un éventuel lanceur avec `Ctrl-C`, puis exécutez :
+
+```bash
+pnpm starter core demo
 ```
 
-Lancez `pnpm dev:all`, connectez-vous avec le compte démo et ouvrez `/fr/tasks/image-generation`. L’UI garde une clé idempotente et interroge l’état tenant-scoped.
+Cette commande vérifie doctor d’abord, ne prépare le compte qu’après une vérification réussie, puis lance web et worker avec `ENABLE_DEMO_FEATURES=true`, `ENABLE_IMAGE_GENERATION_MOCK=true` et `IMAGE_GENERATION_MOCK_FAILURES=0`. Elle désactive le captcha local ainsi que les envois email, Slack et Stripe pour ces processus, sans modifier les fichiers d’environnement. L’adaptateur est simulé : aucun compte de fournisseur IA ni abonnement payant n’est nécessaire.
+
+1. Connectez-vous sur [localhost:3000/fr/login](http://localhost:3000/fr/login) avec `demo@example.test` / `DemoPass123!`, ou le mot de passe existant de la fixture. `DEV_SEED_PASSWORD` s’applique lors de la création du compte ; un nouveau seed ne le change pas.
+2. Dans **Compte → Crédits**, choisissez l’espace démo. Vous devez retrouver une **attribution démo de 1 000 crédits**, éventuellement complétée par les **10 crédits d’inscription**. Attendez la fin des attributions initiales et notez le solde. Un nouveau seed n’ajoute pas 1 000 crédits et n’annule pas les dépenses.
+3. Ouvrez [la page image](http://localhost:3000/fr/tasks/image-generation), gardez son paramètre `org`, saisissez `Ma première tâche image Sushi SaaS` et cliquez une fois sur **Générer l’image**.
+4. Attendez **Image prête** ; les états en attente/en cours peuvent apparaître brièvement. Le SVG affiche **Image generation mock** et votre instruction sur fond bleu/violet. Ce n’est pas une illustration générée par IA.
+5. Actualisez la même URL : même ID de tâche, même résultat, sans nouveau débit. Dans **Compte → Crédits**, vérifiez une seule entrée **Génération d’image −5** et, sans autre activité, un solde réduit de cinq. **Compte → Fichiers** contient `generated-<ID de tâche>.svg`.
+
+L’objet reste dans le bucket Garage privé. L’API fournit une URL signée valable 15 minutes ; rouvrir la tâche renouvelle l’accès. Son détenteur peut accéder au fichier temporairement : ce n’est pas une URL publique permanente. **Générer une autre image** crée une nouvelle tâche payante et consomme cinq crédits supplémentaires.
+
+## Dépanner le parcours local
+
+| Symptôme | Étape suivante |
+| --- | --- |
+| Setup ou doctor échoue | Gardez Docker actif et examinez le contrôle nommé : port, base, Redis, migration ou stockage. Corrigez-le avant de relancer. |
+| Connexion refusée | Utilisez le mot de passe initial du compte démo. Le seed ne le change pas et ne nécessite pas de boîte email réelle. |
+| Page image en 404 | Lancez `pnpm starter core demo`, puis actualisez. La page, l’API et le service simulés sont toujours désactivés en production. |
+| Tâche en attente | Gardez le terminal démo ouvert et consultez `[worker]`. `pnpm dev` seul ne démarre que web. |
+| Reprises ou image absente | Lancez `pnpm starter core doctor`, consultez les erreurs worker/stockage, rétablissez la dépendance et actualisez la tâche existante. |
+| URL d’image expirée | Rechargez la page de la tâche pour obtenir une nouvelle URL signée. |
+| Solde différent de l’exemple | Comparez le débit unique au solde relevé. Les bonus et autres tâches ont leurs propres écritures. |
+| Limite de crédits ou de quota | Vérifiez l’espace, son registre et son usage. Free autorise cet exemple, avec dix tâches mensuelles par défaut ; le seed ne réinitialise ni quota ni solde. |
+
+## La chaîne récupérable
 
 1. L’API vérifie l’origine, la limitation des requêtes et l’authentification ; le service résout les rejeux avant de vérifier les droits d’une nouvelle opération.
 2. `(user_uuid, type, idempotency_key)` identifie la tâche ; une empreinte refuse un autre prompt avec la même clé.
@@ -37,7 +62,7 @@ queued → running → succeeded
 
 Le fournisseur a cinq essais et le job huit, réservant trois essais à la compensation. L’échec terminal passe en `refunding`, écrit un remboursement déterministe, puis seulement en `failed`. Le rejeu ne double ni fournisseur ni remboursement.
 
-Utilisez `IMAGE_GENERATION_MOCK_FAILURES=5` pour tester l’échec. La base réelle prouve une dépense et un remboursement ; Playwright prouve rejeu, variation exacte de cinq crédits, worker, Garage et téléchargement signé.
+Pour un exercice de reprise/remboursement, arrêtez la démo et lancez `pnpm starter core dev` avec les deux flags de démo activés et `IMAGE_GENERATION_MOCK_FAILURES=5` dans l’environnement web et worker. `pnpm starter core demo` force toujours zéro échec. Les cinq essais sont espacés par le délai de reprise de la file ; le remboursement n’est pas immédiat. La base réelle prouve une dépense et un remboursement ; Playwright prouve rejeu, variation exacte de cinq crédits, worker, Garage et téléchargement signé.
 
 Implémentez le fournisseur réel dans `src/services/ai/image.ts` en conservant la clé idempotente, AbortSignal et les contrats de tâche, crédit, job, stockage et erreur. Les identifiants et types du SDK restent dans l’adaptateur.
 

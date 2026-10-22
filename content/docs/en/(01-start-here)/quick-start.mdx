@@ -9,9 +9,9 @@ publishedAt: "2025-09-29T00:00:00.000Z"
 updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Verified against starter commit [`35e64b9`](https://github.com/PansaLegrand/sushi-saas-template/tree/35e64b91f4bb62dffea2ab928316eebc3d346cc9).
+> Verified against starter commit [`e632762`](https://github.com/PansaLegrand/sushi-saas-template/tree/e63276252e4b64566229cb87225afc72da6991de).
 
-Start with **Core**: the customer app, durable worker, PostgreSQL, Redis, and private local object storage. Your first milestone is signing into a demo workspace and seeing its credit ledger. No Stripe, email, or AI provider account is needed for this local walkthrough.
+Start with **Core**: the customer app, durable worker, PostgreSQL, Redis, and private local object storage. Your first milestone is a complete local workflow: sign in, inspect the demo credit grant, run one mock image job, and see its private result and ledger entry. No Stripe, email, or AI provider account is needed for this local walkthrough.
 
 ## Choose your starting point
 
@@ -37,30 +37,58 @@ Run these commands in a terminal. The branch starts from the reviewed source rev
 ```bash
 git clone https://github.com/PansaLegrand/sushi-saas-template.git
 cd sushi-saas-template
-git switch -c my-saas 35e64b91f4bb62dffea2ab928316eebc3d346cc9
+git switch -c my-saas e63276252e4b64566229cb87225afc72da6991de
 export SAAS_STARTER_PROFILE=core
 pnpm starter core install
 pnpm starter core setup
-pnpm dev:seed
 pnpm starter core doctor
-pnpm starter core dev
+pnpm starter core demo
 ```
+
+`demo` runs the read-only doctor first, seeds the local account only after it passes, and then starts Core with mock images enabled, simulated provider failures set to zero, and the local captcha disabled. Email, Slack, and Stripe are disabled for these processes; environment files stay unchanged. No commercial AI provider is contacted. Use bash/zsh or WSL for the shell commands. Ordinary `pnpm starter core dev` remains the normal development workflow; it does not enable this demo mode.
 
 Keep the terminal running. Open [localhost:3000/login](http://localhost:3000/login).
 
 Setup writes missing ignored environment files, starts PostgreSQL, Redis, and Garage, creates the local app/test and restore-drill databases, applies Drizzle migrations, and provisions the private `sushi-dev` bucket. Core skips Content Studio installation, environment files, database creation, and migrations. Setup is safe to rerun and never overwrites an existing environment file.
 
-`doctor` is read-only: it checks tools, environment boundaries, infrastructure, migrations, storage, and ports without printing secret values. The dev runner checks doctor again, starts web and worker together, and stops both on `Ctrl-C`.
+Setup checks for a working Docker daemon, Docker Compose, and ownership of ports 5432/6379 before writing environment files. Missing tools, stopped Docker, or a conflicting service stop setup with an error; resolve the reported prerequisite before retrying.
+
+`doctor` is read-only: it checks tools, environment boundaries, infrastructure, migrations, storage, and ports without printing secret values. Demo runs doctor before seeding, then starts web and worker without a redundant second doctor run. `Ctrl-C` stops both processes.
 
 Keep `SAAS_STARTER_PROFILE=core` exported in each shell used for ordinary `pnpm lint` or commits, so checks use the same selection after the filtered install. These `export` commands use a POSIX shell; in PowerShell use `$env:SAAS_STARTER_PROFILE="core"`.
 
 ## 3. Reach your first working screen
 
-1. Sign in with `demo@example.test` and `DemoPass123!`, or the password set through `DEV_SEED_PASSWORD` before seeding.
-2. Open **Account → Credits**. On a fresh setup, the demo workspace has **1,000 credits** and a corresponding ledger entry.
+1. For a new account, sign in with `demo@example.test` and `DemoPass123!`, or the `DEV_SEED_PASSWORD` used when it was created. An existing account keeps its original password; demo output reports it as unchanged.
+2. Open **Account → Credits**. Find the **one-time 1,000-credit demo grant** in the ledger. The worker can also deliver the separate **10-credit signup grant**, so a fresh balance can become 1,010. The demo grant is not a promise that the total always stays at 1,000.
 3. Open **Account → Profile & security** to explore account settings. Your workspace and session now use the real local application.
 
 These credentials are for local development only. The seed creates a verified reserved-domain account and repairs missing fixtures without issuing the same credit grant twice. It does not require delivery of an email. Existing demo activity can change the displayed balance.
+
+## 4. Complete your first image task
+
+1. Once startup credit grants have settled, refresh **Account → Credits** and note your balance. Keep the same workspace selected throughout this walkthrough.
+2. Open [the local image task](http://localhost:3000/tasks/image-generation). Keep the `org` query parameter that the app adds to its URL. Enter `My first Sushi SaaS image task` in **Prompt**, then select **Generate image** once.
+3. The task may briefly show **Queued for the worker…** and **Generating and storing the image…**. Wait for **Image ready**. The expected result is a blue/purple SVG labeled **Image generation mock** containing your prompt. It is a mock response, not an AI-generated illustration.
+4. Refresh the same task URL. It should recover the same task ID and image without another charge. **Generate another image** intentionally creates a new task and costs another five credits.
+5. Open **Account → Credits** in the same workspace. Find one **Image generation** debit of **−5**. With no other ledger activity, the balance is your recorded baseline minus five: 1,000 → 995, or 1,010 → 1,005 after the signup grant. In **Account → Files**, the result appears as `generated-<task ID>.svg`.
+
+The output is in the private local Garage bucket. The page displays it through a signed URL valid for 15 minutes; reopening the saved task URL obtains a new URL. A signed URL itself grants temporary access to its holder, so it is not a permanent public asset URL.
+
+**You have now exercised:** authentication → workspace authorization → one five-credit spend → durable worker → private output → recoverable task UI. Free includes this image example; no subscription or `--paid-examples` seed is needed.
+
+### If the first run stalls
+
+| What you see | What to check |
+| --- | --- |
+| Setup exits without creating local services | Use `pnpm starter core setup` or `pnpm run setup`. The unqualified `setup` name belongs to pnpm’s own CLI, so `run` is required when invoking the project script directly. |
+| Image page returns 404 | Restart with `pnpm starter core demo`. The normal dev command does not enable mock images, and the demo is deliberately unavailable in production. |
+| Task stays queued | Keep the Core dev terminal running and check its `[worker]` logs. Starting only `pnpm dev` does not start a worker. |
+| Sign-in fails | A new account uses `demo@example.test` / `DemoPass123!` unless `DEV_SEED_PASSWORD` was set. An existing account keeps its original password when reseeded. |
+| Balance is not exactly 995 | Compare the task’s single −5 entry; signup grants, earlier demos, and other workspace activity are separate ledger entries. |
+| Image or storage fails | Run `pnpm starter core doctor`, inspect the worker error, and follow [image workflow troubleshooting](/docs/image-generation-workflow). Refresh the existing task instead of submitting another one. |
+
+## Verify the local stack
 
 In another terminal, check the services:
 
@@ -78,7 +106,7 @@ pnpm starter core build
 
 The build retains the root test suite and bundles the worker runtime. For the full browser workflow, follow [Testing and CI Contracts](/docs/testing-and-ci); it covers real local storage and mock-provider jobs in disposable environments.
 
-## 4. Make it yours
+## 5. Make it yours
 
 Run `pnpm customize` to set your product identity, appearance, and locales. Then follow [Customize Your Product](/docs/customize-your-product) and [Architecture and Error Contracts](/docs/architecture-and-errors). Configure external services only when you reach the feature that needs them, starting with [Environment Configuration](/docs/environment-configuration).
 
@@ -106,7 +134,7 @@ pnpm starter publishing dev
 
 Publishing provisions the separate Payload database and migrations. Keep its authentication and database separate from the SaaS; see [Content Studio and Marketing](/docs/content-studio-and-marketing).
 
-All profiles support `doctor`, `lint`, `build`, and `--dry-run`. The unqualified `pnpm setup`, `pnpm dev:all`, and `pnpm build` commands retain the complete-stack defaults when no profile is selected. For the interactive full-stack customizer, use `./scripts/setup.sh development` in a shell without `SAAS_STARTER_PROFILE`.
+All profiles support `doctor`, `lint`, `build`, and `--dry-run`. The unqualified `pnpm run setup`, `pnpm dev:all`, and `pnpm build` commands retain the complete-stack defaults when no profile is selected. For the interactive full-stack customizer, use `./scripts/setup.sh development` in a shell without `SAAS_STARTER_PROFILE`.
 
 ## Reset local demo data deliberately
 

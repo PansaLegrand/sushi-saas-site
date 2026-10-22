@@ -9,15 +9,15 @@ publishedAt: "2025-09-29T00:00:00.000Z"
 updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> 已根据启动模板提交 [`35e64b9`](https://github.com/PansaLegrand/sushi-saas-template/tree/35e64b91f4bb62dffea2ab928316eebc3d346cc9) 验证。
+> 已根据启动模板提交 [`e632762`](https://github.com/PansaLegrand/sushi-saas-template/tree/e63276252e4b64566229cb87225afc72da6991de) 验证。
 
 完成本页后，你将知道各环境应连接哪个数据库、如何把 schema 修改变成可审查的 SQL，以及如何让数据库与应用独立发布。
 
-模板明确选择 PostgreSQL 与 Drizzle，而不是同时维护多种数据库 adapter。本地可由 `pnpm setup` 在 Docker 中运行 PostgreSQL；生产可选择任意兼容的托管或自建 PostgreSQL，并设置 `DATABASE_URL`。`src/db/schema.ts` 是 schema 的唯一事实来源，`src/db/migrations/` 中已提交的 SQL 是可部署历史。只有 `src/models/**` 可以调用 `db()`。
+模板明确选择 PostgreSQL 与 Drizzle，而不是同时维护多种数据库 adapter。本地可由 `pnpm run setup` 在 Docker 中运行 PostgreSQL；生产可选择任意兼容的托管或自建 PostgreSQL，并设置 `DATABASE_URL`。`src/db/schema.ts` 是 schema 的唯一事实来源，`src/db/migrations/` 中已提交的 SQL 是可部署历史。只有 `src/models/**` 可以调用 `db()`。
 
 ## 本地流程
 
-`pnpm setup` 会创建独立的开发库和测试库。测试数据库名必须包含 `test`，否则安全保护会拒绝清空数据。
+`pnpm run setup` 会创建独立的开发库和测试库。测试数据库名必须包含 `test`，否则安全保护会拒绝清空数据。
 
 修改 schema 后运行：
 

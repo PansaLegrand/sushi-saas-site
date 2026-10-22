@@ -9,17 +9,42 @@ publishedAt: "2026-08-24T00:00:00.000Z"
 updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> コミット [`35e64b9`](https://github.com/PansaLegrand/sushi-saas-template/tree/35e64b91f4bb62dffea2ab928316eebc3d346cc9) で確認済みです。
+> コミット [`e632762`](https://github.com/PansaLegrand/sushi-saas-template/tree/e63276252e4b64566229cb87225afc72da6991de) で確認済みです。
 
 画像生成は production-shaped な有料 workflow の最小例です。ローカル provider は商用 model を呼ばず SVG を作ります。価値は周囲の chain にあり、受理された 1 request は組織共有の 5 credit を消費します。
 
-```dotenv
-ENABLE_DEMO_FEATURES=true
-ENABLE_IMAGE_GENERATION_MOCK=true
-IMAGE_GENERATION_MOCK_FAILURES=0
+## 画像タスクを一度完了する
+
+まず[クイックスタート](/ja/docs/quick-start)でローカルの Core 設定を完了します。別の開発プロセスが起動中なら `Ctrl-C` で停止し、次を実行します。
+
+```bash
+pnpm starter core demo
 ```
 
-`pnpm dev:all` を実行し、demo account で login して `/ja/tasks/image-generation` を開きます。UI は 1 idempotency key を保持して tenant-scoped task を poll します。
+最初に doctor を確認し、成功した場合のみデモアカウントを準備して、`ENABLE_DEMO_FEATURES=true`、`ENABLE_IMAGE_GENERATION_MOCK=true`、`IMAGE_GENERATION_MOCK_FAILURES=0` で web と worker を起動します。このプロセスではローカル captcha、メール、Slack、Stripe を無効にし、環境ファイルは変更しません。ローカルの模擬アダプターなので、AI プロバイダーのアカウントや有料契約は不要です。
+
+1. [localhost:3000/ja/login](http://localhost:3000/ja/login) で `demo@example.test` / `DemoPass123!`、または既存デモアカウントのパスワードを使います。`DEV_SEED_PASSWORD` はアカウント作成時だけ反映され、再 seed では変更されません。
+2. デモワークスペースの **アカウント → クレジット**を開きます。**1,000 デモクレジット**の付与と、別の**登録ボーナス 10 クレジット**が表示される場合があります。初期付与が終わってから残高を控えます。Seed の再実行は 1,000 の再付与や消費のリセットを行いません。
+3. [画像ページ](http://localhost:3000/ja/tasks/image-generation)を開き、`org` パラメーターを保持します。`初めての Sushi SaaS 画像タスク` と入力し、**画像を生成**を一度押します。
+4. **画像の準備ができました**まで待ちます。待機・実行中の表示は短い場合があります。青紫の SVG に **Image generation mock** とプロンプトが表示されます。AI が描いたイラストではなく模擬応答です。
+5. 同じ URL を再読み込みし、同じタスク ID と結果が追加課金なしで戻ることを確認します。**アカウント → クレジット**に **画像生成 −5** が一つ記録され、他の操作がなければ残高は 5 減ります。**アカウント → ファイル**には `generated-<タスク ID>.svg` が表示されます。
+
+オブジェクトは非公開 Garage bucket に保存されます。API が返す署名 URL は 15 分間有効で、タスクを開き直すと更新されます。URL の所持者は一時的にアクセスできるため、恒久的な公開 URL ではありません。**別の画像を生成**は新しいタスクを開始し、さらに 5 クレジット消費します。
+
+## ローカル手順のトラブルシューティング
+
+| 状況 | 次に確認すること |
+| --- | --- |
+| Setup や doctor が失敗 | Docker を起動したまま、指摘されたポート、DB、Redis、マイグレーション、ストレージを修正してから再起動します。 |
+| ログイン失敗 | デモアカウントの元のパスワードを使います。再 seed で変更されず、実際の受信箱も不要です。 |
+| 画像ページが 404 | `pnpm starter core demo` で起動して再読み込みします。模擬ページ・API・サービスは本番では無効です。 |
+| タスクが待機したまま | デモ用ターミナルを開いたまま `[worker]` を確認します。`pnpm dev` は web だけ起動します。 |
+| 再試行や画像の欠落 | `pnpm starter core doctor` と worker/ストレージのエラーを確認し、依存先を復旧して既存タスクを再読み込みします。 |
+| 署名 URL の期限切れ | タスクページを再読み込みして新しい署名 URL を取得します。 |
+| 残高が例と異なる | タスクの一つの消費記録と元の残高を比較します。ボーナスや他のタスクは別記録です。 |
+| クレジットや月間上限に到達 | ワークスペース、台帳、使用量を確認します。Free の既定上限は月 10 タスクで、seed は上限や残高をリセットしません。 |
+
+## 復旧可能な処理の流れ
 
 1. API は同一オリジン、レート制限、認証を確認します。サービスは再送を解決してから、新規操作の利用権限を確認します。
 2. `(user_uuid, type, idempotency_key)` が task を識別し、fingerprint が別 prompt での key 再利用を拒否します。
@@ -37,7 +62,7 @@ queued → running → succeeded
 
 Provider は 5 回、job は 8 回試行し、残り 3 回を compensation 用に確保します。Terminal failure は `refunding` に入り、deterministic refund を追加してから `failed` になります。Replay は provider も refund も重複しません。
 
-`IMAGE_GENERATION_MOCK_FAILURES=5` で failure path を確認できます。実 DB test は 1 spend/1 refund、Playwright は replay、正確な 5-credit 差、worker、Garage、signed download を証明します。
+再試行と返却を試す場合はデモを止め、web と worker で二つのデモフラグを有効にして `IMAGE_GENERATION_MOCK_FAILURES=5` を設定し、通常の `pnpm starter core dev` を起動します。`pnpm starter core demo` は失敗回数をゼロに固定します。5 回の試行にはキューの待機時間があるため、すぐには返却されません。実 DB test は 1 spend/1 refund、Playwright は replay、正確な 5-credit 差、worker、Garage、signed download を証明します。
 
 実際の生成サービスは `src/services/ai/image.ts` に実装し、冪等キー、AbortSignal、タスク、クレジット、ジョブ、ストレージ、エラーの契約を保ちます。認証情報と SDK 型はアダプター内に置きます。
 

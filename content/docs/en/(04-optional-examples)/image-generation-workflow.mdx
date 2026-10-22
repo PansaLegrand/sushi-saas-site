@@ -9,21 +9,40 @@ publishedAt: "2026-08-24T00:00:00.000Z"
 updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Verified against starter commit [`35e64b9`](https://github.com/PansaLegrand/sushi-saas-template/tree/35e64b91f4bb62dffea2ab928316eebc3d346cc9).
+> Verified against starter commit [`e632762`](https://github.com/PansaLegrand/sushi-saas-template/tree/e63276252e4b64566229cb87225afc72da6991de).
 
 Image generation is the starter's minimal reference for a production-shaped paid workflow. The local provider returns a generated SVG rather than calling a commercial model; the important part is the chain around it. One accepted request costs exactly five pooled organization credits.
 
-## Run it locally
+## Run one successful image task
 
-Enable the development-only provider:
+First complete [Quick Start](/docs/quick-start) through the local Core setup. If another dev runner is open, stop it with `Ctrl-C`, then run:
 
-```dotenv
-ENABLE_DEMO_FEATURES=true
-ENABLE_IMAGE_GENERATION_MOCK=true
-IMAGE_GENERATION_MOCK_FAILURES=0
+```bash
+pnpm starter core demo
 ```
 
-Start `pnpm dev:all`, sign in with the seeded demo account, and open `/tasks/image-generation`. The UI submits one idempotency key and polls the tenant-scoped task endpoint until the worker reaches a terminal state.
+This runs doctor first, seeds only after a successful preflight, and starts web plus the durable worker with `ENABLE_DEMO_FEATURES=true`, `ENABLE_IMAGE_GENERATION_MOCK=true`, and `IMAGE_GENERATION_MOCK_FAILURES=0`. It disables the local captcha and outgoing email, Slack, and Stripe for those processes. It leaves environment files unchanged, uses the local mock adapter, and does not require an AI provider account or paid subscription.
+
+1. Sign in at [localhost:3000/login](http://localhost:3000/login) with `demo@example.test` / `DemoPass123!`, or the existing fixture password. A custom `DEV_SEED_PASSWORD` applies when the account is first created; reseeding does not rotate it.
+2. Open **Account → Credits** in the seeded workspace. Expect one **1,000-credit demo grant**, potentially plus the separate **10-credit signup grant**. Wait for startup grants to settle and record the current balance; repeat seeding does not grant another 1,000 or reset prior spending.
+3. Open [the image page](http://localhost:3000/tasks/image-generation), keep its `org` parameter, enter `My first Sushi SaaS image task`, and select **Generate image** once.
+4. Wait for **Image ready**. You may briefly see queued/running states. The SVG contains the label **Image generation mock** and your prompt on a blue/purple background. It is a mock response, not an AI-generated illustration.
+5. Refresh the same task URL. Confirm the same task ID and result return without another charge. In **Account → Credits**, find one **Image generation −5** entry; with no unrelated activity, the balance is the recorded baseline minus five. **Account → Files** contains `generated-<task ID>.svg`.
+
+The object remains in the private Garage bucket. The task API supplies a signed URL valid for 15 minutes; reopening the saved task page renews access. Anyone holding that signed URL has temporary access, so do not treat it as a permanent public asset URL. **Generate another image** deliberately starts a new paid task and spends another five credits.
+
+## Troubleshoot the local walkthrough
+
+| Symptom | Next step |
+| --- | --- |
+| Setup or doctor fails | Keep Docker running; inspect the named port, database, Redis, migration, or storage check. Fix that check before restarting the demo. |
+| Login fails | Use the seeded account’s original password. Repeating seed does not rotate an existing password; it never requires a real inbox. |
+| Image page returns 404 | Use `pnpm starter core demo`, then reload. Production always disables this mock page/API/service. |
+| Task stays queued | Keep the demo terminal open and inspect `[worker]` logs. `pnpm dev` alone starts only web. |
+| Task retries or image is missing | Run `pnpm starter core doctor` and inspect worker/storage errors. Restore the dependency and refresh the existing task URL instead of submitting a replacement. |
+| Signed image URL expires | Reload the saved task page to obtain a new signed URL. |
+| Balance differs from an example total | Compare the single task debit with its baseline. Signup bonuses and other tasks have separate ledger entries. |
+| Credit or monthly quota limit appears | Keep the seeded workspace selected and inspect its ledger/usage. Free allows this example, with the default ten-task monthly limit; reseeding is not a quota or balance reset. |
 
 ## The recoverable chain
 
@@ -45,7 +64,7 @@ queued → running → succeeded
 
 Provider attempts stop after five; the job has eight attempts, leaving three attempts for compensation if the database is temporarily unavailable. A terminal provider failure moves the task to `refunding`, appends the deterministic ledger refund, and only then records `failed`. Replaying a refunding or terminal task never runs the provider or refund twice.
 
-Set `IMAGE_GENERATION_MOCK_FAILURES=5` to exercise the retry and compensation path. The real-database suite proves one spend and one refund after five failures; Playwright proves request replay, exact five-credit balance change, worker execution, Garage storage, and signed download.
+For a deliberate retry/refund drill, stop demo mode and run ordinary `pnpm starter core dev` with both demo flags enabled and `IMAGE_GENERATION_MOCK_FAILURES=5` in the web and worker environment. `pnpm starter core demo` always forces zero provider failures, so it is not the failure-test command. Five failed provider attempts are separated by queue backoff; do not expect an immediate refund. The real-database suite proves one spend and one refund after five failures; Playwright proves request replay, exact five-credit balance change, worker execution, Garage storage, and signed download.
 
 ## Adapt the example for production
 

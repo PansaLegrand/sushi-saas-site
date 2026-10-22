@@ -9,15 +9,15 @@ publishedAt: "2025-09-29T00:00:00.000Z"
 updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> スターターのコミット [`35e64b9`](https://github.com/PansaLegrand/sushi-saas-template/tree/35e64b91f4bb62dffea2ab928316eebc3d346cc9) で検証済みです。
+> スターターのコミット [`e632762`](https://github.com/PansaLegrand/sushi-saas-template/tree/e63276252e4b64566229cb87225afc72da6991de) で検証済みです。
 
 このページを終えると、各環境で使う DB、スキーマ変更をレビュー可能な SQL にする方法、アプリのリリースとは分けて適用する方法が分かります。
 
-スターターは複数の DB アダプターを用意せず、PostgreSQL と Drizzle を採用しています。ローカルでは `pnpm setup` で Docker 上の PostgreSQL を使えます。本番では、互換性のあるマネージド PostgreSQL または自社運用の PostgreSQL を選び、`DATABASE_URL` を設定します。`src/db/schema.ts` がスキーマの正本で、`src/db/migrations/` にコミットされた SQL がデプロイ履歴です。`db()` を呼べるのは `src/models/**` だけです。
+スターターは複数の DB アダプターを用意せず、PostgreSQL と Drizzle を採用しています。ローカルでは `pnpm run setup` で Docker 上の PostgreSQL を使えます。本番では、互換性のあるマネージド PostgreSQL または自社運用の PostgreSQL を選び、`DATABASE_URL` を設定します。`src/db/schema.ts` がスキーマの正本で、`src/db/migrations/` にコミットされた SQL がデプロイ履歴です。`db()` を呼べるのは `src/models/**` だけです。
 
 ## ローカル手順
 
-`pnpm setup` は開発用とテスト用の DB を分けて作ります。テスト DB の名前には `test` が必要で、安全機構はそれ以外の DB の全行削除を拒否します。
+`pnpm run setup` は開発用とテスト用の DB を分けて作ります。テスト DB の名前には `test` が必要で、安全機構はそれ以外の DB の全行削除を拒否します。
 
 スキーマ変更後：
 

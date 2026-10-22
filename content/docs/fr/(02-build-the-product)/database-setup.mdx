@@ -9,15 +9,15 @@ publishedAt: "2025-09-29T00:00:00.000Z"
 updatedAt: "2026-10-05T00:00:00.000Z"
 ---
 
-> Vérifié avec le commit [`35e64b9`](https://github.com/PansaLegrand/sushi-saas-template/tree/35e64b91f4bb62dffea2ab928316eebc3d346cc9) du starter.
+> Vérifié avec le commit [`e632762`](https://github.com/PansaLegrand/sushi-saas-template/tree/e63276252e4b64566229cb87225afc72da6991de) du starter.
 
 À la fin, vous saurez quelle base utiliser dans chaque environnement, transformer une modification du schéma en SQL révisable et l’appliquer séparément de la version applicative.
 
-Le starter choisit délibérément PostgreSQL avec Drizzle plutôt que plusieurs adaptateurs. En local, `pnpm setup` peut lancer PostgreSQL dans Docker ; en production, choisissez un PostgreSQL compatible, managé ou auto-hébergé, puis définissez `DATABASE_URL`. `src/db/schema.ts` est la source du schéma et les SQL versionnés de `src/db/migrations/` son historique déployable. Seul `src/models/**` peut appeler `db()`.
+Le starter choisit délibérément PostgreSQL avec Drizzle plutôt que plusieurs adaptateurs. En local, `pnpm run setup` peut lancer PostgreSQL dans Docker ; en production, choisissez un PostgreSQL compatible, managé ou auto-hébergé, puis définissez `DATABASE_URL`. `src/db/schema.ts` est la source du schéma et les SQL versionnés de `src/db/migrations/` son historique déployable. Seul `src/models/**` peut appeler `db()`.
 
 ## Flux local
 
-`pnpm setup` crée des bases de développement et de test séparées. Le nom de test doit contenir `test` ; le garde-fou refuse de vider toute autre base.
+`pnpm run setup` crée des bases de développement et de test séparées. Le nom de test doit contenir `test` ; le garde-fou refuse de vider toute autre base.
 
 Après un changement de schéma :
 

@@ -7,7 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { trackAdoptionEvent } from "@/lib/analytics/client";
 
 const profiles = ["core", "operations", "publishing"] as const;
-export function StarterProfiles() {
+export function StarterProfiles({ starterCommit }: { starterCommit: string }) {
   const t = useTranslations("marketing.profiles");
   const items = t.raw("items") as { name: string; subtitle: string; body: string; features: string[] }[];
   const [selected, setSelected] = useState(0);
@@ -17,11 +17,12 @@ export function StarterProfiles() {
   const command = [
     "git clone https://github.com/PansaLegrand/sushi-saas-template.git",
     "cd sushi-saas-template",
+    "git switch -c my-saas " + starterCommit,
     "export SAAS_STARTER_PROFILE=" + profile,
     "pnpm starter " + profile + " install",
     "pnpm starter " + profile + " setup",
-    "pnpm dev:seed",
-    "pnpm starter " + profile + " dev"
+    "pnpm starter " + profile + " doctor",
+    "pnpm starter " + profile + " demo"
   ].join("\n");
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   async function copy() {

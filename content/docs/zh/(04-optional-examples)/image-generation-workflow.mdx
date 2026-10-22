@@ -9,17 +9,40 @@ publishedAt: "2026-08-24T00:00:00.000Z"
 updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> 已根据 starter 提交 [`35e64b9`](https://github.com/PansaLegrand/sushi-saas-template/tree/35e64b91f4bb62dffea2ab928316eebc3d346cc9) 验证。
+> 已根据 starter 提交 [`e632762`](https://github.com/PansaLegrand/sushi-saas-template/tree/e63276252e4b64566229cb87225afc72da6991de) 验证。
 
 图像生成是 starter 中最小但完整的生产级付费工作流示例。本地提供器生成 SVG，不调用商业模型；关键价值是它周围的链路。每个被接受的请求固定消耗组织共享的五积分。
 
-```dotenv
-ENABLE_DEMO_FEATURES=true
-ENABLE_IMAGE_GENERATION_MOCK=true
-IMAGE_GENERATION_MOCK_FAILURES=0
+## 完成一次图片任务
+
+先按[快速开始](/zh/docs/quick-start)完成本地 Core 设置。若有其他开发启动器正在运行，先按 `Ctrl-C` 停止，再执行：
+
+```bash
+pnpm starter core demo
 ```
 
-运行 `pnpm dev:all`，使用演示账户登录并打开 `/zh/tasks/image-generation`。UI 使用一个幂等键提交，并轮询组织范围内的任务状态。
+该命令先检查 doctor，仅在检查通过后创建演示账号，再启动 web 与 worker，并设置 `ENABLE_DEMO_FEATURES=true`、`ENABLE_IMAGE_GENERATION_MOCK=true`、`IMAGE_GENERATION_MOCK_FAILURES=0`。它禁用这些进程的本地验证码、邮件、Slack 和 Stripe，不修改环境文件。使用的是本地模拟适配器，无需 AI 供应商账号或付费订阅。
+
+1. 打开 [localhost:3000/zh/login](http://localhost:3000/zh/login)，使用 `demo@example.test` / `DemoPass123!` 或已有演示账号密码登录。自定义 `DEV_SEED_PASSWORD` 仅在创建账号时生效，重复 seed 不会修改密码。
+2. 在演示工作区打开 **账户 → 积分**。应看到一笔 **1,000 演示积分**，以及可能单独到账的 **10 积分注册奖励**。等启动时的发放完成后记下余额。重复 seed 不会再次发放 1,000 积分，也不会撤销已有消耗。
+3. 打开[图片页面](http://localhost:3000/zh/tasks/image-generation)，保留 `org` 参数，输入 `我的第一个 Sushi SaaS 图片任务`，点击一次**生成图像**。
+4. 等待**图像已就绪**，过程中可能短暂显示排队或运行状态。SVG 的蓝紫色背景上会显示 **Image generation mock** 和你的提示词。这是模拟响应，不是 AI 绘制的插画。
+5. 刷新同一个 URL，应恢复相同任务 ID 和结果，不再扣费。在 **账户 → 积分**找到一条**图像生成 −5**记录；没有其他活动时，总余额比之前少五。**账户 → 文件**中会有 `generated-<任务 ID>.svg`。
+
+对象仍保存在私有 Garage bucket。任务 API 返回有效期 15 分钟的签名 URL，重新打开任务会更新链接。持有链接即可临时访问，因此它不是永久公开 URL。**再生成一张图片**会创建新任务并再扣五积分。
+
+## 本地流程故障排查
+
+| 现象 | 下一步 |
+| --- | --- |
+| Setup 或 doctor 失败 | 保持 Docker 运行，检查具体失败项：端口、数据库、Redis、迁移或存储。解决后再重启演示。 |
+| 无法登录 | 使用演示账号原密码。重复 seed 不修改密码，也不需要真实邮箱。 |
+| 图片页面 404 | 执行 `pnpm starter core demo` 后刷新。模拟页面、API 和服务在生产环境始终禁用。 |
+| 任务一直排队 | 保持演示终端运行，查看 `[worker]`。`pnpm dev` 只启动 web。 |
+| 重试或缺少图片 | 运行 `pnpm starter core doctor`，查看 worker/存储错误，恢复依赖后刷新已有任务。 |
+| 图片签名链接过期 | 重新加载任务页面以获取新的签名 URL。 |
+| 余额与示例不一致 | 将唯一的任务扣除记录与原余额比较，奖励和其他任务分别记账。 |
+| 积分或月度配额不足 | 检查所选工作区、账本和用量。默认 Free 每月允许十个任务；seed 不会重置配额或余额。 |
 
 ## 可恢复链路
 
@@ -39,7 +62,7 @@ queued → running → succeeded
 
 提供器最多尝试五次，任务共允许八次，剩余三次专门用于在数据库故障后完成补偿。最终失败先进入 `refunding`、追加确定性的账本退款，再标记 `failed`。重放不会重复运行提供器或退款。
 
-设置 `IMAGE_GENERATION_MOCK_FAILURES=5` 可测试重试与补偿。真实数据库测试证明只有一次消耗和一次退款；Playwright 证明请求重放、精确五积分变化、Worker、Garage 存储和签名下载。
+要专门测试重试与退款，请停止演示模式，在 web 和 worker 环境中开启两个演示标志、设置 `IMAGE_GENERATION_MOCK_FAILURES=5`，再用普通 `pnpm starter core dev` 启动。`pnpm starter core demo` 始终强制零失败，不适合故障演练。五次尝试之间有队列退避时间，不会立即退款。真实数据库测试证明只有一次消耗和一次退款；Playwright 证明请求重放、精确五积分变化、Worker、Garage 存储和签名下载。
 
 在 `src/services/ai/image.ts` 实现真实提供器，保留传入的幂等键、AbortSignal，以及任务、积分、Worker、存储和错误契约。提供器凭据与 SDK 类型仍留在适配器内。
 

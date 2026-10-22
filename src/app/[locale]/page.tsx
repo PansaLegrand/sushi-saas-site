@@ -106,7 +106,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
         </div>
       </section>
 
-      <StarterProfiles />
+      <StarterProfiles starterCommit={sourceReview.commit} />
 
       <section className="section workflow-section">
         <div className="shell">

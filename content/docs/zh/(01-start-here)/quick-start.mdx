@@ -9,9 +9,9 @@ publishedAt: "2025-09-29T00:00:00.000Z"
 updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> 已根据 starter 提交 [`35e64b9`](https://github.com/PansaLegrand/sushi-saas-template/tree/35e64b91f4bb62dffea2ab928316eebc3d346cc9) 验证。
+> 已根据 starter 提交 [`e632762`](https://github.com/PansaLegrand/sushi-saas-template/tree/e63276252e4b64566229cb87225afc72da6991de) 验证。
 
-先从 **Core** 开始：客户端应用、持久化 worker、PostgreSQL、Redis 和私有本地对象存储。第一个目标是登录演示工作区，查看积分账本。这个本地体验不需要 Stripe、邮件或 AI 供应商账号。
+先从 **Core** 开始：客户端应用、持久化 worker、PostgreSQL、Redis 和私有本地对象存储。第一个目标是走通完整本地流程：登录、查看演示积分发放、运行一个模拟图片任务，再检查私有结果和账本记录。这个本地体验不需要 Stripe、邮件或 AI 供应商账号。
 
 ## 选择起点
 
@@ -37,30 +37,58 @@ updatedAt: "2026-10-22T00:00:00.000Z"
 ```bash
 git clone https://github.com/PansaLegrand/sushi-saas-template.git
 cd sushi-saas-template
-git switch -c my-saas 35e64b91f4bb62dffea2ab928316eebc3d346cc9
+git switch -c my-saas e63276252e4b64566229cb87225afc72da6991de
 export SAAS_STARTER_PROFILE=core
 pnpm starter core install
 pnpm starter core setup
-pnpm dev:seed
 pnpm starter core doctor
-pnpm starter core dev
+pnpm starter core demo
 ```
 
-保持终端运行，打开 [localhost:3000/login](http://localhost:3000/login)。
+`demo` 先执行只读 doctor 检查，通过后才创建演示账号，再启动 Core：开启模拟图片、将模拟供应商失败次数设为零，并禁用本地验证码。这些进程中的邮件、Slack 和 Stripe 会禁用，环境文件保持不变，也不会调用商业 AI 供应商。命令使用 bash/zsh 或 WSL。普通的 `pnpm starter core dev` 仍用于正常开发，不会自动启用此演示模式。
+
+保持终端运行，打开 [localhost:3000/zh/login](http://localhost:3000/zh/login)。
 
 Setup 会创建缺失且已被 Git 忽略的环境文件，启动 PostgreSQL、Redis 和 Garage，创建本地应用、测试及恢复演练数据库，应用 Drizzle 迁移，并配置私有 `sushi-dev` bucket。Core 跳过 Content Studio 的安装、环境文件、数据库创建和迁移。可以重复执行 setup，它不会覆盖已有环境文件。
 
-`doctor` 只读检查工具、环境边界、基础设施、迁移、存储和端口，不输出秘密值。开发启动器再次执行 doctor，同时启动 web 和 worker，并在按 `Ctrl-C` 时停止两者。
+Setup 会先检查 Docker 是否运行、Docker Compose 是否可用，以及 5432/6379 端口上的服务是否属于当前项目，再写入环境文件。工具缺失、Docker 停止或端口被其他服务占用时会报错退出；请解决提示的前置条件后重试。
+
+`doctor` 只读检查工具、环境边界、基础设施、迁移、存储和端口，不输出秘密值。Demo 在 seed 前运行 doctor，然后启动 web 和 worker，不再重复执行同一检查。按 `Ctrl-C` 会停止两个进程。
 
 筛选安装后，在每个用于 `pnpm lint` 或提交的终端中导出 `SAAS_STARTER_PROFILE=core`，让检查采用相同配置。这里的 `export` 适用于 POSIX shell；PowerShell 使用 `$env:SAAS_STARTER_PROFILE="core"`。
 
 ## 3. 看到第一个可用页面
 
-1. 使用 `demo@example.test` 和 `DemoPass123!` 登录，或使用 seed 前通过 `DEV_SEED_PASSWORD` 设置的密码。
-2. 打开 **账户 → 积分**。全新安装的演示工作区拥有 **1,000 积分**及对应账本记录。
+1. 新账号使用 `demo@example.test` 和 `DemoPass123!`，或创建账号时使用的 `DEV_SEED_PASSWORD`。已有账号继续使用原密码，demo 输出会明确提示密码未变更。
+2. 打开 **账户 → 积分**。找到**一次性发放的 1,000 演示积分**。Worker 还可能处理独立的 **10 积分注册奖励**，因此新环境总余额可能变为 1,010。演示发放金额不代表总余额始终为 1,000。
 3. 打开 **账户 → 个人资料与安全**探索设置。此时工作区和会话已在真实的本地应用中运行。
 
 这些凭据仅用于本地开发。Seed 创建使用保留域名的已验证账号，并修复缺失的演示数据，不会重复发放同一笔积分，也不需要发送邮件。已有演示活动可能改变显示的余额。
+
+## 4. 完成第一个图片任务
+
+1. 启动时的积分发放处理完毕后，刷新 **账户 → 积分**并记下余额。整个流程保持在同一工作区。
+2. 打开[本地图片任务](http://localhost:3000/zh/tasks/image-generation)，保留应用自动添加的 `org` 参数。在**提示词**中输入 `我的第一个 Sushi SaaS 图片任务`，点击一次**生成图像**。
+3. 状态可能短暂显示**正在等待工作进程…**和**正在生成并存储图像…**。等待**图像已就绪**。预期结果是一张蓝紫色 SVG，带有 **Image generation mock** 字样和你的提示词。这是模拟响应，不是 AI 绘制的插画。
+4. 刷新同一个任务 URL，应恢复相同任务 ID 和图片，不产生第二笔扣费。**再生成一张图片**会主动创建新任务，再扣五积分。
+5. 回到同一工作区的 **账户 → 积分**，找到一条**图像生成**的 **−5** 扣除记录。没有其他账本活动时，余额等于原余额减五：1,000 → 995，或注册奖励到账后的 1,010 → 1,005。在 **账户 → 文件**中，结果文件名为 `generated-<任务 ID>.svg`。
+
+结果存放在本地私有 Garage bucket。页面使用有效期为 15 分钟的签名 URL 显示图片；重新打开保存的任务 URL 会获取新链接。持有签名 URL 的人可以临时访问文件，它不是永久公开资源地址。
+
+**你已验证：**登录 → 工作区授权 → 一次五积分扣除 → 持久化 worker → 私有结果 → 可恢复的任务界面。Free 套餐已包含此图片示例，无需订阅，也无需 `--paid-examples` seed。
+
+### 首次运行遇到问题
+
+| 现象 | 检查方法 |
+| --- | --- |
+| Setup 结束但没有创建本地服务 | 使用 `pnpm starter core setup` 或 `pnpm run setup`。`setup` 同时是 pnpm 自带命令，直接调用项目脚本时必须加 `run`。 |
+| 图片页面返回 404 | 使用 `pnpm starter core demo` 重启。普通 dev 命令不会开启模拟图片，此演示按设计不在生产环境开放。 |
+| 任务一直排队 | 保持 Core 开发终端运行，检查 `[worker]` 日志。单独执行 `pnpm dev` 不会启动 worker。 |
+| 登录失败 | 新账号默认使用 `demo@example.test` / `DemoPass123!`，除非设置过 `DEV_SEED_PASSWORD`。已有账号仍使用原密码，重复 seed 不会修改。 |
+| 余额不是恰好 995 | 检查该任务唯一的 −5 记录；注册奖励、以前的演示和其他工作区活动是独立账本记录。 |
+| 图片或存储出错 | 运行 `pnpm starter core doctor`，查看 worker 错误及[图片流程故障排查](/zh/docs/image-generation-workflow)。刷新已有任务，不要再提交一个新任务。 |
+
+## 验证本地服务
 
 在另一个终端中检查服务：
 
@@ -78,7 +106,7 @@ pnpm starter core build
 
 构建保留根目录测试套件，并打包 worker 运行时。完整浏览器流程见[测试与 CI](/zh/docs/testing-and-ci)，它在可丢弃环境中覆盖真实本地存储和模拟供应商任务。
 
-## 4. 开始定制
+## 5. 开始定制
 
 运行 `pnpm customize` 设置产品身份、外观和语言，然后阅读[定制产品](/zh/docs/customize-your-product)和[架构与错误契约](/zh/docs/architecture-and-errors)。等用到对应功能时再配置外部服务，参考[环境配置](/zh/docs/environment-configuration)。
 
@@ -106,7 +134,7 @@ pnpm starter publishing dev
 
 Publishing 创建独立的 Payload 数据库并应用迁移。它的身份验证和数据库必须与 SaaS 分离，详见 [Content Studio 与营销](/zh/docs/content-studio-and-marketing)。
 
-所有配置都支持 `doctor`、`lint`、`build` 和 `--dry-run`。未选择配置时，`pnpm setup`、`pnpm dev:all` 和 `pnpm build` 保留完整应用默认行为。需要交互式完整安装与定制时，在没有 `SAAS_STARTER_PROFILE` 的 shell 中执行 `./scripts/setup.sh development`。
+所有配置都支持 `doctor`、`lint`、`build` 和 `--dry-run`。未选择配置时，`pnpm run setup`、`pnpm dev:all` 和 `pnpm build` 保留完整应用默认行为。需要交互式完整安装与定制时，在没有 `SAAS_STARTER_PROFILE` 的 shell 中执行 `./scripts/setup.sh development`。
 
 ## 确认后再重置本地演示数据
 

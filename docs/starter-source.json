@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/PansaLegrand/sushi-saas-template",
-  "commit": "35e64b91f4bb62dffea2ab928316eebc3d346cc9",
+  "commit": "e63276252e4b64566229cb87225afc72da6991de",
   "reviewedAt": "2026-10-22",
-  "scope": "Prior contracts retained; account security/privacy, session MFA migration, file/ledger pagination, supported tooling profiles, production smoke, performance budgets, and domain/upgrade workflow reviewed across five locales. PostgreSQL TCP bootstrap readiness verified with a fresh disposable container. Single/multiple workspace browser fixtures and empty video-provider output handling verified."
+  "scope": "Prior contracts retained. Core setup command dispatch, fail-fast Docker and port preflight, guarded local demo startup, optional Studio database provisioning, and the fresh Core browser contract reviewed. Quick Start and image workflow now follow the first private mock result and exact ledger debit in all five locales."
 }
