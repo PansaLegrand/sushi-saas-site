@@ -9,7 +9,7 @@ publishedAt: "2025-09-29T00:00:00.000Z"
 updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Starter source: [`105bddd`](https://github.com/PansaLegrand/sushi-saas-template/tree/105bddd6fe396d1de44c1cf8e6cbce96f51ac85d).
+> Starter source: [`35e64b9`](https://github.com/PansaLegrand/sushi-saas-template/tree/35e64b91f4bb62dffea2ab928316eebc3d346cc9).
 
 视频和图像示例现在都采用持久化付费任务准入。它们仅供开发环境使用；克隆模板不会启用商业生成服务。
 
@@ -24,3 +24,5 @@ updatedAt: "2026-10-22T00:00:00.000Z"
 没有请求指纹的旧同步任务不会自动重提，必须先核实提供器结果再结算。先部署支持 `text_to_video` 的 Worker，再受理该类型的任务。真实适配器必须保持稳定的提供器身份、取消信号、组织隔离与补偿；不支持幂等的提供器必须先对账再重试。仅替换适配器不会开放生产功能，还需替换页面、路由与服务的演示开关并审查准入。
 
 **相关：** [图像工作流](/zh/docs/image-generation-workflow)、[积分账本](/zh/docs/account-ledger)、[套餐](/zh/docs/plans-and-entitlements)、[持久任务](/zh/docs/jobs-and-readiness)。
+
+`TEXT2VIDEO_MOCK_URL` 缺失、为空或仅有空白时使用 `/demo-video.mp4`。供应商返回空输出视为失败，不会记录为付费成功；重试耗尽后通过原账本交易补偿。

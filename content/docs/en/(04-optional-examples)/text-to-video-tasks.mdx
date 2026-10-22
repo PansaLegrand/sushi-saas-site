@@ -9,7 +9,7 @@ publishedAt: "2025-09-29T00:00:00.000Z"
 updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Starter source: [`105bddd`](https://github.com/PansaLegrand/sushi-saas-template/tree/105bddd6fe396d1de44c1cf8e6cbce96f51ac85d).
+> Starter source: [`35e64b9`](https://github.com/PansaLegrand/sushi-saas-template/tree/35e64b91f4bb62dffea2ab928316eebc3d346cc9).
 
 Both video and image examples use durable paid-task admission. They are development-only examples; cloning the starter does not enable a commercial generation provider.
 
@@ -24,3 +24,5 @@ Pricing remains in `src/config/tasks.ts`; entitlement decisions go through `src/
 Old synchronous tasks without a request fingerprint are not automatically resubmitted: reconcile their provider outcome before settling them. Deploy a worker that understands `text_to_video` before admitting that job type. Real adapters must preserve stable provider identities, cancellation, tenant scope, and compensation; a provider without idempotency needs outcome reconciliation before retry. Replacing the adapter alone does not enable production: replace the page, route, and service demo gates with reviewed production admission.
 
 **Related:** [Image workflow](/docs/image-generation-workflow), [Credit ledger](/docs/account-ledger), [Plans](/docs/plans-and-entitlements), and [Durable jobs](/docs/jobs-and-readiness).
+
+An absent, empty, or whitespace-only `TEXT2VIDEO_MOCK_URL` uses `/demo-video.mp4`. Empty provider output is a failure, never a successful paid result; retries eventually compensate through the original ledger transaction.

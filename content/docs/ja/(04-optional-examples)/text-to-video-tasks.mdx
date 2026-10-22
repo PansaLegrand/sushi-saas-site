@@ -9,7 +9,7 @@ publishedAt: "2025-09-29T00:00:00.000Z"
 updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Starter source: [`105bddd`](https://github.com/PansaLegrand/sushi-saas-template/tree/105bddd6fe396d1de44c1cf8e6cbce96f51ac85d).
+> Starter source: [`35e64b9`](https://github.com/PansaLegrand/sushi-saas-template/tree/35e64b91f4bb62dffea2ab928316eebc3d346cc9).
 
 動画と画像の例は、共通の永続化された有料タスク受付を使用します。開発環境専用であり、リポジトリを複製しても商用の生成サービスは有効になりません。
 
@@ -24,3 +24,5 @@ updatedAt: "2026-10-22T00:00:00.000Z"
 指紋のない旧同期タスクは自動再送せず、外部サービスの結果を先に確認します。`text_to_video` 対応ワーカーを先に配置してください。実アダプターでは識別子、取り消し、組織境界、補償を維持し、冪等性のない外部サービスでは再試行前に結果を照合します。本番での利用には、ページ、API、サービスのデモ用条件を審査済みの本番受付へ変更する必要もあります。
 
 **関連：** [画像](/ja/docs/image-generation-workflow)、[クレジット](/ja/docs/account-ledger)、[プラン](/ja/docs/plans-and-entitlements)、[ジョブ](/ja/docs/jobs-and-readiness)。
+
+`TEXT2VIDEO_MOCK_URL` が未設定、空、または空白だけの場合は `/demo-video.mp4` を使います。プロバイダーの空出力は成功した有料結果ではなく失敗として扱い、再試行上限後に元の台帳取引を使って補償します。

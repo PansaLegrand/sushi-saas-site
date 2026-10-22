@@ -9,7 +9,7 @@ publishedAt: "2025-09-29T00:00:00.000Z"
 updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Starter source: [`105bddd`](https://github.com/PansaLegrand/sushi-saas-template/tree/105bddd6fe396d1de44c1cf8e6cbce96f51ac85d).
+> Starter source: [`35e64b9`](https://github.com/PansaLegrand/sushi-saas-template/tree/35e64b91f4bb62dffea2ab928316eebc3d346cc9).
 
 Les exemples vidéo et image partagent une admission durable des tâches payantes. Ils fonctionnent uniquement en développement ; cloner le starter n’active aucun fournisseur commercial.
 
@@ -24,3 +24,5 @@ Les prix sont dans `src/config/tasks.ts`, les droits dans `src/services/entitlem
 Les anciennes tâches synchrones sans empreinte ne sont jamais renvoyées automatiquement : réconciliez d’abord le résultat du fournisseur. Déployez un worker compatible avec `text_to_video` avant son admission. Les adaptateurs réels doivent conserver identité, annulation, isolation et compensation ; sans idempotence du fournisseur, réconciliez avant toute reprise. Remplacez aussi les contrôles de démonstration de la page, de la route et du service par une admission de production revue.
 
 **Liens :** [Images](/fr/docs/image-generation-workflow), [Crédits](/fr/docs/account-ledger), [Offres](/fr/docs/plans-and-entitlements), [Jobs](/fr/docs/jobs-and-readiness).
+
+Si `TEXT2VIDEO_MOCK_URL` est absent, vide ou composé d’espaces, `/demo-video.mp4` est utilisé. Une sortie vide du prestataire est un échec, jamais un résultat payé réussi ; après épuisement des tentatives, la compensation utilise la transaction d’origine.

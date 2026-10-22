@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/PansaLegrand/sushi-saas-template",
-  "commit": "105bddd6fe396d1de44c1cf8e6cbce96f51ac85d",
+  "commit": "35e64b91f4bb62dffea2ab928316eebc3d346cc9",
   "reviewedAt": "2026-10-22",
-  "scope": "Prior contracts retained; account security/privacy, session MFA migration, file/ledger pagination, supported tooling profiles, production smoke, performance budgets, and domain/upgrade workflow reviewed across five locales. PostgreSQL TCP bootstrap readiness verified with a fresh disposable container."
+  "scope": "Prior contracts retained; account security/privacy, session MFA migration, file/ledger pagination, supported tooling profiles, production smoke, performance budgets, and domain/upgrade workflow reviewed across five locales. PostgreSQL TCP bootstrap readiness verified with a fresh disposable container. Single/multiple workspace browser fixtures and empty video-provider output handling verified."
 }
