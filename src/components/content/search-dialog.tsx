@@ -69,7 +69,16 @@ export function ContentSearchDialog({
       isLoading={state.status === "loading"}
     >
       <SearchDialogOverlay />
-      <SearchDialogContent>
+      <SearchDialogContent
+        onKeyDown={(event) => {
+          // Fumadocs 15 handles result navigation on window. Let focused
+          // buttons keep native Enter activation instead of opening the
+          // highlighted result (which can be a different control).
+          if (event.key === "Enter" && event.target instanceof Element && event.target.closest("button")) {
+            event.stopPropagation();
+          }
+        }}
+      >
         <SearchDialogHeader>
           <SearchDialogIcon />
           <SearchDialogInput aria-label={text.search} maxLength={160} autoComplete="off" />
