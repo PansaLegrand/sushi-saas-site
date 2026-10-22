@@ -6,31 +6,21 @@ keywords: [tasks, text to video, credits, idempotency]
 tags: [tasks, AI]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Synced with starter commit [`8ecec8c`](https://github.com/PansaLegrand/sushi-saas-template/tree/8ecec8c3db8934598da5da044c507dc427808e61).
+> Starter source: [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e).
 
-Use this page as a reference for building a metered AI feature, not as a ready-made video product. What ships is a local-only mock screen plus the hard parts around tenancy, entitlements, monthly limits, pooled credits, idempotency, failure state, and refunds. Production ignores the demo flags, so no real video generation is enabled by cloning the repository.
+Both video and image examples use durable paid-task admission. They are development-only examples; cloning the starter does not enable a commercial generation provider.
 
-For a new asynchronous paid feature, start with [Five-Credit Image Generation](/docs/image-generation-workflow). It is the current durable reference with recoverable task/spend/job identities, private output storage, bounded provider retries, and exactly-once terminal compensation. Text-to-video remains useful as the smaller synchronous adapter example.
+Enable `ENABLE_DEMO_FEATURES=true` and `ENABLE_TEXT2VIDEO_MOCK=true`, run `pnpm dev:seed -- --paid-examples`, then start `pnpm dev:all`. The local fixture grants an idempotent manual entitlement without buying anything from Stripe. The mock returns the bundled eight-second `/demo-video.mp4` clip, or `TEXT2VIDEO_MOCK_URL`; it does not synthesize the requested prompt, aspect, or duration.
 
-## Decide what your real provider contract needs
+`POST /api/tasks/text-to-video` requires authentication, an explicit organization, and an idempotency key in the body or `Idempotency-Key` header. Prompts are limited to 1,000 characters; duration is 1–60 whole seconds. The service resolves an existing request before new-operation entitlement checks. One transaction reserves monthly quota, debits pooled credits, creates the task, and persists its queue entry. Queue persistence failure rolls everything back.
 
-- Replace the adapter in `src/services/ai/video.ts`; keep provider-specific code out of routes.
-- The shipped mock completes inside the request. For a provider that takes longer than a few seconds, enqueue durable work, persist the external job ID, verify callbacks, and make provider requests idempotent.
-- Review the one-credit-per-second default, aspect multipliers, plan capability, monthly task limits, and included credit grants. These are example product economics, not recommended pricing.
+Accepted work returns **202** with a queued task. The worker uses the task UUID as its provider identity, retries transient failures, and performs a deterministic credit refund before terminal failure. Poll `GET /api/tasks/[uuid]` for the result. The UI automatically retries transient reads and restores the task and draft settings on reload without another submission. “Generate another video” starts an explicit new intent.
 
-**Ready to launch means:** the mock is absent from production, duplicate requests create one task and one spend, insufficient credits are explained, provider failure creates one refund, callbacks cannot cross organizations, and the UI communicates queued/running/failed states.
+Pricing remains in `src/config/tasks.ts`; entitlement decisions go through `src/services/entitlements.ts`. Execution lives in `src/services/tasks/video.ts`, and provider-specific code belongs in `src/services/ai/video.ts`. The default per-second price and plan allowances are examples to review for your own product.
 
-The text-to-video screen is an opt-in development pattern, not a production AI provider. It is unavailable unless demo features and the text-to-video mock are enabled; demo flags are ignored in production.
+Old synchronous tasks without a request fingerprint are not automatically resubmitted: reconcile their provider outcome before settling them. Deploy a worker that understands `text_to_video` before admitting that job type. Real adapters must preserve stable provider identities, cancellation, tenant scope, and compensation; a provider without idempotency needs outcome reconciliation before retry. Replacing the adapter alone does not enable production: replace the page, route, and service demo gates with reviewed production admission.
 
-Implement the real adapter in `src/services/ai/video.ts`. Replacing it alone does not expose the feature in production: the page, API route, and task service also check `isTextToVideoMockEnabled()`, which is always false there. Replace those demo admission checks with an explicit production feature configuration while retaining same-origin, authentication, entitlements, limits, and credit accounting. Test the production path with the mock disabled.
-
-`POST /api/tasks/text-to-video` requires same origin, rate limit, authentication, the organization `tasks.text_to_video` entitlement, the shared monthly task limit, and sufficient pooled credits. Supply `Idempotency-Key` in the header or body. The service inserts one organization-scoped task, spends credits, records the root ledger transaction, calls the provider, and marks success. Provider failure marks the task failed and appends a credit refund.
-
-Cost is configured in `src/config/tasks.ts` by seconds and aspect ratio. Plus currently allows 50 organization tasks/month and 500 monthly credits; Max has unlimited task count and 2,500 credits; Free has neither capability. Fetch a task through `GET /api/tasks/[uuid]`; access is organization-scoped.
-
-For a real long-running provider, keep these invariants but move execution to durable asynchronous work, use provider idempotency, verify callbacks, persist external IDs, and test duplicate requests, insufficient balance, timeout, callback replay, and refund failure.
-
-**Related:** Set access and limits in [Plans and Entitlements](/docs/plans-and-entitlements), account for spend and refunds in the [Credit Ledger](/docs/account-ledger), and run long work through [Durable Jobs](/docs/jobs-and-readiness).
+**Related:** [Image workflow](/docs/image-generation-workflow), [Credit ledger](/docs/account-ledger), [Plans](/docs/plans-and-entitlements), and [Durable jobs](/docs/jobs-and-readiness).

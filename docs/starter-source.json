@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/PansaLegrand/sushi-saas-template",
-  "commit": "8ecec8c3db8934598da5da044c507dc427808e61",
+  "commit": "323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e",
   "reviewedAt": "2026-10-22",
-  "scope": "Existing source contracts retained; changes since the previous pin reviewed for Node 24, dependency packaging, workspace navigation and atomic image-task admission across all five locales."
+  "scope": "Prior contracts retained; runtime, atomic image/video execution, cancellation, bounded erasure, and task recovery deltas reviewed across five locales."
 }

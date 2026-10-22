@@ -6,30 +6,21 @@ keywords: [tâches, texte vers vidéo, crédits, idempotence]
 tags: [tâches, IA]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Synchronisé avec le commit [`8ecec8c`](https://github.com/PansaLegrand/sushi-saas-template/tree/8ecec8c3db8934598da5da044c507dc427808e61) du starter.
+> Starter source: [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e).
 
-Utilisez cette page comme modèle d’une fonction IA facturée à l’usage, pas comme un produit vidéo prêt à vendre. Le starter fournit un écran mock local et les éléments difficiles : tenancy, droits, limites mensuelles, crédits partagés, idempotence, échec et remboursement. La production ignore les flags de démonstration ; cloner le dépôt n’active donc aucune génération réelle.
+Les exemples vidéo et image partagent une admission durable des tâches payantes. Ils fonctionnent uniquement en développement ; cloner le starter n’active aucun fournisseur commercial.
 
-## Définir le contrat du fournisseur réel
+Activez `ENABLE_DEMO_FEATURES=true` et `ENABLE_TEXT2VIDEO_MOCK=true`, lancez `pnpm dev:seed -- --paid-examples`, puis `pnpm dev:all`. La préparation locale accorde un droit manuel idempotent sans achat Stripe. Le fournisseur simulé retourne le clip de huit secondes `/demo-video.mp4`, ou `TEXT2VIDEO_MOCK_URL` ; il ne synthétise pas le texte, le format ou la durée demandés.
 
-- Remplacez l’adaptateur de `src/services/ai/video.ts` ; gardez le code fournisseur hors des routes.
-- Le mock livré termine dans la requête. Pour un traitement plus long, mettez le travail en file durable, conservez l’ID externe, vérifiez les callbacks et utilisez aussi l’idempotence chez le fournisseur.
-- Revoyez le crédit par seconde, les multiplicateurs, droits de plan, limites mensuelles et crédits inclus. Ce sont des exemples d’économie produit, pas un conseil tarifaire.
+`POST /api/tasks/text-to-video` exige une authentification, une organisation explicite et une clé idempotente dans le corps ou l’en-tête `Idempotency-Key`. Le texte est limité à 1 000 caractères et la durée à 1–60 secondes entières. Le service résout les rejeux avant de vérifier les droits des nouvelles opérations. Une transaction réserve le quota mensuel, débite les crédits, crée la tâche et enregistre sa distribution. Un échec de la file annule tous ces effets.
 
-**Prêt pour la production signifie :** aucun mock en production, un doublon crée une tâche et un débit, le solde insuffisant est expliqué, un échec crée un seul remboursement, les callbacks ne traversent pas les organisations et l’UI montre attente, exécution et échec.
+La réponse **202** contient une tâche en attente. Le worker emploie son UUID comme identité du fournisseur, reprend les erreurs temporaires et rembourse les crédits de façon idempotente avant l’échec terminal. Consultez `GET /api/tasks/[uuid]`. L’interface reprend les lectures interrompues et retrouve la tâche et ses paramètres après rechargement, sans nouvel envoi. « Générer une autre vidéo » crée explicitement une nouvelle demande.
 
-L’écran est un patron de développement opt-in, pas un fournisseur IA de production. Il faut activer démo et mock ; la production ignore ces flags.
+Les prix sont dans `src/config/tasks.ts`, les droits dans `src/services/entitlements.ts`, l’exécution dans `src/services/tasks/video.ts` et l’adaptateur dans `src/services/ai/video.ts`. Réévaluez les tarifs et limites d’exemple pour votre produit.
 
-Implémentez l’adaptateur réel dans `src/services/ai/video.ts`. Cela ne suffit pas à exposer la fonction en production : la page, la route API et le service vérifient aussi `isTextToVideoMockEnabled()`, toujours false en production. Remplacez ces contrôles d’admission de démonstration par une configuration explicite de la fonction de production, en conservant origine, authentification, droits, limites et comptabilité des crédits. Testez le parcours de production avec le mock désactivé.
+Les anciennes tâches synchrones sans empreinte ne sont jamais renvoyées automatiquement : réconciliez d’abord le résultat du fournisseur. Déployez un worker compatible avec `text_to_video` avant son admission. Les adaptateurs réels doivent conserver identité, annulation, isolation et compensation ; sans idempotence du fournisseur, réconciliez avant toute reprise. Remplacez aussi les contrôles de démonstration de la page, de la route et du service par une admission de production revue.
 
-`POST /api/tasks/text-to-video` exige même origine, rate limit, auth, entitlement `tasks.text_to_video`, limite mensuelle partagée et crédits. Fournissez `Idempotency-Key` en header ou body. Le service insère une tâche d’organisation, dépense, garde la transaction racine, appelle le fournisseur et réussit ; en échec il marque la tâche et rembourse par une nouvelle ligne.
-
-Le coût est dans `src/config/tasks.ts`. Plus : 50 tâches/organisation/mois et 500 crédits ; Max : tâches illimitées et 2 500 ; Free : aucune capacité. `GET /api/tasks/[uuid]` est limité à l’organisation.
-
-Pour un vrai traitement long, gardez les invariants mais exécutez en asynchrone durable, utilisez l’idempotence fournisseur, validez les callbacks, stockez les IDs et testez doublon, solde, timeout, replay et échec de remboursement.
-
-**Avant de connecter un fournisseur :** alignez [Plans, limites et droits](/fr/docs/plans-and-entitlements), le [Registre de crédits d’organisation](/fr/docs/account-ledger) et [Tâches durables et readiness](/fr/docs/jobs-and-readiness).
-Pour une nouvelle fonction payante asynchrone, commencez par [Génération d’image à cinq crédits](/fr/docs/image-generation-workflow). C’est la référence durable actuelle : identités récupérables tâche/dépense/job, sortie privée, reprises bornées et compensation terminale unique. Texte-vers-vidéo reste l’exemple synchrone plus petit.
+**Liens :** [Images](/fr/docs/image-generation-workflow), [Crédits](/fr/docs/account-ledger), [Offres](/fr/docs/plans-and-entitlements), [Jobs](/fr/docs/jobs-and-readiness).
