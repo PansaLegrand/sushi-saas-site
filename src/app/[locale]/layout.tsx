@@ -1,7 +1,8 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { isLocale, locales } from "@/i18n/locale";
+import { isLocale, locales, localePath } from "@/i18n/locale";
+import { AnalyticsProvider, type AnalyticsCopy } from "@/components/analytics/analytics-provider";
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -21,7 +22,9 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider messages={messages}>
-      {children}
+      <AnalyticsProvider copy={messages.analytics as AnalyticsCopy} privacyHref={localePath(locale, "/privacy")}>
+        {children}
+      </AnalyticsProvider>
     </NextIntlClientProvider>
   );
 }

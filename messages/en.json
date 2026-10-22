@@ -108,16 +108,52 @@
     "privacy": "Privacy",
     "terms": "Terms"
   },
+  "analytics": {
+    "title": "Help improve the starter",
+    "description": "With your permission, Plausible measures which pages and setup links are useful. It receives your IP address and browser information. No installation activity or form contents are tracked.",
+    "allow": "Allow analytics",
+    "decline": "Keep analytics off",
+    "settings": "Analytics settings",
+    "enabled": "Analytics is on. You can turn it off here.",
+    "disabled": "Analytics is off.",
+    "privacySignal": "Your browser privacy preference keeps analytics off.",
+    "close": "Close",
+    "policy": "Read the privacy notice"
+  },
   "privacy": {
     "title": "Privacy notice",
     "description": "How this documentation website handles visitor information.",
-    "updated": "Last updated · July 29, 2026",
+    "updated": "Last updated · October 22, 2026",
     "notice": "This notice covers the documentation website only. Products built from the starter need their own policy based on the services and data they use.",
     "sections": [
-      { "heading": "Information processed", "paragraphs": ["This website serves public documentation. It does not create customer accounts, accept payments, or store product uploads.", "The hosting provider may process routine request data such as an IP address, user agent, requested URL, and timestamp to deliver and protect the site."] },
-      { "heading": "Analytics and cookies", "paragraphs": ["Analytics are disabled by default. If privacy-respecting analytics are enabled later, this notice and the consent experience must be updated before collection starts.", "The site may use strictly necessary preferences, such as a chosen language or theme."] },
-      { "heading": "External links", "paragraphs": ["Documentation links to GitHub and third-party provider documentation. Their privacy practices apply after you follow those links."] },
-      { "heading": "Questions", "paragraphs": ["Open an issue in the linked source repository for questions about this notice or the documentation website."] }
+      {
+        "heading": "Information processed",
+        "paragraphs": [
+          "This website serves public documentation. It does not create customer accounts, accept payments, or store product uploads.",
+          "The hosting provider may process routine request data such as an IP address, user agent, requested URL, and timestamp to deliver and protect the site."
+        ]
+      },
+      {
+        "heading": "Optional analytics and preferences",
+        "paragraphs": [
+          "Analytics is disabled by default. If enabled for this website, Plausible receives events only after you explicitly allow analytics. We do not track installations or activity in products built from the starter.",
+          "Events contain public page categories, language, fixed interaction labels and, when present, a limited set of approved campaign labels. We do not send form contents, email addresses, arbitrary page paths, full referrers or raw query strings. The connection still exposes your IP address and browser headers to Plausible.",
+          "After you make a choice, this website stores only accepted or declined in local storage under sushi:analytics-consent:v1. If storage is unavailable, the choice lasts for the current page session. Analytics settings in the footer, or the floating control on documentation pages, let you withdraw permission. Withdrawal stops future events; it does not retract information already sent. Do Not Track and Global Privacy Control override any earlier permission.",
+          "The site may also store necessary preferences, such as your chosen language or theme. The analytics adapter adds no tracking cookies or visitor identifier."
+        ]
+      },
+      {
+        "heading": "External links",
+        "paragraphs": [
+          "Documentation links to GitHub and third-party provider documentation. Their privacy practices apply after you follow those links."
+        ]
+      },
+      {
+        "heading": "Questions",
+        "paragraphs": [
+          "Open an issue in the linked source repository for questions about this notice or the documentation website."
+        ]
+      }
     ]
   },
   "terms": {

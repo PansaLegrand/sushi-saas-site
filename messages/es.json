@@ -80,16 +80,52 @@
   "docs": { "title": "Construye y opera Sushi SaaS", "intro": "Elige una tarea para ver pasos exactos de configuración y verificación. Si necesitas entender una decisión o elegir qué cambiar, consulta Guías.", "empty": "La documentación está en preparación.", "topics": "Temas" },
   "blogs": { "title": "Entiende y adapta Sushi SaaS", "intro": "Descubre qué elige el starter, por qué, qué alternativas encajan y qué conviene conservar, cambiar o eliminar para tu producto.", "empty": "Todavía no hay guías publicadas.", "topics": "Temas" },
   "footer": { "label": "Navegación del pie", "description": "Explora, evalúa, construye y opera el starter open source Sushi SaaS.", "start": "Inicio rápido", "docs": "Documentación", "blog": "Guías", "privacy": "Privacidad", "terms": "Términos" },
+  "analytics": {
+    "title": "Ayuda a mejorar el starter",
+    "description": "Con tu permiso, Plausible mide qué páginas y enlaces de instalación resultan útiles. Recibe tu dirección IP e información del navegador. No se rastrean instalaciones ni contenidos de formularios.",
+    "allow": "Permitir analítica",
+    "decline": "Mantener desactivada",
+    "settings": "Ajustes de analítica",
+    "enabled": "La analítica está activada. Puedes desactivarla aquí.",
+    "disabled": "La analítica está desactivada.",
+    "privacySignal": "La preferencia de privacidad de tu navegador mantiene la analítica desactivada.",
+    "close": "Cerrar",
+    "policy": "Leer el aviso de privacidad"
+  },
   "privacy": {
     "title": "Aviso de privacidad",
     "description": "Cómo trata este sitio de documentación la información de visitantes.",
-    "updated": "Última actualización · 29 de julio de 2026",
+    "updated": "Última actualización · 22 de octubre de 2026",
     "notice": "Este aviso solo cubre el sitio de documentación. Los productos creados con el starter necesitan su propia política.",
     "sections": [
-      { "heading": "Información tratada", "paragraphs": ["Este sitio ofrece documentación pública. No crea cuentas, acepta pagos ni almacena archivos de producto.", "El proveedor de hosting puede tratar datos técnicos habituales para entregar y proteger el sitio."] },
-      { "heading": "Analítica y cookies", "paragraphs": ["La analítica está desactivada por defecto. Si se activa, el aviso y el consentimiento deben actualizarse antes de recopilar datos.", "El sitio puede guardar preferencias estrictamente necesarias, como idioma o tema."] },
-      { "heading": "Enlaces externos", "paragraphs": ["La documentación enlaza a GitHub y a proveedores externos. Sus políticas se aplican al seguir esos enlaces."] },
-      { "heading": "Preguntas", "paragraphs": ["Abre un issue en el repositorio enlazado para preguntas sobre este aviso o el sitio."] }
+      {
+        "heading": "Información tratada",
+        "paragraphs": [
+          "Este sitio ofrece documentación pública. No crea cuentas, acepta pagos ni almacena archivos de producto.",
+          "El proveedor de hosting puede tratar datos técnicos habituales para entregar y proteger el sitio."
+        ]
+      },
+      {
+        "heading": "Analítica opcional y preferencias",
+        "paragraphs": [
+          "La analítica está desactivada por defecto. Si se habilita para este sitio web, Plausible solo recibe eventos después de que la permitas expresamente. No rastreamos instalaciones ni actividad en productos creados con el starter.",
+          "Los eventos contienen categorías de páginas públicas, idioma, etiquetas de interacción predefinidas y, si existen, un conjunto limitado de etiquetas de campaña aprobadas. No enviamos contenidos de formularios, direcciones de correo, rutas de página arbitrarias, referencias completas ni cadenas de consulta sin filtrar. La conexión sigue exponiendo tu dirección IP y las cabeceras del navegador a Plausible.",
+          "Tras tu elección, este sitio guarda únicamente accepted o declined en el almacenamiento local bajo sushi:analytics-consent:v1. Si el almacenamiento no está disponible, la elección dura solo durante la sesión de página actual. Puedes retirar el permiso desde los ajustes de analítica del pie de página o el control flotante de la documentación. La retirada detiene eventos futuros; no recupera la información ya enviada. Do Not Track y Global Privacy Control prevalecen sobre cualquier permiso anterior.",
+          "El sitio también puede guardar preferencias necesarias, como el idioma o el tema elegidos. El adaptador de analítica no añade cookies de seguimiento ni identificadores de visitante."
+        ]
+      },
+      {
+        "heading": "Enlaces externos",
+        "paragraphs": [
+          "La documentación enlaza a GitHub y a proveedores externos. Sus políticas se aplican al seguir esos enlaces."
+        ]
+      },
+      {
+        "heading": "Preguntas",
+        "paragraphs": [
+          "Abre un issue en el repositorio enlazado para preguntas sobre este aviso o el sitio."
+        ]
+      }
     ]
   },
   "terms": {

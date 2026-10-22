@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { SiteConfig } from "@/config/site";
+import { AnalyticsSettingsButton } from "@/components/analytics/analytics-provider";
 
 export async function SiteFooter() {
   const t = await getTranslations("footer");
@@ -18,6 +19,7 @@ export async function SiteFooter() {
           <Link href="/blogs">{t("blog")}</Link>
           <Link href="/privacy">{t("privacy")}</Link>
           <Link href="/terms">{t("terms")}</Link>
+          <AnalyticsSettingsButton />
         </nav>
       </div>
     </footer>

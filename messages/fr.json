@@ -80,16 +80,52 @@
   "docs": { "title": "Construire et exploiter Sushi SaaS", "intro": "Choisissez une tâche pour obtenir les étapes exactes de configuration et de vérification. Pour comprendre un choix ou décider quoi modifier, consultez les Guides.", "empty": "La documentation est en préparation.", "topics": "Sujets" },
   "blogs": { "title": "Comprendre et adapter Sushi SaaS", "intro": "Découvrez les choix du starter, leurs raisons, les autres options possibles et ce qu’il faut conserver, modifier ou supprimer pour votre produit.", "empty": "Aucun guide n’est encore publié.", "topics": "Sujets" },
   "footer": { "label": "Navigation de pied de page", "description": "Explorez, évaluez, construisez et exploitez le starter open source Sushi SaaS.", "start": "Démarrage rapide", "docs": "Documentation", "blog": "Guides", "privacy": "Confidentialité", "terms": "Conditions" },
+  "analytics": {
+    "title": "Aidez à améliorer le starter",
+    "description": "Avec votre accord, Plausible mesure les pages et les liens d’installation utiles. Ce service reçoit votre adresse IP et des informations sur votre navigateur. Aucune installation ni aucun contenu de formulaire n’est suivi.",
+    "allow": "Autoriser les statistiques",
+    "decline": "Garder désactivées",
+    "settings": "Réglages des statistiques",
+    "enabled": "Les statistiques sont activées. Vous pouvez les désactiver ici.",
+    "disabled": "Les statistiques sont désactivées.",
+    "privacySignal": "La préférence de confidentialité de votre navigateur maintient les statistiques désactivées.",
+    "close": "Fermer",
+    "policy": "Lire la notice de confidentialité"
+  },
   "privacy": {
     "title": "Avis de confidentialité",
     "description": "Comment ce site de documentation traite les informations des visiteurs.",
-    "updated": "Dernière mise à jour · 29 juillet 2026",
+    "updated": "Dernière mise à jour · 22 octobre 2026",
     "notice": "Cet avis ne couvre que le site de documentation. Les produits issus du starter nécessitent leur propre politique.",
     "sections": [
-      { "heading": "Informations traitées", "paragraphs": ["Ce site sert une documentation publique. Il ne crée pas de compte, n’accepte pas de paiement et ne stocke pas de fichiers produit.", "L’hébergeur peut traiter les données techniques usuelles nécessaires à la livraison et à la protection du site."] },
-      { "heading": "Mesure et cookies", "paragraphs": ["La mesure d’audience est désactivée par défaut. Si elle est activée, cet avis et le consentement devront être mis à jour avant toute collecte.", "Le site peut mémoriser des préférences strictement nécessaires, comme la langue ou le thème."] },
-      { "heading": "Liens externes", "paragraphs": ["La documentation renvoie vers GitHub et des fournisseurs tiers. Leurs politiques s’appliquent après avoir suivi ces liens."] },
-      { "heading": "Questions", "paragraphs": ["Ouvrez une issue dans le dépôt lié pour toute question sur cet avis ou le site."] }
+      {
+        "heading": "Informations traitées",
+        "paragraphs": [
+          "Ce site sert une documentation publique. Il ne crée pas de compte, n’accepte pas de paiement et ne stocke pas de fichiers produit.",
+          "L’hébergeur peut traiter les données techniques usuelles nécessaires à la livraison et à la protection du site."
+        ]
+      },
+      {
+        "heading": "Statistiques facultatives et préférences",
+        "paragraphs": [
+          "Les statistiques sont désactivées par défaut. Si elles sont configurées pour ce site, Plausible ne reçoit des événements qu’après votre autorisation explicite. Nous ne suivons ni les installations ni l’activité dans les produits créés avec le starter.",
+          "Les événements contiennent des catégories de pages publiques, la langue, des libellés d’interaction prédéfinis et, le cas échéant, un ensemble limité de libellés de campagne autorisés. Nous n’envoyons ni contenu de formulaire, ni adresse e-mail, ni chemin de page arbitraire, ni adresse de provenance complète, ni chaîne de requête brute. La connexion révèle toutefois votre adresse IP et les en-têtes du navigateur à Plausible.",
+          "Après votre choix, ce site enregistre uniquement accepted ou declined dans le stockage local sous sushi:analytics-consent:v1. Si ce stockage est indisponible, le choix ne vaut que pour la session de page actuelle. Les réglages des statistiques du pied de page, ou le bouton flottant des pages de documentation, permettent de retirer votre accord. Ce retrait arrête les événements futurs, mais ne récupère pas les informations déjà transmises. Do Not Track et Global Privacy Control priment sur toute autorisation antérieure.",
+          "Le site peut également mémoriser des préférences nécessaires, telles que la langue ou le thème. L’adaptateur de statistiques n’ajoute ni cookie de suivi ni identifiant de visiteur."
+        ]
+      },
+      {
+        "heading": "Liens externes",
+        "paragraphs": [
+          "La documentation renvoie vers GitHub et des fournisseurs tiers. Leurs politiques s’appliquent après avoir suivi ces liens."
+        ]
+      },
+      {
+        "heading": "Questions",
+        "paragraphs": [
+          "Ouvrez une issue dans le dépôt lié pour toute question sur cet avis ou le site."
+        ]
+      }
     ]
   },
   "terms": {
