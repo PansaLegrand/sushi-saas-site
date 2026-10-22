@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { extractLinks } from "./check-content.mjs";
+import { checkStarterProvenance, extractLinks } from "./check-content.mjs";
 
 function walk(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -43,7 +43,11 @@ export function checkStarterSync(starterRoot, siteRoot = process.cwd()) {
   for (const collection of ["docs", "blog"]) {
     for (const file of walk(join(siteRoot, "content", collection))) {
       if (!/\.mdx?$/.test(file)) continue;
-      for (const raw of extractLinks(readFileSync(file, "utf8"))) {
+      const source = readFileSync(file, "utf8");
+      for (const error of checkStarterProvenance(source, manifest)) {
+        errors.push(`${relative(siteRoot, file)}: ${error}`);
+      }
+      for (const raw of extractLinks(source)) {
         if (!raw.startsWith(`${manifest.repository}/`)) continue;
         const url = new URL(raw);
         const parts = url.pathname.split("/").filter(Boolean);

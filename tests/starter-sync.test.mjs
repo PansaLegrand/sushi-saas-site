@@ -56,3 +56,12 @@ test("source review requires a full immutable revision", (t) => {
   writeFileSync(f.manifestPath, JSON.stringify({ repository: f.repository, commit: "main" }));
   assert.match(checkStarterSync(f.starter, f.site).errors[0], /immutable full Git commit/);
 });
+
+test("source review rejects stale displayed labels even when destinations are correctly pinned", (t) => {
+  const f = fixture(t);
+  const stale = f.commit.startsWith("0000000") ? "fffffff" : "0000000";
+  writeFileSync(f.page, `[Starter at \`${stale}\`](${f.repository}/tree/${f.commit})\n`);
+  assert.match(checkStarterSync(f.starter, f.site).errors[0], /source link label .* does not match/);
+  writeFileSync(f.page, `[Starter at \`${f.commit.slice(0, 7)}\`](${f.repository}/tree/${f.commit})\n`);
+  assert.deepEqual(checkStarterSync(f.starter, f.site), { errors: [], links: 1 });
+});

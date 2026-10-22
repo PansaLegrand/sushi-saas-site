@@ -63,6 +63,40 @@ export function extractLinks(source) {
   return links;
 }
 
+/** Displayed revision labels must identify the source readers actually open. */
+export function checkStarterProvenance(source, {
+  repository = STARTER_REPOSITORY,
+  commit = STARTER_COMMIT
+} = {}) {
+  const errors = [];
+  for (const match of source.matchAll(/\[([^\n]*?)\]\(([^)\s]+)(?:\s+["'][^"']*["'])?\)/g)) {
+    const [, label, href] = match;
+    if (!href.startsWith(`${repository}/`)) continue;
+    const revision = href.slice(repository.length + 1).match(/^(?:tree|blob|commit)\/([a-f0-9]{40})(?:[/?#]|$)/i)?.[1];
+    if (!revision) continue;
+    for (const hash of label.matchAll(/\b([a-f0-9]{7,40})\b/gi)) {
+      if (!revision.toLowerCase().startsWith(hash[1].toLowerCase())) {
+        errors.push(`source link label ${hash[1]} does not match its target revision ${revision}.`);
+      }
+    }
+  }
+
+  // Current-review declarations are localized prose, not arbitrary historical
+  // hashes or sample code. Keep historical mentions outside these declarations.
+  const declaration = /(?:Verified against starter commit|Vérifié avec le commit|Verificado con el commit|已根据启动模板提交|スターターのコミット|This guide reflects starter commit|Ce guide reflète le commit|Esta guía refleja el commit|本文基于 starter commit|本ガイドはコミット)\s*`([a-f0-9]{7,40})`/gi;
+  for (const match of source.matchAll(declaration)) {
+    if (!commit.toLowerCase().startsWith(match[1].toLowerCase())) {
+      errors.push(`current source declaration ${match[1]} does not match reviewed revision ${commit}.`);
+    }
+  }
+  for (const match of source.matchAll(/^git switch -c [\w./-]+ ([a-f0-9]{7,40})\s*$/gmi)) {
+    if (!commit.toLowerCase().startsWith(match[1].toLowerCase())) {
+      errors.push(`starter checkout ${match[1]} does not match reviewed revision ${commit}.`);
+    }
+  }
+  return errors;
+}
+
 function walk(directory) {
   const files = [];
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
@@ -174,6 +208,9 @@ export function checkContent(root = process.cwd()) {
     }
     if (!source.includes(STARTER_COMMIT)) {
       errors.push(`${label}: missing starter source pin ${STARTER_COMMIT}`);
+    }
+    for (const error of checkStarterProvenance(source)) {
+      errors.push(`${label}: ${error}`);
     }
     if (/sushi-saas-template\/(?:tree|blob)\/(?:main|master|HEAD)(?:\/|\b)/i.test(source)) {
       errors.push(`${label}: starter source links must pin a commit, not a moving branch`);

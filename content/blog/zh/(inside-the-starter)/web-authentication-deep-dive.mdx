@@ -20,7 +20,7 @@ updatedAt: "2026-08-02T00:00:00.000Z"
 
 客户账户可使用双因素认证，但客户应用默认不强制。独立管理后台则在 `admin_ro` 或 `admin_rw` 运营角色之外，**必须启用 MFA**。
 
-配置位于 [`b16b416` 的 `src/lib/auth.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/35e64b91f4bb62dffea2ab928316eebc3d346cc9/src/lib/auth.ts)。环境变量和 callback URL 见[认证与管理](/zh/docs/authentication-and-admin)。
+配置位于 [`35e64b9` 的 `src/lib/auth.ts`](https://github.com/PansaLegrand/sushi-saas-template/blob/35e64b91f4bb62dffea2ab928316eebc3d346cc9/src/lib/auth.ts)。环境变量和 callback URL 见[认证与管理](/zh/docs/authentication-and-admin)。
 
 ## 上线前必须做出的选择
 
@@ -58,4 +58,4 @@ Turnstile 可保护凭据和发信接口。注册检查同时覆盖密码与 OAu
 - 并发测试邀请席位和最后 owner 保护。
 - 初始化两种管理角色，并确认管理 origin 强制 MFA。
 
-运营路径见[管理后台设置](/zh/docs/admin-console-setup)。本文基于 starter commit `b16b416`。
+运营路径见[管理后台设置](/zh/docs/admin-console-setup)。本文基于 starter commit `35e64b9`。
