@@ -6,10 +6,10 @@ keywords: [S3, R2, Garage, MinIO, upload, stockage]
 tags: [stockage, sécurité]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Synchronisé avec le commit [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e) du starter.
+> Synchronisé avec le commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) du starter.
 
 Utilisez cette fonction lorsque votre produit doit conserver des avatars, documents, imports ou fichiers générés sans les rendre publics ni faire transiter chaque octet par le serveur Next.js. À la fin, une personne connectée doit pouvoir charger, télécharger et supprimer un fichier depuis **Compte → Fichiers**, sans qu’une autre organisation puisse y accéder.
 
@@ -36,3 +36,7 @@ Un upload abandonné libère sa réservation après une heure. La suppression r�
 Testez flux complet, MIME/checksum invalide, concurrence quota, URL expirée, accès inter-organisation, reprise et nettoyage. Voir `docs/storage-providers.md` du starter pour CORS.
 
 **Étape suivante :** fiabilisez suppression et nettoyage avec [Tâches durables et readiness](/fr/docs/jobs-and-readiness).
+
+## Pagination bornée
+
+`GET /api/storage/files` accepte `page` entier de 1 à 10 000 et `limit` de 1 à 100 (50 par défaut), avec `hasMore`. L’écran localisé permet précédent, suivant et nouvelle tentative ; une ancienne réponse ne remplace pas une nouvelle page ou un autre espace. Un seul en-tête Content-Type est envoyé lors du téléversement.

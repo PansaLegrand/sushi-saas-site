@@ -6,10 +6,10 @@ keywords: [consola de administración, RBAC, MFA, despliegue]
 tags: [administración, seguridad, operaciones]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Sincronizado con el commit [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e) del starter.
+> Sincronizado con el commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) del starter.
 
 Usa esta página cuando alguien deba investigar clientes, cobros o fallos operativos fuera de la aplicación. La consola ya está incluida; tus decisiones son si desplegarla, quién accede y cuánto proteger su origen dedicado.
 
@@ -96,3 +96,7 @@ Mantén separados los orígenes web y de administración. La aplicación de admi
 6. Confirma que un usuario normal no puede abrir una página ni llamar a una API de administración.
 
 Continúa con [Páginas y operaciones de la consola](/es/docs/admin-console-operations) para ver las superficies que incluye la versión actual.
+
+## Perfil y MFA por sesión
+
+`/[locale]/account/profile` permite gestionar nombre, contraseña, MFA y sesiones recientes. La API de gestión omite tokens e IDs internos; revocar exige una sesión creada hace menos de 15 minutos. Los endpoints públicos nativos de listar/revocar sesiones están cerrados. Admin exige MFA verificado por la sesión actual. Aplica `0038_young_rafael_vega.sql` antes del código web/admin. Las sesiones antiguas y OAuth deben completar `/two-factor`; un código inválido no autoriza y cambiar MFA borra la verificación previa.

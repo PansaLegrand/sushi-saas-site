@@ -6,12 +6,12 @@ keywords: [account deletion, data export, privacy, erasure, GDPR, retention]
 tags: [privacy, account, lifecycle]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Synced with starter commit [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e). Review this technical workflow and its retention settings with counsel before production.
+> Synced with starter commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37). Review this technical workflow and its retention settings with counsel before production.
 
-Use this page if customers must be able to receive a copy of their data or request account erasure. The starter ships authenticated APIs, durable workers, a tested table-by-table policy, and private export artifacts. It does **not** ship a finished account-settings screen for these actions; add the confirmation UI and policy copy your product requires.
+The starter includes localized customer screens at `/[locale]/account/profile` and `/[locale]/account/privacy`, backed by authenticated APIs, durable workers and private exports. Customers can edit their name, manage passwords and MFA, review sessions, export data, and schedule or cancel account deletion. Review the policy and confirmation copy for your product before launch.
 
 ## Make the policy decisions before exposing the buttons
 
@@ -31,7 +31,7 @@ Credentials, password hashes, sessions, verification tokens, and TOTP secrets ar
 
 `POST /api/account/data-export` requires authentication, same-origin protection, rate limiting, and an `Idempotency-Key`. It returns 202 and queues `account_data_export`.
 
-Poll `GET /api/account/data-export/{requestUuid}`. When complete, the response contains a five-minute signed manifest URL and signed links to active private files. Export artifacts are private and expire after seven days by default.
+Poll `GET /api/account/data-export`. Request `GET /api/account/data-export/{requestUuid}` when complete to obtain a five-minute signed manifest URL and signed links to active private files. Export artifacts are private and expire after seven days by default.
 
 ## Requesting Erasure
 
@@ -64,3 +64,7 @@ The shipped defaults are technical choices, not legal advice. Align them with th
 5. Never log export payloads, credentials, or signed download URLs.
 
 **Related:** Exports and erasure depend on [Durable Jobs and Readiness](/docs/jobs-and-readiness); include both workflows in the [Deployment and Security](/docs/deployment-and-security) launch test.
+
+## Customer controls and export status
+
+The privacy screen requires typed email confirmation before deletion and links ownership blockers to team settings. It recovers the latest export after reload. Poll `GET /api/account/data-export` for metadata; request `GET /api/account/data-export/{requestUuid}` explicitly to obtain short-lived download links. Read polling has a separate rate bucket. Erasure workers checkpoint external effects and yield after bounded progress without spending the failure retry budget.

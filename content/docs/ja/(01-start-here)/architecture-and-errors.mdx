@@ -6,10 +6,10 @@ keywords: [アーキテクチャ, サービス, モデル, エラー, Next.js, T
 tags: [アーキテクチャ, エラー, テスト]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> スターターのコミット [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e) で検証済みです。
+> スターターのコミット [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) で検証済みです。
 
 製品固有の最初の機能を追加する前に読んでください。目的は実務的です。各ファイルの置き場所、顧客データを守る境界、安全に拡張できたことを証明するテストが分かるようになります。
 
@@ -74,3 +74,9 @@ UI は `error_code` で分岐し、`resolveErrorMessage` または `resolveAuthE
 ルートに業務ルールがなく、サービスが書き込みの不変条件を、モデルがすべてのクエリを担当し、拒否レスポンスがカタログのコードだけを公開し、対応する階層のテストが通れば、その機能領域は完成です。
 
 詳細な契約はスターターの `docs/errors.md`、`docs/frontend.md`、`AGENTS.md` にあります。設計を選んだ理由と別方式へ移行する際の考え方は、[Sushi SaaS の構造](/ja/blogs/anatomy-of-modern-saas)で確認できます。
+
+## 安全な拡張と更新
+
+`pnpm scaffold:domain invoice-drafts --dry-run` で水平レイヤーの DTO、設定、モデル、サービス、API、ルート、テスト、実装チェック表を確認します。`--dry-run` を外すと既存ファイルを上書きせず作成します。スキーマ、所有権、機能権限、個人データ方針、テストの実装前は無効です。技術更新ガイドに従い、スキーマを先に展開し、リリース検証記録を残してください。
+
+[技術更新の取り決め](https://github.com/PansaLegrand/sushi-saas-template/blob/56c5b8260add9604d55501e464f4b41e619f5a37/docs/upgrading.md).

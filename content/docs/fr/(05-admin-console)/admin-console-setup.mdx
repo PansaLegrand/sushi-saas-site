@@ -6,10 +6,10 @@ keywords: [console d’administration, RBAC, MFA, déploiement]
 tags: [administration, sécurité, opérations]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Synchronisé avec le commit [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e) du starter.
+> Synchronisé avec le commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) du starter.
 
 Utilisez cette page lorsqu’une personne doit enquêter sur clients, facturation ou incidents en dehors de l’application. La console est déjà livrée ; vous devez décider de la déployer, qui y accède et à quel point protéger son origine dédiée.
 
@@ -96,3 +96,7 @@ Gardez des origines distinctes pour le web et l’administration. L’applicatio
 6. Vérifiez qu’un utilisateur ordinaire ne peut ni ouvrir une page ni appeler une API d’administration.
 
 Poursuivez avec [Pages et opérations de la console](/fr/docs/admin-console-operations) pour découvrir les surfaces réellement livrées.
+
+## Profil et MFA par session
+
+`/[locale]/account/profile` gère nom, mot de passe, MFA et révocation des sessions récentes. L’API de gestion ne renvoie ni tokens ni identifiants internes ; une révocation exige une session de moins de 15 minutes. Les endpoints publics natifs de liste/révocation sont fermés. Admin exige une vérification MFA dans la session actuelle. Appliquez `0038_young_rafael_vega.sql` avant le code web/admin. Les anciennes sessions et OAuth passent par `/two-factor` ; un code invalide n’accorde rien et une modification MFA efface les assurances précédentes.

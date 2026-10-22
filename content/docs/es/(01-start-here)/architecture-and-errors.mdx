@@ -6,10 +6,10 @@ keywords: [arquitectura, servicios, modelos, errores, Next.js, TypeScript]
 tags: [arquitectura, errores, pruebas]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Verificado con el commit [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e) del starter.
+> Verificado con el commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) del starter.
 
 Lee esta página antes de añadir la primera función propia de tu producto. El objetivo es práctico: saber dónde va cada archivo, qué frontera protege los datos del cliente y qué pruebas demuestran que una extensión es segura.
 
@@ -76,3 +76,9 @@ El dominio está terminado cuando la ruta no contiene reglas de negocio, el serv
 Los contratos completos siguen versionados en `docs/errors.md`, `docs/frontend.md` y `AGENTS.md` del starter.
 
 **Siguiente paso:** observa cómo estas capas forman una petición completa en [Anatomía de una SaaS moderna](/es/blogs/anatomy-of-modern-saas).
+
+## Extensiones y actualizaciones seguras
+
+`pnpm scaffold:domain invoice-drafts --dry-run` muestra DTO, configuración, modelo, servicio, API, ruta, prueba y hoja de implementación en capas horizontales. Sin `--dry-run` los crea sin sobrescribir archivos. El dominio queda deshabilitado hasta implementar esquema, propiedad, capacidades, privacidad y pruebas. Sigue la guía técnica de actualización para desplegar primero el esquema y registrar evidencia de la versión.
+
+[Contrato técnico de actualización](https://github.com/PansaLegrand/sushi-saas-template/blob/56c5b8260add9604d55501e464f4b41e619f5a37/docs/upgrading.md).

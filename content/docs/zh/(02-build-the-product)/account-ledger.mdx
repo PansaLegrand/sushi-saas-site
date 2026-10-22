@@ -6,10 +6,10 @@ keywords: [积分, 账本, 幂等, 组织]
 tags: [积分, 记账]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> 已根据启动模板提交 [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e) 验证。
+> 已根据启动模板提交 [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) 验证。
 
 积分是一种可选的产品打包方式，并非所有功能都必须使用。当一次方案内操作的成本可变，或客户购买的用量需要结转时使用积分；如果只需判断客户能否操作，使用简单的 entitlement 或 limit 即可。
 
@@ -35,3 +35,7 @@ updatedAt: "2026-08-02T00:00:00.000Z"
 当两个并发消费无法透支、相同业务 key 的重试只产生一次效果、过期发放不计入可用余额、UI 展示逻辑交易而非内部拆分行，且失败任务留下可审计的补偿退款时，积分功能才算完成。
 
 **相关内容：** [套餐与权益](/zh/docs/plans-and-entitlements)决定谁可以使用积分，[Stripe 计费](/zh/docs/stripe-setup)说明付费订阅如何赠送积分。
+
+## 分页不改变完整余额
+
+通过 `ledgerPage` 浏览历史。先将拆分的 FEFO 行合并为逻辑交易，再分页；余额仍使用完整账本。响应包含 `ledgerPagination`，翻页不能改变财务余额。

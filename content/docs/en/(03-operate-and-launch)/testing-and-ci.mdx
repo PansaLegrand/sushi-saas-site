@@ -6,10 +6,10 @@ keywords: [Vitest, Playwright, CI, test database, coverage]
 tags: [testing, CI, reliability]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Verified against starter commit [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e).
+> Verified against starter commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37).
 
 The test suite is organized by what it may mock. That rule matters more than the folder names: a mocked database test cannot prove a unique constraint, and a route test that mocks its auth guard cannot prove authentication happens before data access.
 
@@ -44,3 +44,7 @@ The Playwright suite uses a disposable stack on port 3100. It signs in through t
 CI runs lint, migrations against PostgreSQL 16, Redis-backed tests, coverage, all application builds, and the browser suite. Do not lower a coverage threshold or replace a real-infrastructure test with a mock to turn a release green; change the product or add the missing test.
 
 **Ready to merge means:** the lowest tier that can prove each invariant contains the test, auth and replay checks exist where required, real infrastructure is green, and a production build succeeds.
+
+## Production artifacts and performance
+
+After `pnpm build`, run `pnpm test:production`. CI boots isolated production web/admin artifacts and checks mobile login, static chunks, security headers and anonymous redirects, alongside the real full-stack development tests. `pnpm benchmark:ledger -- --check` measures synthetic CPU replay at 1,000, 10,000 and 50,000 rows; it is not a production latency claim. ESLint now runs directly and hook dependency violations are errors. External-provider and Content Studio editor flows still need their own disposable-environment checks.

@@ -6,12 +6,12 @@ keywords: [suppression de compte, export de données, confidentialité, effaceme
 tags: [confidentialité, compte, cycle de vie]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Synchronisé avec le commit [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e). Faites valider ce flux et sa rétention par un conseil juridique avant production.
+> Synchronisé avec le commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37). Faites valider ce flux et sa rétention par un conseil juridique avant production.
 
-Utilisez cette page si les clients doivent obtenir une copie de leurs données ou demander l’effacement du compte. Le starter livre des API authentifiées, des workers durables, une politique testée table par table et des exports privés. Il ne livre **pas d’écran de paramètres finalisé** pour ces actions ; ajoutez la confirmation et le texte de politique propres à votre produit.
+Le starter fournit des écrans localisés à `/[locale]/account/profile` et `/[locale]/account/privacy`, avec API authentifiées, workers durables et exports privés. Le client peut modifier son nom, gérer mot de passe et MFA, consulter ses sessions, exporter ses données et programmer ou annuler la suppression. Validez la politique et les confirmations avant lancement.
 
 ## Fixer la politique avant d’afficher les boutons
 
@@ -29,7 +29,7 @@ Identifiants, hashes, sessions, tokens et secrets TOTP ne sont jamais exportés.
 
 ## Export
 
-`POST /api/account/data-export` exige authentification, même origine, rate limit et `Idempotency-Key`. Il renvoie 202 et met le travail en file. Suivez `GET /api/account/data-export/{requestUuid}`.
+`POST /api/account/data-export` exige authentification, même origine, rate limit et `Idempotency-Key`. Il renvoie 202 et met le travail en file. Suivez `GET /api/account/data-export`.
 
 Une fois terminé, le résultat contient un manifeste et des liens signés cinq minutes. Les artefacts restent privés et expirent après sept jours par défaut.
 
@@ -44,3 +44,7 @@ La demande est bloquée pour le dernier owner d’une organisation partagée ou 
 Gardez stockage privé et cron actifs, ajoutez un hook pour chaque nouveau fournisseur, mettez la politique à jour avec chaque table et testez sur un compte jetable. Ne journalisez jamais les exports ou URLs signées.
 
 **Pour passer en production :** appuyez export et effacement sur [Tâches durables et readiness](/fr/docs/jobs-and-readiness), puis validez l’ensemble avec la [Checklist de déploiement et sécurité](/fr/docs/deployment-and-security).
+
+## Actions et état des exports
+
+La suppression exige de saisir son adresse e-mail ; les blocages de propriété renvoient aux paramètres de l’équipe. Le dernier export est retrouvé après rechargement. Interrogez `GET /api/account/data-export` pour les métadonnées et demandez explicitement `GET /api/account/data-export/{requestUuid}` pour les liens temporaires. La lecture a une limite distincte. Le worker sauvegarde les effets externes et poursuit par lots sans compter le progrès normal comme un échec.

@@ -6,10 +6,10 @@ keywords: [S3, R2, Garage, MinIO, upload, storage]
 tags: [storage, セキュリティ]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> スターターのコミット [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e) と同期済みです。
+> スターターのコミット [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) と同期済みです。
 
 アバター、文書、インポート、生成物を公開せず、すべてのバイトを Next.js サーバー経由にもしたくない場合に使います。完了後は、ログインしたユーザーが **アカウント → ファイル** でアップロード、ダウンロード、削除でき、別の組織からはアクセスできない状態になります。
 
@@ -34,3 +34,7 @@ updatedAt: "2026-08-24T00:00:00.000Z"
 未完了のアップロードは一時間後に容量予約を解放します。削除はキューで再試行するため、cron が必要です。オブジェクトキーはサービスが生成し、クライアントには選ばせません。
 
 一連の処理、不正な MIME タイプとチェックサム、容量予約の競合、期限切れ URL、組織をまたぐアクセス、削除の再試行、後片付けをテストします。削除などの非同期処理を動かす方法は[永続ジョブと稼働準備](/ja/docs/jobs-and-readiness)、CORS の詳細はスターターの `docs/storage-providers.md` を参照してください。
+
+## 上限付きページ分割
+
+`GET /api/storage/files` は整数 `page`（1～10,000）と `limit`（1～100、既定50）を受け取り、`hasMore` を返します。多言語画面で前後移動と再試行ができ、古い応答が新しいページやワークスペースを上書きしません。アップロードの Content-Type は一度だけ送信します。

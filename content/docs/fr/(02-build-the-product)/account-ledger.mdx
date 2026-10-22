@@ -6,10 +6,10 @@ keywords: [crédits, registre, idempotence, organisations]
 tags: [crédits, comptabilité]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Vérifié avec le commit [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e) du starter.
+> Vérifié avec le commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) du starter.
 
 Les crédits sont un choix de packaging, pas une obligation pour chaque fonction. Utilisez-les lorsqu’une action a un coût variable ou que l’usage acheté doit être reporté ; utilisez un entitlement ou une limite si la seule question est de savoir si le client peut agir.
 
@@ -35,3 +35,7 @@ Pour une fonction payante : calculez le coût en configuration, exigez l’entit
 La fonction est terminée lorsque deux dépenses simultanées ne dépassent pas le solde, qu’un retry avec la même clé n’a qu’un effet, que les attributions expirées sont exclues du disponible, que l’UI montre les transactions logiques et qu’un travail échoué laisse un remboursement compensatoire auditable.
 
 **Pour compléter le modèle :** consultez [Plans, limites et droits](/fr/docs/plans-and-entitlements) pour décider qui peut consommer, puis [Facturation Stripe](/fr/docs/stripe-setup) pour comprendre quand les crédits sont attribués.
+
+## Historique paginé et solde intégral
+
+Utilisez `ledgerPage` pour naviguer. Les lignes FEFO fractionnées sont regroupées avant pagination ; le solde repose toujours sur tout le registre. La réponse contient `ledgerPagination`. Changer de page ne doit jamais modifier le solde financier.

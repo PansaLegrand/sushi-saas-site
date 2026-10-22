@@ -6,10 +6,10 @@ keywords: [credits, ledger, idempotency, organizations]
 tags: [credits, accounting]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Verified against starter commit [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e).
+> Verified against starter commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37).
 
 Credits are optional product packaging, not a requirement for every feature. Use them when one plan action has variable cost or when purchased usage should carry forward. Use a simple entitlement or limit when the only question is whether a customer may perform an action.
 
@@ -35,3 +35,7 @@ When adding a paid feature, calculate cost in configuration, verify its plan ent
 You are done when two simultaneous spends cannot overdraw the pool, retrying the same business key creates one effect, expired grants are excluded from available balance, the UI shows logical transactions rather than internal split rows, and a failed downstream task leaves an auditable compensating refund.
 
 **Related:** [Plans and Entitlements](/docs/plans-and-entitlements) decides who may consume credits; [Stripe Billing](/docs/stripe-setup) explains how paid subscriptions grant them.
+
+## History pagination preserves the full balance
+
+Pass `ledgerPage` for previous/next history navigation. Pagination applies after split FEFO rows are grouped into logical transactions, while the balance still uses the complete ledger. The response includes `ledgerPagination`; history page changes must never change the financial balance.

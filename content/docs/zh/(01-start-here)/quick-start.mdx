@@ -6,10 +6,10 @@ keywords: [快速开始, 安装, Next.js, pnpm, Docker, Garage]
 tags: [setup, local development]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> 已根据 starter 提交 [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e) 验证。
+> 已根据 starter 提交 [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) 验证。
 
 完成本页后，客户应用、管理控制台、Content Studio、持久 Worker、SaaS 开发/测试数据库、Payload 数据库、Redis 和私有本地 S3 兼容 bucket 会一起运行。
 
@@ -64,3 +64,7 @@ pnpm build
 ```
 
 Playwright 会通过 Better Auth 登录，并验证组织积分、真实 Garage 上传，以及经过 Worker 和签名结果的五积分图像任务。下一步阅读[自定义产品](/zh/docs/customize-your-product)、[架构与错误契约](/zh/docs/architecture-and-errors)和[测试与 CI](/zh/docs/testing-and-ci)。
+
+## 选择较小的模板组合
+
+执行 `pnpm starter core install`、`pnpm starter core setup`、`pnpm starter core doctor` 和 `pnpm starter core dev`，仅运行 web 与 worker。`operations` 增加管理员应用，`publishing` 再增加 Content Studio。也支持 `lint`、`build` 和 `--dry-run`。Core/operations 跳过 Studio 环境文件与迁移。过滤安装后，在 shell 导出 `SAAS_STARTER_PROFILE=core` 或 `operations`，让常规 lint 与提交检查使用相同组合。默认仍为完整栈；这些组合不改变运行时权限或套餐。

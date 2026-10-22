@@ -6,10 +6,10 @@ keywords: [クイックスタート, setup, Next.js, pnpm, Docker, Garage]
 tags: [setup, local development]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> コミット [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e) で確認済みです。
+> コミット [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) で確認済みです。
 
 完了すると、顧客 app、admin console、Content Studio、durable worker、SaaS dev/test DB、Payload DB、Redis、private S3-compatible bucket が一緒に動きます。
 
@@ -64,3 +64,7 @@ pnpm build
 ```
 
 Playwright は Better Auth で login し、tenant credits、実 Garage upload、5-credit image task から worker と signed result までを確認します。次に[製品のカスタマイズ](/ja/docs/customize-your-product)、[アーキテクチャ](/ja/docs/architecture-and-errors)、[テストと CI](/ja/docs/testing-and-ci)へ進んでください。
+
+## 小さな構成から始める
+
+`pnpm starter core install`、`pnpm starter core setup`、`pnpm starter core doctor`、`pnpm starter core dev` は web と worker を対象とします。`operations` は admin、`publishing` は Content Studio も追加します。`lint`、`build`、`--dry-run` も利用できます。Core/operations は Studio の環境作成と移行を省略します。フィルター付きインストール後は `SAAS_STARTER_PROFILE=core` または `operations` をシェルに設定し、lint と pre-commit に同じ構成を使わせます。既定は全体構成で、実行時権限や料金プランは変えません。

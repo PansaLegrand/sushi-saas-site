@@ -6,10 +6,10 @@ keywords: [管理控制台, RBAC, MFA, 部署]
 tags: [管理, 安全, 运维]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> 与 starter 提交 [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e) 同步。
+> 与 starter 提交 [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) 同步。
 
 当应用之外需要有人调查客户、账单或运维故障时，请使用本页。模板已提供管理控制台；你需要决定是否部署、谁可访问，以及专用来源应受到多严格的保护。
 
@@ -96,3 +96,7 @@ pnpm admin:promote operator@example.com --role admin_ro --provider google
 6. 确认普通用户既不能打开管理页面，也不能调用管理 API。
 
 接下来阅读[管理控制台页面与运维操作](/zh/docs/admin-console-operations)，了解当前实际提供的界面。
+
+## 账号设置与会话级 MFA
+
+`/[locale]/account/profile` 支持昵称、密码、MFA 和近期会话撤销。管理 API 不返回会话 token 或内部 ID；撤销要求 15 分钟内创建的会话。SDK 的公开会话列表和撤销入口已关闭。管理员必须由当前会话完成二次验证，仅启用账号 MFA 不够。先应用 `0038_young_rafael_vega.sql`，再部署 web/admin。旧会话和 OAuth 会话须通过 `/two-factor`；错误验证码不会授权，更改 MFA 会清除此前的会话认证。

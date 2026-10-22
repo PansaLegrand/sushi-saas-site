@@ -6,10 +6,10 @@ keywords: [Vitest, Playwright, CI, テスト DB, カバレッジ]
 tags: [testing, CI, reliability]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> コミット [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e) で確認済みです。
+> コミット [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) で確認済みです。
 
 テストは「何を mock できるか」で分かれます。DB を mock したテストは unique constraint を証明できず、auth guard を mock した route test はデータ取得前の認証を証明できません。
 
@@ -42,3 +42,7 @@ Playwright は login、tenant credit、Garage upload/delete、5-credit image tas
 外部 E2E の接続先には `E2E_BASE_URL`、`E2E_USER_EMAIL`、`E2E_USER_PASSWORD` が必要です。書き込みテストは使い捨ての環境を `E2E_ALLOW_MUTATIONS=1` で明示した場合だけ実行します。本番を接続先にしないでください。
 
 CI は lint、PostgreSQL 16 migration、Redis、coverage、全 build、browser flow を実行します。緑にするため threshold を下げたり、実インフラ test を mock に置き換えないでください。
+
+## 本番成果物と性能の検査
+
+`pnpm build` 後に `pnpm test:production` を実行します。CI は隔離した web/admin の本番成果物を起動し、モバイルログイン、静的ファイル、ヘッダー、匿名転送を検査します。実際の開発スタックのテストも残ります。`pnpm benchmark:ledger -- --check` は1,000、10,000、50,000行の合成データで CPU を測定し、本番遅延を保証しません。ESLint を直接実行し、hook 依存の問題をエラーにします。外部サービスと Studio 編集画面は別の使い捨て環境で確認してください。

@@ -6,10 +6,10 @@ keywords: [architecture, services, models, errors, Next.js, TypeScript]
 tags: [architecture, errors, testing]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Verified against starter commit [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e).
+> Verified against starter commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37).
 
 Use this page before adding your first product-specific feature. The goal is practical: know where each file belongs, which boundary protects customer data, and which tests will tell you that an extension is safe.
 
@@ -92,3 +92,9 @@ You are done when the route contains no business rules, the service owns every w
 The detailed engineering contracts remain in `docs/errors.md`, `docs/frontend.md`, and `AGENTS.md` inside the starter repository.
 
 **Related:** Read [Anatomy of a Modern SaaS](/blogs/anatomy-of-modern-saas) for the product-level reasons behind these boundaries and the tradeoffs involved in changing them.
+
+## Scaffold and upgrade safely
+
+`pnpm scaffold:domain invoice-drafts --dry-run` previews a horizontal DTO/config/model/service/API/route/test scaffold and implementation worksheet. Omit `--dry-run` to create it. Existing files are never overwritten, and generated domains remain disabled until their schema, ownership, entitlements, privacy inventory and tests are implemented. Follow the starter engineering upgrade guide for schema-first deployment and release evidence.
+
+[Engineering upgrade contract](https://github.com/PansaLegrand/sushi-saas-template/blob/56c5b8260add9604d55501e464f4b41e619f5a37/docs/upgrading.md).

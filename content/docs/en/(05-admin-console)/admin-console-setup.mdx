@@ -6,10 +6,10 @@ keywords: [admin console, RBAC, MFA, deployment]
 tags: [admin, security, operations]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Synced with starter commit [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e).
+> Synced with starter commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37).
 
 Use this page when someone other than the application itself must investigate customers, billing, or operational failures. The starter already ships the console; your decision is whether to deploy it, who receives access, and how tightly its origin is protected.
 
@@ -96,3 +96,7 @@ Keep the web and admin origins distinct. The admin app applies `noindex`, `nofol
 6. Confirm that an ordinary user cannot open a page or call an admin API.
 
 Continue with [Admin Console Pages and Operations](/docs/admin-console-operations) for the exact surfaces that ship today.
+
+## Profile and session assurance
+
+`/[locale]/account/profile` offers display-name editing, password management, MFA and recent-session revocation. The management API omits session tokens and internal IDs; revocation requires a session created within 15 minutes. Native public SDK session-list/revoke endpoints are closed. Admin access now requires verification by the current session, not only account enrollment. Apply migration `0038_young_rafael_vega.sql` before web/admin code. Existing and OAuth sessions must complete `/two-factor`; failed codes grant no assurance, and changing MFA clears prior assurance.

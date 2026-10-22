@@ -6,10 +6,10 @@ keywords: [S3, R2, Garage, MinIO, uploads, storage]
 tags: [storage, security]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Synced with starter commit [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e).
+> Synced with starter commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37).
 
 Use this when your product needs user files—avatars, documents, imports, or generated assets—without making them public or proxying every byte through the Next.js server. By the end, a signed-in user should be able to upload, download, and delete a file from **Account → Files**, while another organization cannot access it.
 
@@ -36,3 +36,7 @@ Abandoned uploads release their reservations after one hour. Deletion retries th
 Before launch, test the complete flow, wrong MIME and checksum, quota races, expired URLs, cross-organization access, deletion retry, and cleanup. See `docs/storage-providers.md` in the starter for provider-specific CORS and endpoint details.
 
 **Next:** Configure [Durable Jobs and Readiness](/docs/jobs-and-readiness) so abandoned-upload cleanup and object deletion keep working after transient failures.
+
+## Bounded file pages
+
+`GET /api/storage/files` accepts integer `page` from 1 to 10,000 and `limit` from 1 to 100 (default 50). Responses include `hasMore`. The localized file screen has previous/next navigation and retryable errors; stale requests cannot overwrite a newer page or workspace. Uploads send one Content-Type header.

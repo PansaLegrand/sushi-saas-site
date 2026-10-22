@@ -6,12 +6,12 @@ keywords: [borrado de cuenta, exportación de datos, privacidad, eliminación, G
 tags: [privacidad, cuenta, ciclo de vida]
 author: "Sushi SaaS"
 publishedAt: "2026-08-01T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Sincronizado con el commit [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e). Revisa este flujo y la retención con asesoría legal antes de producción.
+> Sincronizado con el commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37). Revisa este flujo y la retención con asesoría legal antes de producción.
 
-Usa esta página si los clientes deben descargar sus datos o pedir que se borre su cuenta. El starter incluye APIs autenticadas, workers durables, una política probada tabla por tabla y artefactos privados. **No incluye una pantalla de ajustes terminada** para estas acciones; añade la confirmación y el texto legal que necesite tu producto.
+El starter incluye pantallas localizadas en `/[locale]/account/profile` y `/[locale]/account/privacy`, con APIs autenticadas, workers durables y exportaciones privadas. El cliente puede editar su nombre, gestionar contraseña y MFA, revisar sesiones, exportar datos y programar o cancelar el borrado. Revisa la política y las confirmaciones antes de publicar.
 
 ## Define la política antes de mostrar los botones
 
@@ -29,7 +29,7 @@ Credenciales, hashes, sesiones, tokens y secretos TOTP nunca se exportan. Regist
 
 ## Exportar
 
-`POST /api/account/data-export` requiere autenticación, mismo origen, límite de frecuencia e `Idempotency-Key`. Devuelve 202 y encola el trabajo. Consulta `GET /api/account/data-export/{requestUuid}`.
+`POST /api/account/data-export` requiere autenticación, mismo origen, límite de frecuencia e `Idempotency-Key`. Devuelve 202 y encola el trabajo. Consulta `GET /api/account/data-export`.
 
 Al terminar devuelve un manifiesto y enlaces firmados de cinco minutos. Los artefactos siguen privados y caducan a los siete días por defecto.
 
@@ -44,3 +44,7 @@ Se bloquea al último owner de una organización compartida o al último adminis
 Mantén almacenamiento privado y cron activos, implementa hooks para todo proveedor nuevo, actualiza la política al crear tablas y prueba todo el flujo con una cuenta desechable. No registres payloads ni URLs firmadas.
 
 **Para llevarlo a producción:** apoya exportación y borrado en [Trabajos duraderos y readiness](/es/docs/jobs-and-readiness) y valida el conjunto con [Despliegue y seguridad](/es/docs/deployment-and-security).
+
+## Controles y estado de exportación
+
+El borrado exige escribir el correo y enlaza los bloqueos de propiedad a los ajustes del equipo. La última exportación se recupera al recargar. Consulta metadatos con `GET /api/account/data-export`; pide `GET /api/account/data-export/{requestUuid}` explícitamente para generar enlaces temporales. La consulta usa un límite separado. El worker guarda puntos de control y continúa por lotes sin consumir reintentos de fallo por progreso normal.

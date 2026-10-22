@@ -6,10 +6,10 @@ keywords: [Vitest, Playwright, CI, base de datos de pruebas, cobertura]
 tags: [testing, CI, reliability]
 author: "Sushi SaaS"
 publishedAt: "2026-08-24T00:00:00.000Z"
-updatedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Verificado con el commit [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e).
+> Verificado con el commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37).
 
 La suite se organiza por lo que cada nivel puede simular. Un test con base simulada no prueba una restricción única; una ruta que simula su guard tampoco prueba que autentique antes de leer datos.
 
@@ -42,3 +42,7 @@ Playwright prueba login, créditos tenant, subida/borrado en Garage y la tarea d
 Un destino E2E externo requiere `E2E_BASE_URL`, `E2E_USER_EMAIL` y `E2E_USER_PASSWORD`; las pruebas que escriben solo se ejecutan con `E2E_ALLOW_MUTATIONS=1` en un entorno desechable. No apuntes esta suite a producción.
 
 CI ejecuta lint, migraciones PostgreSQL 16, Redis, cobertura, todos los builds y el navegador. No reduzcas umbrales ni sustituyas infraestructura real por mocks para obtener verde.
+
+## Artefactos de producción y rendimiento
+
+Tras `pnpm build`, ejecuta `pnpm test:production`. CI inicia los artefactos web/admin aislados en producción y comprueba login móvil, recursos, cabeceras y redirecciones anónimas, además de las pruebas del stack de desarrollo. `pnpm benchmark:ledger -- --check` mide CPU con 1.000, 10.000 y 50.000 filas sintéticas; no representa latencia real. ESLint se ejecuta directamente y las dependencias de hooks son errores. Proveedores externos y editor Studio requieren validación separada en entornos desechables.

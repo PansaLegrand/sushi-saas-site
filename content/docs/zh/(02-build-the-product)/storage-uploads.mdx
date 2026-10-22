@@ -6,10 +6,10 @@ keywords: [S3, R2, Garage, MinIO, 上传, 存储]
 tags: [存储, 安全]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> 已与启动模板提交 [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e) 同步。
+> 已与启动模板提交 [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) 同步。
 
 当产品需要保存头像、文档、导入文件或生成内容，又不希望文件公开、也不希望所有字节都经过 Next.js 服务器时，请使用此能力。完成本页后，已登录用户应能在**账户 → 文件**中上传、下载和删除文件，而其他组织无法访问。
 
@@ -36,3 +36,7 @@ updatedAt: "2026-08-24T00:00:00.000Z"
 上线前测试完整流程、错误 MIME/checksum、配额竞争、过期 URL、跨组织访问、删除重试与清理。供应商 CORS 细节见模板 `docs/storage-providers.md`。
 
 **下一步：** 配置[持久任务与就绪检查](/zh/docs/jobs-and-readiness)，确保临时故障后仍能清理放弃的上传和已删除的对象。
+
+## 有界文件分页
+
+`GET /api/storage/files` 接收整数 `page`（1–10,000）及 `limit`（1–100，默认 50），返回 `hasMore`。本地化文件页提供上一页、下一页与错误重试；旧请求不能覆盖新分页或工作区结果。上传只发送一个 Content-Type 头。

@@ -6,10 +6,10 @@ keywords: [S3, R2, Garage, MinIO, subidas, almacenamiento]
 tags: [almacenamiento, seguridad]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Sincronizado con el commit [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e) del starter.
+> Sincronizado con el commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) del starter.
 
 Usa esta función cuando tu producto necesite guardar avatares, documentos, importaciones o archivos generados sin hacerlos públicos ni enviar cada byte a través del servidor de Next.js. Al terminar, una persona autenticada debería poder subir, descargar y eliminar un archivo desde **Cuenta → Archivos**, sin que otra organización pueda acceder a él.
 
@@ -36,3 +36,7 @@ Las subidas abandonadas liberan reserva tras una hora. El borrado reintenta por 
 Prueba flujo completo, MIME/checksum incorrecto, carreras de cuota, URL caducada, acceso cruzado, reintento y limpieza. Consulta `docs/storage-providers.md` del starter para CORS.
 
 **Siguiente paso:** haz fiables el borrado y la limpieza con [Trabajos duraderos y readiness](/es/docs/jobs-and-readiness).
+
+## Paginación limitada
+
+`GET /api/storage/files` acepta `page` entero entre 1 y 10.000 y `limit` entre 1 y 100 (50 por defecto), y devuelve `hasMore`. La pantalla localizada permite avanzar, retroceder y reintentar; respuestas antiguas no reemplazan una página o workspace nuevos. La subida envía una sola cabecera Content-Type.

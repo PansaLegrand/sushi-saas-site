@@ -6,10 +6,10 @@ keywords: [quick start, setup, Next.js, pnpm, Docker, Garage]
 tags: [setup, local development]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-24T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Verified against starter commit [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e).
+> Verified against starter commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37).
 
 By the end of this page, you will have the customer app, admin console, Content Studio, durable worker, two SaaS databases, a Payload database, Redis, and a private local S3-compatible bucket running together.
 
@@ -68,3 +68,7 @@ pnpm build
 ```
 
 Playwright signs in through Better Auth and tests the tenant credit ledger, real Garage uploads, and the five-credit image task through the durable worker and signed result. Continue with [Customize Your Product](/docs/customize-your-product), [Architecture and Error Contracts](/docs/architecture-and-errors), and [Testing and CI Contracts](/docs/testing-and-ci).
+
+## Choose a smaller starter profile
+
+Use `pnpm starter core install`, `pnpm starter core setup`, `pnpm starter core doctor`, and `pnpm starter core dev` for web plus worker. `operations` adds admin; `publishing` adds Content Studio. The same profiles support `lint`, `build`, and `--dry-run`. Core/operations skip Studio environment creation and migrations. After a filtered install, export `SAAS_STARTER_PROFILE=core` or `operations` for ordinary lint and pre-commit checks. Defaults retain the full stack. These are tooling selections, not runtime permissions or plan tiers.

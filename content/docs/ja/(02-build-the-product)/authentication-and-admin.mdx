@@ -6,10 +6,10 @@ keywords: [Better Auth, 認証, 管理, MFA]
 tags: [認証, 管理, セキュリティ]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> スターターのコミット [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e) で検証済みです。
+> スターターのコミット [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) で検証済みです。
 
 この設定により、顧客は新規登録、メールアドレスの確認、ログイン、パスワードの復旧、セッション、組織の切り替えを利用できます。信頼する運用担当者は、プラットフォーム管理者の権限と MFA の両方を要求する独立したコンソールを使います。
 
@@ -43,3 +43,7 @@ Sushi SaaS は Better Auth を使い、メールアドレスとパスワード�
 ## 新しい認証コードの前にマイグレーションを適用する
 
 現在の版は Better Auth 1.7.6 を使用します。デプロイ前に SaaS マイグレーション `0037_neat_excalibur.sql` を適用し、`two_factor` に `verified`、`failed_verification_count`、`locked_until` を追加します。確認済みの登録（`users.two_factor_enabled=true`）だけが verified になり、未確認の secret は確認済みとは扱いません。ステージング環境で MFA 登録、誤ったコードによるロック、Admin ログインを確認してください。
+
+## プロフィールとセッション単位の MFA
+
+`/[locale]/account/profile` で名前、パスワード、MFA、最近のセッションを管理します。管理 API はトークンや内部 ID を返さず、失効には作成後15分以内のセッションが必要です。SDK の公開セッション一覧・失効 API は閉じています。管理者には現在のセッションでの MFA 検証が必要です。web/admin より先に `0038_young_rafael_vega.sql` を適用してください。既存や OAuth のセッションは `/two-factor` を完了します。不正なコードは権限を付与せず、MFA 変更で以前の検証状態を消去します。

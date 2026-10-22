@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/PansaLegrand/sushi-saas-template",
-  "commit": "323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e",
+  "commit": "56c5b8260add9604d55501e464f4b41e619f5a37",
   "reviewedAt": "2026-10-22",
-  "scope": "Prior contracts retained; runtime, atomic image/video execution, cancellation, bounded erasure, and task recovery deltas reviewed across five locales."
+  "scope": "Prior contracts retained; account security/privacy, session MFA migration, file/ledger pagination, supported tooling profiles, production smoke, performance budgets, and domain/upgrade workflow reviewed across five locales."
 }

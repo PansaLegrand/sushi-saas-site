@@ -6,10 +6,10 @@ keywords: [Better Auth, autenticación, administración, MFA]
 tags: [autenticación, administración, seguridad]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Verificado con el commit [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e) del starter.
+> Verificado con el commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) del starter.
 
 Esta configuración ofrece al cliente registro, email verificado, acceso, recuperación, sesiones y un espacio de organización. El personal de confianza usa una consola separada que exige a la vez un rol de plataforma y MFA.
 
@@ -45,3 +45,7 @@ Antes de lanzar prueba alta, verificación, acceso, recuperación, callback Goog
 ## Migra la autenticación antes de desplegar el código
 
 Esta versión usa Better Auth 1.7.6. Aplica primero la migración SaaS `0037_neat_excalibur.sql`: añade `verified`, `failed_verification_count` y `locked_until` a `two_factor`. Solo las inscripciones ya confirmadas (`users.two_factor_enabled=true`) se marcan como verificadas; un secreto pendiente no es una confirmación. Comprueba inscripción MFA, bloqueo por códigos fallidos y acceso de Admin en staging.
+
+## Perfil y MFA por sesión
+
+`/[locale]/account/profile` permite gestionar nombre, contraseña, MFA y sesiones recientes. La API de gestión omite tokens e IDs internos; revocar exige una sesión creada hace menos de 15 minutos. Los endpoints públicos nativos de listar/revocar sesiones están cerrados. Admin exige MFA verificado por la sesión actual. Aplica `0038_young_rafael_vega.sql` antes del código web/admin. Las sesiones antiguas y OAuth deben completar `/two-factor`; un código inválido no autoriza y cambiar MFA borra la verificación previa.

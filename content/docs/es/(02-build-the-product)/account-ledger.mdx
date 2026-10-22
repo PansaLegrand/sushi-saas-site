@@ -6,10 +6,10 @@ keywords: [créditos, libro mayor, idempotencia, organizaciones]
 tags: [créditos, contabilidad]
 author: "Sushi SaaS"
 publishedAt: "2025-09-29T00:00:00.000Z"
-updatedAt: "2026-08-02T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> Verificado con el commit [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e) del starter.
+> Verificado con el commit [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) del starter.
 
 Los créditos son una opción de empaquetado, no una obligación para cada función. Úsalos cuando una acción tenga coste variable o el uso comprado deba trasladarse; usa un entitlement o límite cuando solo importe si el cliente puede actuar.
 
@@ -35,3 +35,7 @@ Para una función de pago: calcula coste en configuración, exige entitlement, c
 Está terminado cuando dos consumos simultáneos no sobregiran, reintentar una clave produce un efecto, las concesiones vencidas no cuentan como disponibles, la UI muestra transacciones lógicas y un trabajo fallido deja un reembolso compensatorio auditable.
 
 **Para completar el modelo:** consulta [Planes y derechos](/es/docs/plans-and-entitlements) para decidir quién puede consumir y [Facturación con Stripe](/es/docs/stripe-setup) para entender cuándo se conceden créditos.
+
+## Historial paginado, saldo completo
+
+Usa `ledgerPage` para navegar. Las filas FEFO divididas se agrupan antes de paginar; el saldo sigue usando todo el libro. La respuesta incluye `ledgerPagination`. Cambiar de página nunca cambia el saldo financiero.

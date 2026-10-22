@@ -6,10 +6,10 @@ keywords: [管理コンソール, RBAC, MFA, デプロイ]
 tags: [管理, セキュリティ, 運用]
 author: "Sushi SaaS"
 publishedAt: "2026-08-02T00:00:00.000Z"
-updatedAt: "2026-10-05T00:00:00.000Z"
+updatedAt: "2026-10-22T00:00:00.000Z"
 ---
 
-> スターターのコミット [`323fbf1`](https://github.com/PansaLegrand/sushi-saas-template/tree/323fbf1aedadb57ac9efad1f1f9cc51b6599aa6e) と同期しています。
+> スターターのコミット [`56c5b82`](https://github.com/PansaLegrand/sushi-saas-template/tree/56c5b8260add9604d55501e464f4b41e619f5a37) と同期しています。
 
 顧客向けアプリの外から、顧客、請求、運用障害を調べる担当者が必要な場合に使います。管理コンソール自体は含まれていますが、デプロイするか、誰にアクセス権を与えるか、専用オリジンをどう保護するかは自分で決めます。
 
@@ -96,3 +96,7 @@ Web と管理のオリジンは分離してください。管理アプリは `no
 6. 一般ユーザーが管理ページを開けず、管理 API も呼べないことを確認します。
 
 現在提供されている画面と各操作の使い分けは、[管理コンソールのページと運用](/ja/docs/admin-console-operations)を参照してください。公開前のネットワーク、シークレット、ヘルスチェックは[デプロイとセキュリティ](/ja/docs/deployment-and-security)で最終確認します。
+
+## プロフィールとセッション単位の MFA
+
+`/[locale]/account/profile` で名前、パスワード、MFA、最近のセッションを管理します。管理 API はトークンや内部 ID を返さず、失効には作成後15分以内のセッションが必要です。SDK の公開セッション一覧・失効 API は閉じています。管理者には現在のセッションでの MFA 検証が必要です。web/admin より先に `0038_young_rafael_vega.sql` を適用してください。既存や OAuth のセッションは `/two-factor` を完了します。不正なコードは権限を付与せず、MFA 変更で以前の検証状態を消去します。
