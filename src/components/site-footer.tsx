@@ -1,3 +1,4 @@
+import { Github } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { SiteConfig } from "@/config/site";
@@ -10,15 +11,16 @@ export async function SiteFooter() {
     <footer className="site-footer">
       <div className="shell site-footer__inner">
         <div>
-          <p className="site-footer__name">{SiteConfig.name}</p>
-          <p>{t("description")}</p>
+          <p className="site-footer__name">{SiteConfig.name}<span className="footer-dot" /></p>
+          <p>{t("description")}</p><small>{t("license")}</small>
         </div>
         <nav aria-label={t("label")}>
-          <Link href="/docs/quick-start">{t("start")}</Link>
+          <Link href="/docs/quick-start" data-analytics-event="quickstart_opened" data-analytics-source="footer">{t("start")}</Link>
           <Link href="/docs">{t("docs")}</Link>
           <Link href="/blogs">{t("blog")}</Link>
           <Link href="/privacy">{t("privacy")}</Link>
           <Link href="/terms">{t("terms")}</Link>
+          <a href={SiteConfig.repositoryUrl} target="_blank" rel="noopener noreferrer" data-analytics-event="github_opened" data-analytics-source="footer"><Github size={14} aria-hidden="true" />{t("github")}</a>
           <AnalyticsSettingsButton />
         </nav>
       </div>

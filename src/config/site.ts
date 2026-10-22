@@ -1,7 +1,7 @@
 export const SiteConfig = {
   name: "Sushi SaaS",
   description:
-    "An open-source Next.js SaaS starter with Better Auth, Stripe, organizations, credits, private storage, durable jobs, a separate admin console, and Payload Content Studio.",
+    "An open-source Next.js starter for subscription and credit-based SaaS, with authentication, teams, private storage, durable jobs, and optional admin and publishing apps.",
   origin: "https://www.sushisaas.com",
   repositoryUrl: "https://github.com/PansaLegrand/sushi-saas-template"
 } as const;

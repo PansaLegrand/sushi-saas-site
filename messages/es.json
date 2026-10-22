@@ -1,85 +1,49 @@
 {
   "metadata": {
-    "title": "Plantilla SaaS Next.js de código abierto",
-    "description": "Un starter SaaS Next.js open source con configuración guiada, autenticación, organizaciones, Stripe, créditos, almacenamiento privado, trabajos durables, Content Studio, observabilidad y operaciones probadas.",
-    "keywords": ["starter SaaS Next.js", "SaaS open source", "facturación Stripe", "Better Auth", "Drizzle ORM", "plantilla SaaS"]
+    "title": "Starter Next.js SaaS gratis para suscripciones y créditos",
+    "description": "Crea un SaaS de suscripciones y créditos con un starter Next.js gratuito y abierto: facturación de equipos, créditos de uso, archivos privados y tareas persistentes.",
+    "keywords": [
+      "starter SaaS Next.js",
+      "SaaS open source",
+      "facturación Stripe",
+      "Better Auth",
+      "Drizzle ORM",
+      "plantilla SaaS"
+    ]
   },
-  "nav": { "label": "Navegación principal", "start": "Inicio rápido", "docs": "Documentación", "blog": "Guías", "github": "GitHub", "language": "Elegir idioma" },
-  "landing": {
-    "eyebrow": "Licencia MIT · Pensado para producción",
-    "heroLineOne": "Una plantilla SaaS Next.js",
-    "heroLineTwo": "de código abierto.",
-    "useCase": {
-      "eyebrow": "Un producto real",
-      "title": "DojoClip: un SaaS de medios con IA.",
-      "body": "DojoClip construye edición de vídeo y flujos de imagen, música y voz sobre una base SaaS. Conoce qué aporta el starter y qué añade el producto a su experiencia creativa.",
-      "action": "Leer el caso DojoClip",
-      "visit": "Explorar DojoClip"
-    },
-    "subtitle": "Pasa de una configuración local guiada a una aplicación web, consola admin y Content Studio desplegables, con facturación segura ante reintentos, almacenamiento privado, trabajo durable, observabilidad y restauraciones probadas.",
-    "primaryAction": "Ejecutarlo en local",
-    "secondaryAction": "Ver el código",
-    "fitPrompt": "¿Primero quieres evaluar el stack?",
-    "fitAction": "Descubre cuándo encaja Sushi SaaS.",
-    "signalsLabel": "Señales del proyecto",
-    "signals": [
-      { "title": "Desarrollo en un comando", "body": "Setup, doctor, runner unificado, fixtures seguros y PostgreSQL, Redis y Garage locales." },
-      { "title": "Dinero seguro ante reintentos", "body": "Checkout, webhooks, gastos del libro y compensación exactamente una vez." },
-      { "title": "Operaciones desplegables", "body": "Workers portables, contenedores, readiness, telemetría, copias, retención y auditoría de lanzamiento." },
-      { "title": "Tests de arquitectura", "body": "Capas, autorización, reintentos, migraciones y restricciones se ejecutan como pruebas." }
-    ],
-    "journeys": {
-      "title": "Entra por la pregunta que tienes ahora.",
-      "intro": "Cada fase necesita un nivel distinto de detalle. Ejecuta todo el stack, sigue un flujo de pago o revisa los controles de producción antes de decidir qué conservar.",
-      "items": [
-        { "title": "Explora el starter", "body": "Instálalo, personaliza la identidad, verifica dependencias, crea una cuenta demo y abre cada aplicación incluida.", "action": "Seguir el inicio rápido" },
-        { "title": "Aprende una función completa", "body": "Sigue la tarea de imagen de cinco créditos por autenticación, permisos, replay del libro, worker durable, salida privada y compensación.", "action": "Trazar el flujo de referencia" },
-        { "title": "Prepara un lanzamiento real", "body": "Construye contenedores reforzados, inspecciona migraciones e integridad, ejecuta restauraciones y la auditoría de lanzamiento.", "action": "Abrir la ruta de lanzamiento" }
-      ]
-    },
-    "systems": {
-      "title": "Una base, no una demo.",
-      "intro": "El starter se centra en lo que se vuelve caro tras el lanzamiento: propiedad, reintentos, conciliación, operación y límites explícitos.",
-      "items": [
-        { "title": "Autenticación y abuso", "body": "Email verificado, OAuth, recuperación, MFA, Turnstile, límites Redis e historial de eventos." },
-        { "title": "Facturación y permisos", "body": "Los Price de Stripe controlan el checkout; los webhooks actualizan suscripciones y capacidades." },
-        { "title": "Contabilidad de créditos", "body": "Un libro inmutable conecta compras, concesiones, consumo, reversiones y saldos." },
-        { "title": "Organizaciones y equipos", "body": "Espacios personales y compartidos, invitaciones, roles, protección del último propietario y recursos comunes." },
-        { "title": "Almacenamiento y tareas", "body": "Objetos S3 privados, acceso firmado, resultados generados, ciclo de vida y cola durable con reintentos." },
-        { "title": "Consola operativa", "body": "Aplicación admin separada con MFA, roles de lectura/escritura, recuperación de jobs, auditoría y visibilidad de cobros." },
-        { "title": "Contenido y ciclo de datos", "body": "Payload Studio independiente, gateway de marketing firmado, consentimientos, exportación de cuenta y borrado diferido." },
-        { "title": "Operaciones de release", "body": "OpenTelemetry, logs estructurados, integridad de migraciones, copias, restauración, retención, contenedores y launch checks." }
-      ]
-    },
-    "referenceFlow": {
-      "eyebrow": "Flujo de referencia ejecutable",
-      "title": "Una petición de imagen recorre toda la base SaaS.",
-      "intro": "El proveedor local es sencillo a propósito. El valor está en la cadena que lo rodea: una clave, un gasto de cinco créditos, ejecución durable, salida privada y un reembolso recuperable tras una caída.",
-      "action": "Leer la guía completa",
-      "steps": [
-        { "title": "Autorizar", "body": "Resuelve miembro, organización, capacidad, cuota y límite de mismo origen." },
-        { "title": "Reservar", "body": "Persiste una tarea con huella y un gasto determinista de cinco créditos." },
-        { "title": "Despachar", "body": "Deduplica un job durable que sobrevive a la petición HTTP." },
-        { "title": "Generar", "body": "Llama al proveedor con identidad idempotente estable y reintentos limitados." },
-        { "title": "Guardar", "body": "Escribe y verifica un objeto Garage/S3 privado y firma su acceso temporal." },
-        { "title": "Compensar", "body": "Ante un fallo terminal, restaura el gasto una vez antes de marcar la tarea fallida." }
-      ]
-    },
-    "architecture": {
-      "title": "Una sola dirección en el código.",
-      "intro": "Las rutas traducen HTTP. Los servicios guardan invariantes. Los modelos hacen consultas. La base impone restricciones.",
-      "steps": [
-        { "title": "Rutas", "body": "Autentican, validan y convierten HTTP en una operación de negocio." },
-        { "title": "Servicios", "body": "Coordinan invariantes, idempotencia, autorización y efectos." },
-        { "title": "Modelos", "body": "Persistencia tipada y consciente del tenant detrás de un único límite." },
-        { "title": "Base de datos", "body": "Impone unicidad, propiedad, referencias y transiciones durables." }
-      ]
-    },
-    "closing": { "title": "Empieza más cerca de la parte que solo tu empresa puede construir.", "action": "Abrir inicio rápido" }
+  "nav": {
+    "label": "Navegación principal",
+    "start": "Inicio rápido",
+    "docs": "Documentación",
+    "blog": "Guías",
+    "github": "GitHub",
+    "language": "Elegir idioma",
+    "product": "Producto",
+    "openSource": "Código abierto"
   },
-  "docs": { "title": "Construye y opera Sushi SaaS", "intro": "Elige una tarea para ver pasos exactos de configuración y verificación. Si necesitas entender una decisión o elegir qué cambiar, consulta Guías.", "empty": "La documentación está en preparación.", "topics": "Temas" },
-  "blogs": { "title": "Entiende y adapta Sushi SaaS", "intro": "Descubre qué elige el starter, por qué, qué alternativas encajan y qué conviene conservar, cambiar o eliminar para tu producto.", "empty": "Todavía no hay guías publicadas.", "topics": "Temas" },
-  "footer": { "label": "Navegación del pie", "description": "Explora, evalúa, construye y opera el starter open source Sushi SaaS.", "start": "Inicio rápido", "docs": "Documentación", "blog": "Guías", "privacy": "Privacidad", "terms": "Términos" },
+  "docs": {
+    "title": "Construye y opera Sushi SaaS",
+    "intro": "Elige una tarea para ver pasos exactos de configuración y verificación. Si necesitas entender una decisión o elegir qué cambiar, consulta Guías.",
+    "empty": "La documentación está en preparación.",
+    "topics": "Temas"
+  },
+  "blogs": {
+    "title": "Entiende y adapta Sushi SaaS",
+    "intro": "Descubre qué elige el starter, por qué, qué alternativas encajan y qué conviene conservar, cambiar o eliminar para tu producto.",
+    "empty": "Todavía no hay guías publicadas.",
+    "topics": "Temas"
+  },
+  "footer": {
+    "label": "Navegación del pie",
+    "description": "Una base abierta para tu próximo SaaS. Explórala, ejecútala en local y hazla tuya.",
+    "start": "Inicio rápido",
+    "docs": "Documentación",
+    "blog": "Guías",
+    "privacy": "Privacidad",
+    "terms": "Términos",
+    "github": "GitHub",
+    "license": "Licencia MIT · Libre de usar y ampliar"
+  },
   "analytics": {
     "title": "Ayuda a mejorar el starter",
     "description": "Con tu permiso, Plausible mide qué páginas y enlaces de instalación resultan útiles. Recibe tu dirección IP e información del navegador. No se rastrean instalaciones ni contenidos de formularios.",
@@ -134,11 +98,218 @@
     "updated": "Última actualización · 29 de julio de 2026",
     "notice": "Estos términos cubren el sitio. El código del starter se licencia por separado bajo MIT.",
     "sections": [
-      { "heading": "Documentación", "paragraphs": ["El material ofrece información técnica general; no es asesoramiento legal, fiscal, de seguridad ni financiero.", "Revisa y adapta los ejemplos a tu producto, despliegue, jurisdicción y modelo de amenazas."] },
-      { "heading": "Código open source", "paragraphs": ["El uso del starter se rige por la licencia MIT incluida en su repositorio. Estos términos no la sustituyen."] },
-      { "heading": "Disponibilidad y cambios", "paragraphs": ["El sitio y su contenido pueden cambiar o no estar disponibles. Comprueba los detalles contra la versión del código que utilizas."] },
-      { "heading": "Servicios de terceros", "paragraphs": ["Las referencias a terceros son informativas y no constituyen garantía ni recomendación. Se aplican sus términos."] }
+      {
+        "heading": "Documentación",
+        "paragraphs": [
+          "El material ofrece información técnica general; no es asesoramiento legal, fiscal, de seguridad ni financiero.",
+          "Revisa y adapta los ejemplos a tu producto, despliegue, jurisdicción y modelo de amenazas."
+        ]
+      },
+      {
+        "heading": "Código open source",
+        "paragraphs": [
+          "El uso del starter se rige por la licencia MIT incluida en su repositorio. Estos términos no la sustituyen."
+        ]
+      },
+      {
+        "heading": "Disponibilidad y cambios",
+        "paragraphs": [
+          "El sitio y su contenido pueden cambiar o no estar disponibles. Comprueba los detalles contra la versión del código que utilizas."
+        ]
+      },
+      {
+        "heading": "Servicios de terceros",
+        "paragraphs": [
+          "Las referencias a terceros son informativas y no constituyen garantía ni recomendación. Se aplican sus términos."
+        ]
+      }
     ]
   },
-  "notFound": { "title": "Esta página se movió o nunca existió.", "body": "Usa el índice de documentación para encontrar la guía actual.", "action": "Volver al inicio" }
+  "notFound": {
+    "title": "Esta página se movió o nunca existió.",
+    "body": "Usa el índice de documentación para encontrar la guía actual.",
+    "action": "Volver al inicio"
+  },
+  "marketing": {
+    "hero": {
+      "eyebrow": "Código abierto. Listo para que lo hagas tuyo.",
+      "title": "Tu próximo SaaS,",
+      "accent": "un paso por delante.",
+      "description": "Un starter Next.js que conecta cuentas, facturación de equipos, créditos de uso y tareas en segundo plano. Empieza con lo esencial. Hazlo tu producto.",
+      "primary": "Empieza a construir",
+      "secondary": "Explora el producto",
+      "badges": [
+        "Gratis bajo licencia MIT",
+        "Tu código, tus datos",
+        "Cinco idiomas"
+      ],
+      "previewLabel": "Dentro del starter",
+      "previewTitle": "Cada crédito, a la vista.",
+      "previewNote": "Interfaz real en inglés · Datos de ejemplo"
+    },
+    "stackLabel": "Creado con herramientas que ya conoces",
+    "tour": {
+      "eyebrow": "Míralo de cerca",
+      "title": "Tu producto ya tiene una base.",
+      "description": "Explora las pantallas reales que usarán tus clientes y operadores. Añade tu marca, tus flujos y tu modelo de negocio.",
+      "label": "Vistas del producto",
+      "note": "Pantallas reales del starter en inglés, con datos de ejemplo. Esta vista es de solo lectura.",
+      "expand": "Abrir captura a tamaño completo",
+      "items": [
+        {
+          "tab": "Créditos",
+          "title": "Cada crédito tiene una historia.",
+          "body": "Ofrece un historial claro de asignaciones, consumo y reembolsos. Un único registro trazable explica el saldo.",
+          "alt": "Interfaz real en inglés del registro de créditos de Sushi SaaS, con saldo, consumo de vídeo e imagen y reembolso de ejemplo."
+        },
+        {
+          "tab": "Espacios",
+          "title": "Un lugar para todo el equipo.",
+          "body": "Organiza miembros, roles, invitaciones y recursos compartidos en el espacio al que pertenecen.",
+          "alt": "Interfaz real en inglés de ajustes de equipo de Sushi SaaS, con miembros, roles, uso de plazas e invitación pendiente de ejemplo."
+        },
+        {
+          "tab": "Operaciones",
+          "title": "Descubre qué necesita atención.",
+          "body": "Consulta tareas persistentes y sus reintentos en una consola admin independiente. Da a los operadores una ruta clara de recuperación.",
+          "alt": "Interfaz real en inglés de la cola de tareas admin de Sushi SaaS, con tareas de ejemplo completadas, en curso, pendientes y fallidas."
+        }
+      ]
+    },
+    "profiles": {
+      "eyebrow": "Un primer paso más sencillo",
+      "title": "Empieza con lo que necesitas.",
+      "description": "Elige tu configuración local. Añade la consola admin y las herramientas de publicación cuando tu proyecto lo requiera.",
+      "recommended": "Empieza aquí",
+      "label": "Elige un perfil del starter",
+      "items": [
+        {
+          "name": "Core",
+          "subtitle": "Construye tu producto",
+          "body": "La app de clientes y el worker duradero, con las bases compartidas del SaaS.",
+          "features": [
+            "Cuentas y espacios",
+            "Facturación y créditos de uso",
+            "Archivos privados y tareas"
+          ]
+        },
+        {
+          "name": "Operations",
+          "subtitle": "Acompaña a tus clientes",
+          "body": "Todo Core, más una consola independiente para quienes operan tu SaaS.",
+          "features": [
+            "Todo Core",
+            "Roles admin y MFA",
+            "Seguimiento de facturación y tareas"
+          ]
+        },
+        {
+          "name": "Publishing",
+          "subtitle": "Organiza tu contenido",
+          "body": "Todo Operations, más un Content Studio con despliegue independiente.",
+          "features": [
+            "Todo Operations",
+            "Payload Content Studio",
+            "Flujos editoriales"
+          ]
+        }
+      ],
+      "terminal": "Tu terminal",
+      "copy": "Copiar comandos",
+      "copied": "Copiado",
+      "copyError": "No se pudo copiar. Selecciona los comandos de abajo para copiarlos.",
+      "guide": "Abre el inicio rápido completo",
+      "requirements": "Node 24.22.1+ (24.x), pnpm 10.22.0 y Docker.",
+      "note": "El código es gratis. El alojamiento y los servicios externos que actives tienen sus propios costes."
+    },
+    "proof": {
+      "eyebrow": "Confianza que puedes comprobar",
+      "title": "Los detalles importan tras el lanzamiento.",
+      "description": "Consulta el código y los tests que respaldan estas capacidades. Son los mecanismos que mantienen el trabajo cuando se repite una solicitud o se interrumpe una tarea.",
+      "action": "Inspecciona la implementación",
+      "items": [
+        {
+          "title": "Facturación con rastro verificable",
+          "body": "Pagos idempotentes, créditos registrados sin sobrescribir entradas y reembolsos sin duplicados mantienen trazables los efectos financieros."
+        },
+        {
+          "title": "Trabajo que puede recuperarse",
+          "body": "Las tareas persistentes, los reintentos limitados y las comprobaciones de cancelación preservan el progreso más allá de una solicitud del navegador."
+        },
+        {
+          "title": "Límites de propiedad claros",
+          "body": "Los permisos por espacio y el acceso a archivos privados mantienen los recursos de cada cliente en su contexto."
+        }
+      ]
+    },
+    "workflow": {
+      "eyebrow": "Un ejemplo de principio a fin",
+      "title": "Sigue una solicitud hasta el resultado.",
+      "description": "Ejecuta el ejemplo local de imagen para ver cómo encajan las piezas. El proveedor de demo es simulado; el flujo que lo rodea es real.",
+      "action": "Recorre el flujo de imagen",
+      "steps": [
+        {
+          "title": "Comprobar el acceso",
+          "body": "Identifica al cliente, su espacio, la capacidad y la cuota."
+        },
+        {
+          "title": "Reservar una sola vez",
+          "body": "Registra juntos la tarea, el gasto de créditos y su envío persistente a la cola."
+        },
+        {
+          "title": "Hacer el trabajo",
+          "body": "Procesa la tarea y permite acceder al resultado privado."
+        },
+        {
+          "title": "Recuperarse sin duplicados",
+          "body": "Reintenta con una identidad estable o compensa un fallo definitivo."
+        }
+      ]
+    },
+    "caseStudy": {
+      "eyebrow": "Creado con Sushi SaaS",
+      "title": "Del starter a DojoClip.",
+      "description": "DojoClip reúne flujos de vídeo, imagen, música y voz. Descubre qué bases se reutilizan y dónde un producto real añade su propia experiencia.",
+      "action": "Lee el caso de uso",
+      "visit": "Explora DojoClip",
+      "asideTitle": "Una base para productos de IA",
+      "items": [
+        "Propiedad de recursos por cliente y equipo",
+        "Suscripciones y créditos de uso",
+        "Medios privados y tareas en segundo plano"
+      ],
+      "note": "El editor de DojoClip y sus proveedores comerciales de generación son extensiones propias."
+    },
+    "faq": {
+      "eyebrow": "Antes de empezar",
+      "title": "Algunas buenas preguntas.",
+      "items": [
+        {
+          "question": "¿Puedo usarlo para un producto comercial?",
+          "answer": "Sí. El starter es de código abierto bajo la licencia MIT. Puedes adaptarlo a productos comerciales conservando el aviso de licencia requerido. El alojamiento y los servicios de terceros son independientes."
+        },
+        {
+          "question": "¿Necesito todas las aplicaciones?",
+          "answer": "No. Core ejecuta la app de clientes y el worker. Operations añade admin y Publishing añade Content Studio. Los perfiles eligen herramientas locales y destinos de compilación; no cambian los derechos de los planes."
+        },
+        {
+          "question": "¿Incluye un proveedor de IA funcional?",
+          "answer": "Los ejemplos locales de imagen y vídeo usan proveedores simulados y permanecen desactivados en producción. Añade tu proveedor, reglas de producto y validación, conservando los contratos de facturación, almacenamiento y recuperación."
+        },
+        {
+          "question": "¿Qué falta antes del lanzamiento?",
+          "answer": "Tu flujo de producto, identidad, precios, cuentas de proveedores, políticas legales revisadas y configuración de despliegue. Las guías de lanzamiento y actualización explican las comprobaciones y responsabilidades operativas."
+        }
+      ],
+      "guide": "Lee la lista de lanzamiento"
+    },
+    "closing": {
+      "eyebrow": "Tu próximo commit empieza aquí",
+      "title": "Hazlo tuyo.",
+      "description": "Empieza con Core, explora el código y construye lo que hace diferente a tu producto.",
+      "primary": "Empieza a construir",
+      "secondary": "Consigue el código en GitHub",
+      "license": "Licencia MIT · Libre de usar y ampliar"
+    }
+  }
 }

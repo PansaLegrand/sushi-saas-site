@@ -36,3 +36,19 @@ test("Fumadocs controls have translations for every supported locale", () => {
     assert.match(translations, new RegExp(label));
   }
 });
+
+test("every public UI message has a non-empty counterpart in all five locales", () => {
+  function shape(value, path = "") {
+    if (typeof value === "string") {
+      assert.ok(value.trim(), "empty translation at " + path);
+      return "string";
+    }
+    if (Array.isArray(value)) return value.map((entry, index) => shape(entry, path + "[" + index + "]"));
+    assert.ok(value && typeof value === "object", "unexpected message value at " + path);
+    return Object.fromEntries(Object.keys(value).sort().map(key => [key, shape(value[key], path + "." + key)]));
+  }
+  const reference = shape(JSON.parse(source("../messages/en.json")));
+  for (const locale of ["zh", "es", "fr", "ja"]) {
+    assert.deepEqual(shape(JSON.parse(source("../messages/" + locale + ".json"))), reference, locale + ": catalog shape");
+  }
+});
